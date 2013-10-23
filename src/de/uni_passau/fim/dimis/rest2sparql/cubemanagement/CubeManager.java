@@ -73,6 +73,14 @@ public class CubeManager {
         return connection.ExecuteSPARQL(query, format);
     }
 
+    /**
+     * Returns the measures of the cube with the given name.
+     * If the CubeName is an empty String, the measures of all cubes are returned.
+     *
+     * @param CubeName The name of the cube to get information from.
+     * @return the measures of the cube.
+     * @throws IOException If the connection to the database failes.
+     */
     public String getMeasures(String CubeName) throws IOException  {
         String query = PrefixManager.createPrefixString() +
                 "SELECT ?CUBE_NAME ?MEASURE_NAME ?LABEL " +
