@@ -3,6 +3,7 @@
   <component name="ChangeListManager">
     <list default="true" id="7dd3236d-90a0-4a31-8994-16d90883017b" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/de/uni_passau/fim/dimis/rest2sparql/cubemanagement/CubeManager.java" afterPath="$PROJECT_DIR$/src/de/uni_passau/fim/dimis/rest2sparql/cubemanagement/CubeManager.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/junit/de/uni_passau/fim/dimis/rest2sparql/cubemanagement/CubeManagerTest.java" afterPath="$PROJECT_DIR$/junit/de/uni_passau/fim/dimis/rest2sparql/cubemanagement/CubeManagerTest.java" />
     </list>
     <ignored path="rest2sparql.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -14,13 +15,13 @@
     <file path="/HttpConnectionTest.java" changelist="7dd3236d-90a0-4a31-8994-16d90883017b" time="1382458898011" ignored="false" />
     <file path="/QueryException.java" changelist="7dd3236d-90a0-4a31-8994-16d90883017b" time="1382452583146" ignored="false" />
     <file path="/QueryFactory.java" changelist="7dd3236d-90a0-4a31-8994-16d90883017b" time="1382453748639" ignored="false" />
-    <file path="/CubeManager.java" changelist="7dd3236d-90a0-4a31-8994-16d90883017b" time="1382536568612" ignored="false" />
+    <file path="/CubeManager.java" changelist="7dd3236d-90a0-4a31-8994-16d90883017b" time="1382539234283" ignored="false" />
     <file path="/CodeBigdataEngine.java" changelist="7dd3236d-90a0-4a31-8994-16d90883017b" time="1382458940885" ignored="false" />
     <file path="/QueryFilter.java" changelist="7dd3236d-90a0-4a31-8994-16d90883017b" time="1382527108778" ignored="false" />
     <file path="/BasicQueryFilter.java" changelist="7dd3236d-90a0-4a31-8994-16d90883017b" time="1382461379927" ignored="false" />
     <file path="/SparqlPrefix.java" changelist="7dd3236d-90a0-4a31-8994-16d90883017b" time="1382534544809" ignored="false" />
     <file path="/PrefixCollection.java" changelist="7dd3236d-90a0-4a31-8994-16d90883017b" time="1382534502434" ignored="false" />
-    <file path="/CubeManagerTest.java" changelist="7dd3236d-90a0-4a31-8994-16d90883017b" time="1382538531472" ignored="false" />
+    <file path="/CubeManagerTest.java" changelist="7dd3236d-90a0-4a31-8994-16d90883017b" time="1382539516792" ignored="false" />
     <option name="TRACKING_ENABLED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -105,10 +106,10 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="CubeManager.java" pinned="false" current="false" current-in-tab="false">
+      <file leaf-file-name="CubeManager.java" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/de/uni_passau/fim/dimis/rest2sparql/cubemanagement/CubeManager.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="30" column="18" selection-start="930" selection-end="930" vertical-scroll-proportion="0.0">
+            <state line="81" column="29" selection-start="3284" selection-end="3284" vertical-scroll-proportion="0.6466165">
               <folding>
                 <element signature="docComment;class#CubeManager#0" expanded="true" />
                 <element signature="docComment;method#CubeManager#0;class#CubeManager#0" expanded="true" />
@@ -119,10 +120,10 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="CubeManagerTest.java" pinned="false" current="true" current-in-tab="true">
+      <file leaf-file-name="CubeManagerTest.java" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/junit/de/uni_passau/fim/dimis/rest2sparql/cubemanagement/CubeManagerTest.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="21" column="17" selection-start="477" selection-end="477" vertical-scroll-proportion="0.47945204">
+            <state line="42" column="5" selection-start="3928" selection-end="3928" vertical-scroll-proportion="0.0">
               <folding>
                 <element signature="imports" expanded="true" />
                 <element signature="docComment;class#CubeManagerTest#0" expanded="true" />
@@ -665,7 +666,7 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="2" y="18" width="3062" height="1869" extended-state="0" />
-    <editor active="false" />
+    <editor active="true" />
     <layout>
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3298077" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
@@ -675,7 +676,7 @@
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="IDEtalk Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3298077" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
-      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.1855615" sideWeight="0.09615385" order="2" side_tool="true" content_ui="tabs" />
+      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.1855615" sideWeight="0.095192306" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="IDEtalk" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3298077" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3298077" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
@@ -683,9 +684,9 @@
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.24973261" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="SLIDING" type="SLIDING" visible="false" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.1855615" sideWeight="0.57403845" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.1855615" sideWeight="0.5692308" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.24973261" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
-      <window_info id="Run" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.3298077" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.33461538" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
@@ -855,24 +856,24 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/junit/de/uni_passau/fim/dimis/rest2sparql/cubemanagement/CubeManagerTest.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="42" column="5" selection-start="3928" selection-end="3928" vertical-scroll-proportion="0.0">
+          <folding>
+            <element signature="imports" expanded="true" />
+            <element signature="docComment;class#CubeManagerTest#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/src/de/uni_passau/fim/dimis/rest2sparql/cubemanagement/CubeManager.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="30" column="18" selection-start="930" selection-end="930" vertical-scroll-proportion="0.0">
+        <state line="81" column="29" selection-start="3284" selection-end="3284" vertical-scroll-proportion="0.6466165">
           <folding>
             <element signature="docComment;class#CubeManager#0" expanded="true" />
             <element signature="docComment;method#CubeManager#0;class#CubeManager#0" expanded="true" />
             <element signature="docComment;method#getCubes#0;class#CubeManager#0" expanded="true" />
             <element signature="docComment;method#getDimensions#0;class#CubeManager#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/junit/de/uni_passau/fim/dimis/rest2sparql/cubemanagement/CubeManagerTest.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="21" column="17" selection-start="477" selection-end="477" vertical-scroll-proportion="0.47945204">
-          <folding>
-            <element signature="imports" expanded="true" />
-            <element signature="docComment;class#CubeManagerTest#0" expanded="true" />
           </folding>
         </state>
       </provider>

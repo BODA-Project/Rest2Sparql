@@ -3,6 +3,7 @@ package de.uni_passau.fim.dimis.rest2sparql.cubemanagement;
 import de.uni_passau.fim.dimis.rest2sparql.triplestore.CodeBigdataEngine;
 import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 /**
@@ -26,10 +27,18 @@ public class CubeManagerTest {
         CubeManager manager = new CubeManager(new CodeBigdataEngine());
 
         String res = manager.getDimensions("Dataset-f744647d-e493-4640-9bd6-2080779a5e77");
+
+        assertEquals(expected, res);
     }
 
     @Test
     public void testGetMeasures() throws Exception {
-        fail("Not yet implemented!");
+        String expected = "<?xml version='1.0' encoding='UTF-8'?>\n<sparql xmlns='http://www.w3.org/2005/sparql-results#'>\n\t<head>\n\t\t<variable name='CUBE_NAME'/>\n\t\t<variable name='MEASURE_NAME'/>\n\t\t<variable name='LABEL'/>\n\t</head>\n\t<results>\n\t\t<result>\n\t\t\t<binding name='CUBE_NAME'>\n\t\t\t\t<uri>http://code-research.eu/resource/Dataset-f744647d-e493-4640-9bd6-2080779a5e77</uri>\n\t\t\t</binding>\n\t\t\t<binding name='MEASURE_NAME'>\n\t\t\t\t<uri>http://dbpedia.org/resource/Water_level</uri>\n\t\t\t</binding>\n\t\t\t<binding name='LABEL'>\n\t\t\t\t<literal xml:lang='en'>Water level</literal>\n\t\t\t</binding>\n\t\t</result>\n\t\t<result>\n\t\t\t<binding name='CUBE_NAME'>\n\t\t\t\t<uri>http://code-research.eu/resource/Dataset-f744647d-e493-4640-9bd6-2080779a5e77</uri>\n\t\t\t</binding>\n\t\t\t<binding name='MEASURE_NAME'>\n\t\t\t\t<uri>http://dbpedia.org/resource/Water_level</uri>\n\t\t\t</binding>\n\t\t\t<binding name='LABEL'>\n\t\t\t\t<literal>Water Level</literal>\n\t\t\t</binding>\n\t\t</result>\n\t</results>\n</sparql>\n";
+
+        CubeManager manager = new CubeManager(new CodeBigdataEngine());
+
+        String res = manager.getMeasures("Dataset-f744647d-e493-4640-9bd6-2080779a5e77");
+
+        assertEquals(expected, res);
     }
 }

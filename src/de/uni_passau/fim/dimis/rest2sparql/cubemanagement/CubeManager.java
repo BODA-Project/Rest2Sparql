@@ -73,8 +73,16 @@ public class CubeManager {
         return connection.ExecuteSPARQL(query, format);
     }
 
-    public String getMeasures(String CubeName) {
-        return ""; // TODO
+    public String getMeasures(String CubeName) throws IOException  {
+        String query = PrefixManager.createPrefixString() +
+                "SELECT ?CUBE_NAME ?MEASURE_NAME ?LABEL " +
+                "WHERE { ?CUBE_NAME qb:structure ?dsd. " +
+                "?dsd qb:component ?compSpec. " +
+                "?compSpec qb:measure ?MEASURE_NAME. " +
+                "?MEASURE_NAME rdfs:label ?LABEL. " +
+                "FILTER (?CUBE_NAME = code:" + CubeName + ").}"; // TODO generalize filter
+
+        return connection.ExecuteSPARQL(query, format);
     }
 
     public void setOutputFormat(OutputFormat format) {
