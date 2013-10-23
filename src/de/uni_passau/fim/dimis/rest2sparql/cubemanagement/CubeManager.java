@@ -21,7 +21,6 @@ public class CubeManager {
 
     private TripleStoreConnection connection;
     private OutputFormat format = OutputFormat.XML;
-
     private PrefixCollection PrefixManager = new PrefixCollection();
 
     /**
@@ -53,8 +52,25 @@ public class CubeManager {
         return connection.ExecuteSPARQL(query, format);
     }
 
-    public String getDimensions(String CubeName) {
-        return ""; // TODO
+    /**
+     * Returns the dimensions of the cube with the given name.
+     * If the CubeName is an empty String, the dimensions of all cubes are returned.
+     *
+     * @param CubeName The name of the cube to get information from.
+     * @return the dimensions of the cube.
+     * @throws IOException If the connection to the database failes.
+     */
+    public String getDimensions(String CubeName) throws IOException {
+
+        String query = PrefixManager.createPrefixString() +
+                "SELECT ?CUBE_NAME ?DIMENSION_NAME ?LABEL " +
+                "WHERE { ?CUBE_NAME qb:structure ?dsd. " +
+                "?dsd qb:component ?compSpec. " +
+                "?compSpec qb:dimension ?DIMENSION_NAME. " +
+                "?DIMENSION_NAME rdfs:label ?LABEL. " +
+                "FILTER (?CUBE_NAME = code:" + CubeName + ").}"; // TODO generalize filter
+
+        return connection.ExecuteSPARQL(query, format);
     }
 
     public String getMeasures(String CubeName) {
