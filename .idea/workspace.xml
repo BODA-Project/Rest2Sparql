@@ -3,24 +3,24 @@
   <component name="ChangeListManager">
     <list default="true" id="7dd3236d-90a0-4a31-8994-16d90883017b" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/de/uni_passau/fim/dimis/rest2sparql/cubemanagement/CubeManager.java" afterPath="$PROJECT_DIR$/src/de/uni_passau/fim/dimis/rest2sparql/cubemanagement/CubeManager.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="rest2sparql.iws" />
     <ignored path=".idea/workspace.xml" />
-    <file path="/Dummy.txt" changelist="7dd3236d-90a0-4a31-8994-16d90883017b" time="1382532798856" ignored="false" />
+    <file path="/Dummy.txt" changelist="7dd3236d-90a0-4a31-8994-16d90883017b" time="1382538597564" ignored="false" />
     <file path="/TripleStoreConnection.java" changelist="7dd3236d-90a0-4a31-8994-16d90883017b" time="1382458888157" ignored="false" />
     <file path="/ConnectionException.java" changelist="7dd3236d-90a0-4a31-8994-16d90883017b" time="1382433172774" ignored="false" />
     <file path="/HttpConnection.java" changelist="7dd3236d-90a0-4a31-8994-16d90883017b" time="1382456372214" ignored="false" />
-    <file path="/fragment.java" changelist="7dd3236d-90a0-4a31-8994-16d90883017b" time="1382440076153" ignored="false" />
+    <file path="/fragment.java" changelist="7dd3236d-90a0-4a31-8994-16d90883017b" time="1382538597564" ignored="false" />
     <file path="/HttpConnectionTest.java" changelist="7dd3236d-90a0-4a31-8994-16d90883017b" time="1382458898011" ignored="false" />
     <file path="/QueryException.java" changelist="7dd3236d-90a0-4a31-8994-16d90883017b" time="1382452583146" ignored="false" />
     <file path="/QueryFactory.java" changelist="7dd3236d-90a0-4a31-8994-16d90883017b" time="1382453748639" ignored="false" />
-    <file path="/CubeManager.java" changelist="7dd3236d-90a0-4a31-8994-16d90883017b" time="1382533996024" ignored="false" />
+    <file path="/CubeManager.java" changelist="7dd3236d-90a0-4a31-8994-16d90883017b" time="1382536568612" ignored="false" />
     <file path="/CodeBigdataEngine.java" changelist="7dd3236d-90a0-4a31-8994-16d90883017b" time="1382458940885" ignored="false" />
     <file path="/QueryFilter.java" changelist="7dd3236d-90a0-4a31-8994-16d90883017b" time="1382527108778" ignored="false" />
     <file path="/BasicQueryFilter.java" changelist="7dd3236d-90a0-4a31-8994-16d90883017b" time="1382461379927" ignored="false" />
     <file path="/SparqlPrefix.java" changelist="7dd3236d-90a0-4a31-8994-16d90883017b" time="1382534544809" ignored="false" />
     <file path="/PrefixCollection.java" changelist="7dd3236d-90a0-4a31-8994-16d90883017b" time="1382534502434" ignored="false" />
+    <file path="/CubeManagerTest.java" changelist="7dd3236d-90a0-4a31-8994-16d90883017b" time="1382538531472" ignored="false" />
     <option name="TRACKING_ENABLED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -105,37 +105,27 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="CubeManager.java" pinned="false" current="true" current-in-tab="true">
+      <file leaf-file-name="CubeManager.java" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/de/uni_passau/fim/dimis/rest2sparql/cubemanagement/CubeManager.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="46" column="57" selection-start="1693" selection-end="1693" vertical-scroll-proportion="0.5923001">
+            <state line="30" column="18" selection-start="930" selection-end="930" vertical-scroll-proportion="0.0">
               <folding>
                 <element signature="docComment;class#CubeManager#0" expanded="true" />
                 <element signature="docComment;method#CubeManager#0;class#CubeManager#0" expanded="true" />
                 <element signature="docComment;method#getCubes#0;class#CubeManager#0" expanded="true" />
+                <element signature="docComment;method#getDimensions#0;class#CubeManager#0" expanded="true" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="SparqlPrefix.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/de/uni_passau/fim/dimis/util/SparqlPrefix.java">
+      <file leaf-file-name="CubeManagerTest.java" pinned="false" current="true" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/junit/de/uni_passau/fim/dimis/rest2sparql/cubemanagement/CubeManagerTest.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="25" column="33" selection-start="593" selection-end="593" vertical-scroll-proportion="0.0">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="PrefixCollection.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/de/uni_passau/fim/dimis/util/PrefixCollection.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="90" column="32" selection-start="3002" selection-end="3002" vertical-scroll-proportion="0.0">
+            <state line="21" column="17" selection-start="477" selection-end="477" vertical-scroll-proportion="0.47945204">
               <folding>
-                <element signature="docComment;method#addPrefix#0;class#PrefixCollection#0" expanded="true" />
-                <element signature="docComment;method#addPrefixIfNotExists#0;class#PrefixCollection#0" expanded="true" />
-                <element signature="docComment;method#deletePrefix#0;class#PrefixCollection#0" expanded="true" />
-                <element signature="docComment;method#createPrefixString#0;class#PrefixCollection#0" expanded="true" />
+                <element signature="imports" expanded="true" />
+                <element signature="docComment;class#CubeManagerTest#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -153,7 +143,7 @@
       <file leaf-file-name="BasicQueryFilter.java" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/de/uni_passau/fim/dimis/rest2sparql/sparql/BasicQueryFilter.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="20" column="21" selection-start="516" selection-end="516" vertical-scroll-proportion="0.0">
+            <state line="24" column="0" selection-start="566" selection-end="566" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
@@ -196,9 +186,10 @@
         <option value="$PROJECT_DIR$/src/de/uni_passau/fim/dimis/rest2sparql/triplestore/CodeBigdataEngine.java" />
         <option value="$PROJECT_DIR$/src/de/uni_passau/fim/dimis/rest2sparql/sparql/QueryFilter.java" />
         <option value="$PROJECT_DIR$/src/de/uni_passau/fim/dimis/rest2sparql/sparql/BasicQueryFilter.java" />
-        <option value="$PROJECT_DIR$/src/de/uni_passau/fim/dimis/rest2sparql/cubemanagement/CubeManager.java" />
         <option value="$PROJECT_DIR$/src/de/uni_passau/fim/dimis/util/PrefixCollection.java" />
         <option value="$PROJECT_DIR$/src/de/uni_passau/fim/dimis/util/SparqlPrefix.java" />
+        <option value="$PROJECT_DIR$/src/de/uni_passau/fim/dimis/rest2sparql/cubemanagement/CubeManager.java" />
+        <option value="$PROJECT_DIR$/junit/de/uni_passau/fim/dimis/rest2sparql/cubemanagement/CubeManagerTest.java" />
       </list>
     </option>
   </component>
@@ -467,7 +458,33 @@
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
+              <option name="myItemId" value="rest2sparql" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
               <option name="myItemId" value="triplestore" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="rest2sparql" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="rest2sparql" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="junit" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="rest2sparql" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="cubemanagement" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
@@ -501,31 +518,15 @@
     <property name="dynamic.classpath" value="false" />
   </component>
   <component name="RecentsManager">
+    <key name="CreateTestDialog.RecentsKey">
+      <recent name="de.uni_passau.fim.dimis.rest2sparql.cubemanagement" />
+      <recent name="de.uni_passau.fim.dimis.rest2sparql.triplestore" />
+    </key>
     <key name="CreateTestDialog.Recents.Supers">
       <recent name="" />
     </key>
-    <key name="CreateTestDialog.RecentsKey">
-      <recent name="de.uni_passau.fim.dimis.rest2sparql.triplestore" />
-    </key>
   </component>
   <component name="RunManager" selected="JUnit.Main">
-    <configuration default="false" name="Main" type="Application" factoryName="Application" temporary="true">
-      <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
-      <option name="MAIN_CLASS_NAME" value="de.uni_passau.fim.dimis.Main" />
-      <option name="VM_PARAMETERS" value="" />
-      <option name="PROGRAM_PARAMETERS" value="" />
-      <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
-      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
-      <option name="ALTERNATIVE_JRE_PATH" value="" />
-      <option name="ENABLE_SWING_INSPECTOR" value="false" />
-      <option name="ENV_VARIABLES" />
-      <option name="PASS_PARENT_ENVS" value="true" />
-      <module name="rest2sparql" />
-      <envs />
-      <RunnerSettings RunnerId="Run" />
-      <ConfigurationWrapper RunnerId="Run" />
-      <method />
-    </configuration>
     <configuration default="true" type="Application" factoryName="Application">
       <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
       <option name="MAIN_CLASS_NAME" />
@@ -562,25 +563,45 @@
       <patterns />
       <method />
     </configuration>
+    <configuration default="false" name="Main" type="Application" factoryName="Application">
+      <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
+      <option name="MAIN_CLASS_NAME" value="de.uni_passau.fim.dimis.Main" />
+      <option name="VM_PARAMETERS" value="" />
+      <option name="PROGRAM_PARAMETERS" value="" />
+      <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" value="" />
+      <option name="ENABLE_SWING_INSPECTOR" value="false" />
+      <option name="ENV_VARIABLES" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <module name="rest2sparql" />
+      <envs />
+      <RunnerSettings RunnerId="Run" />
+      <ConfigurationWrapper RunnerId="Run" />
+      <method />
+    </configuration>
     <configuration default="false" name="Main" type="JUnit" factoryName="JUnit">
       <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
       <module name="rest2sparql" />
       <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
       <option name="ALTERNATIVE_JRE_PATH" value="" />
       <option name="PACKAGE_NAME" value="de.uni_passau.fim.dimis.rest2sparql.triplestore" />
-      <option name="MAIN_CLASS_NAME" value="de.uni_passau.fim.dimis.rest2sparql.triplestore.HttpConnectionTest" />
+      <option name="MAIN_CLASS_NAME" value="" />
       <option name="METHOD_NAME" value="" />
-      <option name="TEST_OBJECT" value="class" />
+      <option name="TEST_OBJECT" value="directory" />
       <option name="VM_PARAMETERS" value="" />
       <option name="PARAMETERS" value="" />
       <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$/junit" />
       <option name="ENV_VARIABLES" />
       <option name="PASS_PARENT_ENVS" value="true" />
       <option name="TEST_SEARCH_SCOPE">
-        <value defaultName="moduleWithDependencies" />
+        <value defaultName="wholeProject" />
       </option>
       <envs />
-      <patterns />
+      <dir value="$PROJECT_DIR$/junit/" />
+      <patterns>
+        <pattern testClass="de.uni_passau.fim.dimis.rest2sparql.cubemanagement/*" />
+      </patterns>
       <RunnerSettings RunnerId="Debug">
         <option name="DEBUG_PORT" value="" />
         <option name="TRANSPORT" value="0" />
@@ -592,14 +613,9 @@
       <method />
     </configuration>
     <list size="2">
-      <item index="0" class="java.lang.String" itemvalue="JUnit.Main" />
-      <item index="1" class="java.lang.String" itemvalue="Application.Main" />
+      <item index="0" class="java.lang.String" itemvalue="Application.Main" />
+      <item index="1" class="java.lang.String" itemvalue="JUnit.Main" />
     </list>
-    <recent_temporary>
-      <list size="1">
-        <item index="0" class="java.lang.String" itemvalue="Application.Main" />
-      </list>
-    </recent_temporary>
   </component>
   <component name="ShelveChangesManager" show_recycled="false" />
   <component name="SvnConfiguration" maxAnnotateRevisions="500" myUseAcceleration="nothing" myAutoUpdateAfterCommit="false" cleanupOnStartRun="false" SSL_PROTOCOLS="all">
@@ -649,7 +665,7 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="2" y="18" width="3062" height="1869" extended-state="0" />
-    <editor active="true" />
+    <editor active="false" />
     <layout>
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3298077" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
@@ -658,8 +674,8 @@
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.24973261" sideWeight="0.6701923" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="IDEtalk Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
-      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.1855615" sideWeight="0.14326923" order="2" side_tool="true" content_ui="tabs" />
+      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3298077" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
+      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.1855615" sideWeight="0.09615385" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="IDEtalk" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3298077" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3298077" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
@@ -667,11 +683,11 @@
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.24973261" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="SLIDING" type="SLIDING" visible="false" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.1855615" sideWeight="0.85673076" order="0" side_tool="false" content_ui="combo" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3298077" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.1855615" sideWeight="0.57403845" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.24973261" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
+      <window_info id="Run" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.3298077" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
-      <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
     </layout>
   </component>
@@ -740,13 +756,6 @@
     <option name="FILTER_TARGETS" value="false" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/src/de/uni_passau/fim/dimis/Main.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="2" column="13" selection-start="47" selection-end="47" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/de/uni_passau/fim/dimis/rest2sparql/triplestore/TripleStoreConnection.java">
       <provider selected="true" editor-type-id="text-editor">
         <state line="13" column="57" selection-start="341" selection-end="341" vertical-scroll-proportion="0.0">
@@ -799,23 +808,28 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/src/de/uni_passau/fim/dimis/util/SparqlPrefix.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="26" column="22" selection-start="620" selection-end="620" vertical-scroll-proportion="0.29615006">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/de/uni_passau/fim/dimis/util/PrefixCollection.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="90" column="32" selection-start="3002" selection-end="3002" vertical-scroll-proportion="1.23692">
+          <folding>
+            <element signature="docComment;method#addPrefix#0;class#PrefixCollection#0" expanded="true" />
+            <element signature="docComment;method#addPrefixIfNotExists#0;class#PrefixCollection#0" expanded="true" />
+            <element signature="docComment;method#deletePrefix#0;class#PrefixCollection#0" expanded="true" />
+            <element signature="docComment;method#createPrefixString#0;class#PrefixCollection#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/src/de/uni_passau/fim/dimis/rest2sparql/triplestore/CodeBigdataEngine.java">
       <provider selected="true" editor-type-id="text-editor">
         <state line="29" column="36" selection-start="1054" selection-end="1054" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/de/uni_passau/fim/dimis/rest2sparql/sparql/BasicQueryFilter.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="20" column="21" selection-start="516" selection-end="516" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/de/uni_passau/fim/dimis/rest2sparql/triplestore/TripleStoreConnection.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="27" column="0" selection-start="830" selection-end="830" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
@@ -827,32 +841,38 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/de/uni_passau/fim/dimis/util/PrefixCollection.java">
+    <entry file="file://$PROJECT_DIR$/src/de/uni_passau/fim/dimis/rest2sparql/sparql/BasicQueryFilter.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="90" column="32" selection-start="3002" selection-end="3002" vertical-scroll-proportion="0.0">
-          <folding>
-            <element signature="docComment;method#addPrefix#0;class#PrefixCollection#0" expanded="true" />
-            <element signature="docComment;method#addPrefixIfNotExists#0;class#PrefixCollection#0" expanded="true" />
-            <element signature="docComment;method#deletePrefix#0;class#PrefixCollection#0" expanded="true" />
-            <element signature="docComment;method#createPrefixString#0;class#PrefixCollection#0" expanded="true" />
-          </folding>
+        <state line="24" column="0" selection-start="566" selection-end="566" vertical-scroll-proportion="0.0">
+          <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/de/uni_passau/fim/dimis/util/SparqlPrefix.java">
+    <entry file="file://$PROJECT_DIR$/src/de/uni_passau/fim/dimis/rest2sparql/triplestore/TripleStoreConnection.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="25" column="33" selection-start="593" selection-end="593" vertical-scroll-proportion="0.0">
+        <state line="27" column="0" selection-start="830" selection-end="830" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/de/uni_passau/fim/dimis/rest2sparql/cubemanagement/CubeManager.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="46" column="57" selection-start="1693" selection-end="1693" vertical-scroll-proportion="0.5923001">
+        <state line="30" column="18" selection-start="930" selection-end="930" vertical-scroll-proportion="0.0">
           <folding>
             <element signature="docComment;class#CubeManager#0" expanded="true" />
             <element signature="docComment;method#CubeManager#0;class#CubeManager#0" expanded="true" />
             <element signature="docComment;method#getCubes#0;class#CubeManager#0" expanded="true" />
+            <element signature="docComment;method#getDimensions#0;class#CubeManager#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/junit/de/uni_passau/fim/dimis/rest2sparql/cubemanagement/CubeManagerTest.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="21" column="17" selection-start="477" selection-end="477" vertical-scroll-proportion="0.47945204">
+          <folding>
+            <element signature="imports" expanded="true" />
+            <element signature="docComment;class#CubeManagerTest#0" expanded="true" />
           </folding>
         </state>
       </provider>
