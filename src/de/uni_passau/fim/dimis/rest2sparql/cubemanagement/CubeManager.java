@@ -67,8 +67,10 @@ public class CubeManager {
                 "WHERE { ?CUBE_NAME qb:structure ?dsd. " +
                 "?dsd qb:component ?compSpec. " +
                 "?compSpec qb:dimension ?DIMENSION_NAME. " +
-                "?DIMENSION_NAME rdfs:label ?LABEL. " +
-                "FILTER (?CUBE_NAME = code:" + CubeName + ").}"; // TODO generalize filter
+                "?DIMENSION_NAME rdfs:label ?LABEL. }";
+        if (!CubeName.equals("")) {
+            query.replace("}", "FILTER (?CUBE_NAME = code:" + CubeName + ").}"); // TODO generalize filter
+        }
 
         return connection.ExecuteSPARQL(query, format);
     }
@@ -81,14 +83,16 @@ public class CubeManager {
      * @return the measures of the cube.
      * @throws IOException If the connection to the database failes.
      */
-    public String getMeasures(String CubeName) throws IOException  {
+    public String getMeasures(String CubeName) throws IOException {
         String query = PrefixManager.createPrefixString() +
                 "SELECT ?CUBE_NAME ?MEASURE_NAME ?LABEL " +
                 "WHERE { ?CUBE_NAME qb:structure ?dsd. " +
                 "?dsd qb:component ?compSpec. " +
                 "?compSpec qb:measure ?MEASURE_NAME. " +
-                "?MEASURE_NAME rdfs:label ?LABEL. " +
-                "FILTER (?CUBE_NAME = code:" + CubeName + ").}"; // TODO generalize filter
+                "?MEASURE_NAME rdfs:label ?LABEL. ";
+        if (!CubeName.equals("")) {
+            query.replace("}", "FILTER (?CUBE_NAME = code:" + CubeName + ").}"); // TODO generalize filter
+        }
 
         return connection.ExecuteSPARQL(query, format);
     }
