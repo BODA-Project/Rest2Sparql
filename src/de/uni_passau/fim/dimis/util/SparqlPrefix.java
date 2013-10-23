@@ -23,7 +23,7 @@ public class SparqlPrefix {
         this.string = "PREFIX " + prefix + ": <" + url + ">";
     }
 
-    public String getPrefix() {
+    public String getAbbreviation() {
         return prefix;
     }
 
