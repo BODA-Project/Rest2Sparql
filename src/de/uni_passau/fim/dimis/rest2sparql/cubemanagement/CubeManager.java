@@ -69,7 +69,7 @@ public class CubeManager {
                 "?compSpec qb:dimension ?DIMENSION_NAME. " +
                 "?DIMENSION_NAME rdfs:label ?LABEL. }";
         if (!CubeName.equals("")) {
-            query.replace("}", "FILTER (?CUBE_NAME = code:" + CubeName + ").}"); // TODO generalize filter
+            query = query.replace("}", "FILTER (?CUBE_NAME = code:" + CubeName + ").}"); // TODO generalize filter
         }
 
         return connection.ExecuteSPARQL(query, format);
@@ -89,10 +89,33 @@ public class CubeManager {
                 "WHERE { ?CUBE_NAME qb:structure ?dsd. " +
                 "?dsd qb:component ?compSpec. " +
                 "?compSpec qb:measure ?MEASURE_NAME. " +
-                "?MEASURE_NAME rdfs:label ?LABEL. ";
+                "?MEASURE_NAME rdfs:label ?LABEL. }";
         if (!CubeName.equals("")) {
-            query.replace("}", "FILTER (?CUBE_NAME = code:" + CubeName + ").}"); // TODO generalize filter
+            query = query.replace("}", "FILTER (?CUBE_NAME = code:" + CubeName + ").}"); // TODO generalize filter
         }
+
+        return connection.ExecuteSPARQL(query, format);
+    }
+
+    /**
+     * Returns the entities of a dimension. DimensionName and CubeName must not be empty!
+     * @param DimensionName The name of the dimension. <b>MUST BE A WHOLE URL</b> without "<" and ">".
+     * @param CubeName The name of the cube.
+     * @return The entities of the dimension.
+     * @throws IOException If the connection to the database failes.
+     */
+    public String getEntities(String DimensionName, String CubeName) throws IOException {
+        String query = PrefixManager.createPrefixString() +
+                "SELECT ?CUBE_NAME ?DIMENSION_NAME ?ENTITY_NAME ?LABEL " +
+                "WHERE { ?CUBE_NAME qb:structure ?dsd. " +
+                "?dsd qb:component ?compSpec. " +
+                "?compSpec qb:dimension ?DIMENSION_NAME. " +
+                "?obs qb:dataSet ?CUBE_NAME. " +
+                "?obs ?DIMENSION_NAME ?ENTITY_NAME. " +
+                "?ENTITY_NAME rdfs:label ?LABEL. " +
+                "FILTER (?CUBE_NAME = code:" + CubeName + "). " +
+                "FILTER (?DIMENSION_NAME = <" + DimensionName + ">). " +
+                "} GROUP BY ?CUBE_NAME ?DIMENSION_NAME ?ENTITY_NAME ?LABEL"; // TODO generalize filter
 
         return connection.ExecuteSPARQL(query, format);
     }
