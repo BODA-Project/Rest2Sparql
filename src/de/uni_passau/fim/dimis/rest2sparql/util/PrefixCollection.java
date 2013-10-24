@@ -1,4 +1,4 @@
-package de.uni_passau.fim.dimis.util;
+package de.uni_passau.fim.dimis.rest2sparql.util;
 
 import java.util.HashSet;
 

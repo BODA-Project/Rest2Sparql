@@ -1,9 +1,9 @@
 package de.uni_passau.fim.dimis.rest2sparql.queryfactory;
 
-import de.uni_passau.fim.dimis.util.CubeObject;
-import de.uni_passau.fim.dimis.util.FixedDimension;
-import de.uni_passau.fim.dimis.util.PrefixCollection;
-import de.uni_passau.fim.dimis.util.SparqlPrefix;
+import de.uni_passau.fim.dimis.rest2sparql.util.CubeObject;
+import de.uni_passau.fim.dimis.rest2sparql.util.FixedDimension;
+import de.uni_passau.fim.dimis.rest2sparql.util.PrefixCollection;
+import de.uni_passau.fim.dimis.rest2sparql.util.SparqlPrefix;
 
 import java.util.List;
 

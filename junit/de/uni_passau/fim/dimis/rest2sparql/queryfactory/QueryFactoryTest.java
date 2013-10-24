@@ -1,8 +1,8 @@
 package de.uni_passau.fim.dimis.rest2sparql.queryfactory;
 
-import de.uni_passau.fim.dimis.util.CubeObject;
-import de.uni_passau.fim.dimis.util.Dimension;
-import de.uni_passau.fim.dimis.util.Measure;
+import de.uni_passau.fim.dimis.rest2sparql.util.CubeObject;
+import de.uni_passau.fim.dimis.rest2sparql.util.Dimension;
+import de.uni_passau.fim.dimis.rest2sparql.util.Measure;
 import junit.framework.Assert;
 import org.junit.Test;
 

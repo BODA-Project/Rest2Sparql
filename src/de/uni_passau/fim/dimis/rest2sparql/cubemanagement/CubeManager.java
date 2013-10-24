@@ -1,8 +1,8 @@
 package de.uni_passau.fim.dimis.rest2sparql.cubemanagement;
 
 import de.uni_passau.fim.dimis.rest2sparql.triplestore.TripleStoreConnection;
-import de.uni_passau.fim.dimis.util.PrefixCollection;
-import de.uni_passau.fim.dimis.util.SparqlPrefix;
+import de.uni_passau.fim.dimis.rest2sparql.util.PrefixCollection;
+import de.uni_passau.fim.dimis.rest2sparql.util.SparqlPrefix;
 
 import java.io.IOException;
 
