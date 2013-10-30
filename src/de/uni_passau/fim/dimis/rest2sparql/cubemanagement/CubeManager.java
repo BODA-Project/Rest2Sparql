@@ -49,7 +49,7 @@ public class CubeManager {
                 "?CUBE_NAME rdfs:label ?LABEL. " +
                 "?CUBE_NAME rdfs:comment ?COMMENT.}";
 
-        return connection.ExecuteSPARQL(query, format);
+        return connection.executeSPARQL(query, format);
     }
 
     /**
@@ -72,7 +72,7 @@ public class CubeManager {
             query = query.replace("}", "FILTER (?CUBE_NAME = code:" + CubeName + ").}"); // TODO generalize filter
         }
 
-        return connection.ExecuteSPARQL(query, format);
+        return connection.executeSPARQL(query, format);
     }
 
     /**
@@ -94,7 +94,7 @@ public class CubeManager {
             query = query.replace("}", "FILTER (?CUBE_NAME = code:" + CubeName + ").}"); // TODO generalize filter
         }
 
-        return connection.ExecuteSPARQL(query, format);
+        return connection.executeSPARQL(query, format);
     }
 
     /**
@@ -117,7 +117,7 @@ public class CubeManager {
                 "FILTER (?DIMENSION_NAME = <" + DimensionName + ">). " +
                 "} GROUP BY ?CUBE_NAME ?DIMENSION_NAME ?ENTITY_NAME ?LABEL"; // TODO generalize filter
 
-        return connection.ExecuteSPARQL(query, format);
+        return connection.executeSPARQL(query, format);
     }
 
     public void setOutputFormat(OutputFormat format) {
