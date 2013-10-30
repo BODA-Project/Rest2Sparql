@@ -22,6 +22,6 @@ public interface TripleStoreConnection {
         }
     }
 
-    String ExecuteSPARQL(String query, OutputFormat format) throws IOException;
+    String ExecuteSPARQL(String query, OutputFormat format) throws Exception;
 
 }

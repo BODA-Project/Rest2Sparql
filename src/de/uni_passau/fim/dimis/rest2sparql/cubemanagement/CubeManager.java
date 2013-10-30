@@ -41,7 +41,7 @@ public class CubeManager {
      * @return a list of all cubes in the database.
      * @throws IOException If the connection to the database failes.
      */
-    public String getCubes() throws IOException {
+    public String getCubes() throws Exception {
 
         String query = PrefixManager.createPrefixString() +
                 "SELECT ?CUBE_NAME ?LABEL ?COMMENT. " +
@@ -60,7 +60,7 @@ public class CubeManager {
      * @return the dimensions of the cube.
      * @throws IOException If the connection to the database failes.
      */
-    public String getDimensions(String CubeName) throws IOException {
+    public String getDimensions(String CubeName) throws Exception {
 
         String query = PrefixManager.createPrefixString() +
                 "SELECT ?CUBE_NAME ?DIMENSION_NAME ?LABEL " +
@@ -83,7 +83,7 @@ public class CubeManager {
      * @return the measures of the cube.
      * @throws IOException If the connection to the database failes.
      */
-    public String getMeasures(String CubeName) throws IOException {
+    public String getMeasures(String CubeName) throws Exception {
         String query = PrefixManager.createPrefixString() +
                 "SELECT ?CUBE_NAME ?MEASURE_NAME ?LABEL " +
                 "WHERE { ?CUBE_NAME qb:structure ?dsd. " +
@@ -104,7 +104,7 @@ public class CubeManager {
      * @return The entities of the dimension.
      * @throws IOException If the connection to the database failes.
      */
-    public String getEntities(String DimensionName, String CubeName) throws IOException {
+    public String getEntities(String DimensionName, String CubeName) throws Exception {
         String query = PrefixManager.createPrefixString() +
                 "SELECT ?CUBE_NAME ?DIMENSION_NAME ?ENTITY_NAME ?LABEL " +
                 "WHERE { ?CUBE_NAME qb:structure ?dsd. " +
