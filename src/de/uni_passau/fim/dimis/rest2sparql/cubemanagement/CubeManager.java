@@ -1,12 +1,12 @@
 package de.uni_passau.fim.dimis.rest2sparql.cubemanagement;
 
-import de.uni_passau.fim.dimis.rest2sparql.triplestore.TripleStoreConnection;
+import de.uni_passau.fim.dimis.rest2sparql.triplestore.ITripleStoreConnection;
 import de.uni_passau.fim.dimis.rest2sparql.util.PrefixCollection;
 import de.uni_passau.fim.dimis.rest2sparql.util.SparqlPrefix;
 
 import java.io.IOException;
 
-import static de.uni_passau.fim.dimis.rest2sparql.triplestore.TripleStoreConnection.OutputFormat;
+import static de.uni_passau.fim.dimis.rest2sparql.triplestore.ITripleStoreConnection.OutputFormat;
 
 /**
  * Created with IntelliJ IDEA.
@@ -19,7 +19,7 @@ import static de.uni_passau.fim.dimis.rest2sparql.triplestore.TripleStoreConnect
  */
 public class CubeManager {
 
-    private TripleStoreConnection connection;
+    private ITripleStoreConnection connection;
     private OutputFormat format = OutputFormat.XML;
     private PrefixCollection PrefixManager = new PrefixCollection();
 
@@ -28,7 +28,7 @@ public class CubeManager {
      *
      * @param connection The connection to the triple store.
      */
-    public CubeManager(TripleStoreConnection connection) {
+    public CubeManager(ITripleStoreConnection connection) {
         this.connection = connection;
         PrefixManager.addPrefix(new SparqlPrefix("qb", "http://purl.org/linked-data/cube#"));
         PrefixManager.addPrefix(new SparqlPrefix("code", "http://code-research.eu/resource/"));

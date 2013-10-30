@@ -11,7 +11,6 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 
-import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -22,7 +21,7 @@ import java.net.URISyntaxException;
  * Time: 11:14 AM
  * To change this template use File | Settings | File Templates.
  */
-public class CodeBigdataEngine implements TripleStoreConnection {
+public class CodeBigdataEngine implements ITripleStoreConnection {
 
     private static final String scheme = "http";
     private static final String host = "zaire.dimis.fim.uni-passau.de";
@@ -33,7 +32,7 @@ public class CodeBigdataEngine implements TripleStoreConnection {
     public CodeBigdataEngine() {
     }
 
-    public String ExecuteSPARQL(String query, OutputFormat format) throws Exception {
+    public String executeSPARQL(String query, OutputFormat format) throws Exception {
 
         URI uri = null;
         try {

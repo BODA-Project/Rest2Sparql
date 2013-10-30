@@ -9,7 +9,7 @@ import java.io.IOException;
  * Time: 11:07 AM
  * To change this template use File | Settings | File Templates.
  */
-public interface TripleStoreConnection {
+public interface ITripleStoreConnection {
 
     public enum OutputFormat{XML ("application/sparql-results+xml"),
                              JSON ("application/sparql-results+json"),
@@ -22,6 +22,6 @@ public interface TripleStoreConnection {
         }
     }
 
-    String ExecuteSPARQL(String query, OutputFormat format) throws Exception;
+    String executeSPARQL(String query, OutputFormat format) throws Exception;
 
 }

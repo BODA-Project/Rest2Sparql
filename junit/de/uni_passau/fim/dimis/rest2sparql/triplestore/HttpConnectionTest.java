@@ -34,7 +34,7 @@ public class HttpConnectionTest {
                 "</sparql>\n";
 
         CodeBigdataEngine con = new CodeBigdataEngine();
-        String res = con.ExecuteSPARQL(query, TripleStoreConnection.OutputFormat.XML);
+        String res = con.ExecuteSPARQL(query, ITripleStoreConnection.OutputFormat.XML);
 
         Assert.assertEquals(res, expected);
 
