@@ -1,6 +1,8 @@
 package de.uni_passau.fim.dimis.rest2sparql.util;
 
-import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Created with IntelliJ IDEA.
@@ -11,74 +13,70 @@ import java.util.HashSet;
  */
 public class PrefixCollection {
 
-    private HashSet<SparqlPrefix> prefixes = new HashSet<>();
-    private HashSet<String> prefs = new HashSet<>();
-    private HashSet<String> urls = new HashSet<>();
+    private LinkedHashMap<String, String> prefixes = new LinkedHashMap<>();
 
     /**
      * Adds a {@SparqlPrefix}.
+     *
      * @param p The {@SparqlPrefix} to add.
      * @throws IllegalArgumentException If the prefix, abbreviation or URL already exist.
      */
-    public void addPrefix(SparqlPrefix p) throws IllegalArgumentException {
+    public void addPrefix(SparqlPrefix p) {
 
-        if (prefixes.contains(p)) {
-            throw new IllegalArgumentException("Prefix already exists!");
-        } else if (prefs.contains(p.getAbbreviation())) {
-            throw new IllegalArgumentException("Abbreviation already exists!");
-        } else if (urls.contains(p.getUrl())) {
-            throw new IllegalArgumentException("URL already exists!");
-        } else {
-            prefixes.add(p);
-            prefs.add(p.getAbbreviation());
-            urls.add(p.getUrl());
+        if (!prefixes.containsKey(p.getUrl())) {
+            if (prefixes.containsValue(p.getAbbreviation())) {
+
+            } else {
+                prefixes.put(p.getUrl(), p.getAbbreviation());
+            }
         }
 
+
     }
 
     /**
-     * Adds a {@SparqlPrefix}, if it is not already in the set.
-     * @param p The {@SparqlPrefix} to add.
-     * @throws IllegalArgumentException If the prefix is not in the set, but the abbreviation or the URL exists.
+     * Returns the abbreviation for a given url in the database. Returns null, if the url is not found.
+     *
+     * @param url The url to get the abbreviation for.
+     * @return the abbreviation for a given url in the database. Returns null, if the url is not found.
      */
-    public void addPrefixIfNotExists(SparqlPrefix p) throws IllegalArgumentException {
+    public String getAbbreviation(String url) {
 
-        if (!prefixes.contains(p))
-            if (prefs.contains(p.getAbbreviation()) || urls.contains(p.getUrl())) {
-                throw new IllegalArgumentException("The Prefix does not exist, but either the abbreviation or the url exist!");
-            } else {
-                prefixes.add(p);
-                prefs.add(p.getAbbreviation());
-                urls.add(p.getUrl());
-            }
+        String res = null;
+
+        if (prefixes.containsKey(url)) {
+            res = prefixes.get(url);
+        }
+
+        return res;
     }
 
     /**
-     * Removes a {@SparqlPrefix} if it is in the set.
-     * @param p The {@SparqlPrefix} to remove.
+     * Removes a prefix defined by an url if it is in the set.
+     *
+     * @param url The url to remove.
      * @return <code>true</code> if the prefix existed and was removed.
      */
-    public boolean deletePrefix(SparqlPrefix p) {
-        if (!prefixes.contains(p)) {
+    public boolean deletePrefix(String url) {
+        if (!prefixes.containsKey(url)) {
             return false;
         } else {
-            prefixes.remove(p);
-            prefs.remove(p.getAbbreviation());
-            urls.remove(p.getUrl());
+            prefixes.remove(url);
             return true;
         }
     }
 
     public boolean existsUrl(String s) {
-        return urls.contains(s);
+        return prefixes.containsKey(s);
     }
 
-    public boolean existsPrefix(String s) {
-        return prefs.contains(s);
+    public boolean existsAbbreviation(String s) {
+        return prefixes.containsValue(s);
     }
 
     /**
      * Creates a {@String} of all prefixes that can be used in a SPARQL query. Prefixes are delimited by spaces.
+     *
      * @return The prefixstring.
      */
     public String createPrefixString() {
@@ -87,13 +85,19 @@ public class PrefixCollection {
 
     /**
      * Creates a {@String} of all prefixes that can be used in a SPARQL query.
+     *
      * @param delimiter The {@String} to place between the prefixes.
      * @return The prefixstring.
      */
     public String createPrefixString(String delimiter) {
         StringBuilder sb = new StringBuilder();
-        for (SparqlPrefix p : prefixes) {
-            sb.append(p.toString());
+        Set<Map.Entry<String, String>> es = prefixes.entrySet();
+        for (Map.Entry e : es) {
+            sb.append("PREFIX ");
+            sb.append(e.getValue());
+            sb.append(": <");
+            sb.append(e.getKey());
+            sb.append(">");
             sb.append(delimiter);
         }
         return sb.toString();
