@@ -66,7 +66,7 @@ public class QueryFactory {
 
         int i = 0;
         for (CubeObject c : o) {
-            c.setVarName("NAME_" + Integer.toString(i));
+            c.setVarName("NAME_" + Integer.toString(i), true);
             i++;
         }
 
