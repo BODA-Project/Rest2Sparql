@@ -1,6 +1,8 @@
 package de.uni_passau.fim.dimis.rest2sparql.cubemanagement;
 
 import de.uni_passau.fim.dimis.rest2sparql.triplestore.CodeBigdataEngine;
+import de.uni_passau.fim.dimis.rest2sparql.util.Cube;
+import de.uni_passau.fim.dimis.rest2sparql.util.Dimension;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -26,7 +28,7 @@ public class CubeManagerTest {
 
         CubeManager manager = new CubeManager(new CodeBigdataEngine());
 
-        String res = manager.getDimensions("Dataset-f744647d-e493-4640-9bd6-2080779a5e77");
+        String res = manager.getDimensions(new Cube("http://code-research.eu/resource/Dataset-f744647d-e493-4640-9bd6-2080779a5e77"));
 
         assertEquals(expected, res);
     }
@@ -37,7 +39,7 @@ public class CubeManagerTest {
 
         CubeManager manager = new CubeManager(new CodeBigdataEngine());
 
-        String res = manager.getMeasures("Dataset-f744647d-e493-4640-9bd6-2080779a5e77");
+        String res = manager.getMeasures(new Cube("http://code-research.eu/resource/Dataset-f744647d-e493-4640-9bd6-2080779a5e77"));
 
         assertEquals(expected, res);
     }
@@ -48,7 +50,8 @@ public class CubeManagerTest {
 
         CubeManager manager = new CubeManager(new CodeBigdataEngine());
 
-        String res = manager.getEntities("http://dbpedia.org/resource/River" ,"Dataset-f744647d-e493-4640-9bd6-2080779a5e77");
+        String res = manager.getEntities(new Dimension("http://dbpedia.org/resource/River"),
+                new Cube("http://code-research.eu/resource/Dataset-f744647d-e493-4640-9bd6-2080779a5e77"));
 
         assertEquals(expected, res);
     }
