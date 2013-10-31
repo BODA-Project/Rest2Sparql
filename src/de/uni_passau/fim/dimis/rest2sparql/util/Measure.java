@@ -1,7 +1,5 @@
 package de.uni_passau.fim.dimis.rest2sparql.util;
 
-import de.uni_passau.fim.dimis.rest2sparql.util.CubeObject;
-
 import java.util.List;
 
 /**
@@ -15,9 +13,9 @@ public class Measure extends CubeObject {
 
     private String valueVarName;
 
-    public Measure(String label, String name) {
-        super(label, name);
-        PREFIX = "M_";
+    public Measure(String name) {
+        super(name);
+        VAR_NAME_PREFIX = "M_";
         this.valueVarName = "V_NAME";
     }
 
@@ -42,8 +40,8 @@ public class Measure extends CubeObject {
     }
 
     @Override
-    public void setVarName(String varName) {
-        super.setVarName(varName);
+    public void setVarName(String varName, boolean usePrefix) {
+        super.setVarName(varName, usePrefix);
         setValueVarName(varName);
     }
 }

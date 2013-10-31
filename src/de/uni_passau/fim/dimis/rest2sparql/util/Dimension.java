@@ -1,7 +1,5 @@
 package de.uni_passau.fim.dimis.rest2sparql.util;
 
-import de.uni_passau.fim.dimis.rest2sparql.util.CubeObject;
-
 import java.util.List;
 
 /**
@@ -15,10 +13,10 @@ public class Dimension extends CubeObject {
 
     protected String entityVarName;
 
-    public Dimension(String label, String name) {
-        super(label, name);
+    public Dimension(String name) {
+        super(name);
         this.entityVarName = "E_NAME";
-        PREFIX = "D_";
+        VAR_NAME_PREFIX = "D_";
     }
 
     @Override
@@ -42,8 +40,8 @@ public class Dimension extends CubeObject {
     }
 
     @Override
-    public void setVarName(String varName) {
-        super.setVarName(varName);
+    public void setVarName(String varName, boolean usePrefix) {
+        super.setVarName(varName, usePrefix);
         setEntityVarName(varName);
     }
 }

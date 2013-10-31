@@ -12,25 +12,29 @@ import java.util.List;
  */
 public abstract class CubeObject {
 
-    private String label;
     private String name;
     private String varName = "P_VAR";
+    private SparqlPrefix prefix = null;
 
-    protected String PREFIX;
+    protected String VAR_NAME_PREFIX;
 
-    public CubeObject(String label, String name) {
-        this.label = label;
+    public CubeObject(String name) {
         this.name = name;
+    }
+
+    private CubeObject(String name, SparqlPrefix prefix) {
+        this.name = name;
+        this.prefix = prefix;
     }
 
     public abstract String buildPattern(String obsNameVar);
 
     public String buildFilterString() {
-        return "FILTER (" + "?" + varName + " = <" + name + ">). ";
-    }
-
-    public String getLabel() {
-        return label;
+        if (prefix == null) {
+            return "FILTER (" + "?" + varName + " = <" + name + ">). ";
+        } else {
+            return "FILTER (" + "?" + varName + " = <" + prefix.getAbbreviation() + ":" + name + ">). ";
+        }
     }
 
     public String getName() {
@@ -53,8 +57,12 @@ public abstract class CubeObject {
      *
      * @param varName The new name for the variable.
      */
-    public void setVarName(String varName) {
-        this.varName = PREFIX + varName;
+    public void setVarName(String varName, boolean usePrefix) {
+        if (usePrefix) {
+            this.varName = VAR_NAME_PREFIX + varName;
+        } else {
+            this.varName = varName;
+        }
     }
 
 }

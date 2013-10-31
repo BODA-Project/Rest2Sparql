@@ -11,8 +11,8 @@ public class FixedDimension extends Dimension {
 
     private String entityName;
 
-    public FixedDimension(String label, String name, String entityName) {
-        super(label, name);
+    public FixedDimension(String name, String entityName) {
+        super(name);
         this.entityName = entityName;
     }
 
