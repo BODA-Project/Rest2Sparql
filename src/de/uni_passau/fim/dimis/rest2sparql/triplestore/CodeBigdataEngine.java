@@ -1,5 +1,6 @@
 package de.uni_passau.fim.dimis.rest2sparql.triplestore;
 
+import de.uni_passau.fim.dimis.rest2sparql.triplestore.util.ConnectionException;
 import de.uni_passau.fim.dimis.rest2sparql.triplestore.util.QueryException;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -11,6 +12,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -32,7 +34,7 @@ public class CodeBigdataEngine implements ITripleStoreConnection {
     public CodeBigdataEngine() {
     }
 
-    public String executeSPARQL(String query, OutputFormat format) throws Exception {
+    public String executeSPARQL(String query, OutputFormat format) throws ConnectionException {
 
         URI uri = null;
         try {
@@ -58,14 +60,24 @@ public class CodeBigdataEngine implements ITripleStoreConnection {
         } catch (ClientProtocolException e) {
             System.out.println("shit!"); // TODO
         } catch (HttpHostConnectException e) {
-            throw e;
+            throw new ConnectionException(e);
+        } catch (IOException e) {
+           throw new ConnectionException(e);
         } finally {
             if (response != null) {
-                response.close();
+                try {
+                    response.close();
+                } catch (IOException e) {
+                    throw new ConnectionException(e);
+                }
             }
         }
 
-        return EntityUtils.toString(entity);
+        try {
+            return EntityUtils.toString(entity);
+        } catch (IOException e) {
+            throw new ConnectionException(e);
+        }
     }
 
 }

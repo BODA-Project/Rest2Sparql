@@ -1,5 +1,7 @@
 package de.uni_passau.fim.dimis.rest2sparql.triplestore;
 
+import de.uni_passau.fim.dimis.rest2sparql.triplestore.util.ConnectionException;
+
 import java.io.IOException;
 
 /**
@@ -22,6 +24,6 @@ public interface ITripleStoreConnection {
         }
     }
 
-    String executeSPARQL(String query, OutputFormat format) throws Exception;
+    String executeSPARQL(String query, OutputFormat format) throws ConnectionException;
 
 }

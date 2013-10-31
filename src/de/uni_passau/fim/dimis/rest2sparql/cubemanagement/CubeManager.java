@@ -1,10 +1,11 @@
 package de.uni_passau.fim.dimis.rest2sparql.cubemanagement;
 
 import de.uni_passau.fim.dimis.rest2sparql.triplestore.ITripleStoreConnection;
+import de.uni_passau.fim.dimis.rest2sparql.triplestore.util.ConnectionException;
+import de.uni_passau.fim.dimis.rest2sparql.util.Cube;
+import de.uni_passau.fim.dimis.rest2sparql.util.Dimension;
 import de.uni_passau.fim.dimis.rest2sparql.util.PrefixCollection;
 import de.uni_passau.fim.dimis.rest2sparql.util.SparqlPrefix;
-
-import java.io.IOException;
 
 import static de.uni_passau.fim.dimis.rest2sparql.triplestore.ITripleStoreConnection.OutputFormat;
 
@@ -39,9 +40,9 @@ public class CubeManager {
      * Returns a list of all cubes in the database. The list includes the unique cubename, and a label and description, if available.
      *
      * @return a list of all cubes in the database.
-     * @throws IOException If the connection to the database failes.
+     * @throws Exception If the connection to the database failes.
      */
-    public String getCubes() throws Exception {
+    public String getCubes() throws ConnectionException {
 
         String query = PrefixManager.createPrefixString() +
                 "SELECT ?CUBE_NAME ?LABEL ?COMMENT. " +
@@ -54,57 +55,56 @@ public class CubeManager {
 
     /**
      * Returns the dimensions of the cube with the given name.
-     * If the CubeName is an empty String, the dimensions of all cubes are returned.
      *
-     * @param CubeName The name of the cube to get information from.
+     * @param cube The {@Cube} to get the dimensions from.
      * @return the dimensions of the cube.
-     * @throws IOException If the connection to the database failes.
+     * @throws {@ConnectionException} If the connection to the database failes.
      */
-    public String getDimensions(String CubeName) throws Exception {
+    public String getDimensions(Cube cube) throws ConnectionException {
 
+        cube.setVarName("CUBE_NAME", false);
         String query = PrefixManager.createPrefixString() +
                 "SELECT ?CUBE_NAME ?DIMENSION_NAME ?LABEL " +
                 "WHERE { ?CUBE_NAME qb:structure ?dsd. " +
                 "?dsd qb:component ?compSpec. " +
                 "?compSpec qb:dimension ?DIMENSION_NAME. " +
-                "?DIMENSION_NAME rdfs:label ?LABEL. }";
-        if (!CubeName.equals("")) {
-            query = query.replace("}", "FILTER (?CUBE_NAME = code:" + CubeName + ").}"); // TODO generalize filter
-        }
+                "?DIMENSION_NAME rdfs:label ?LABEL. " + cube.buildFilterString() + "}";
 
         return connection.executeSPARQL(query, format);
     }
 
     /**
      * Returns the measures of the cube with the given name.
-     * If the CubeName is an empty String, the measures of all cubes are returned.
      *
-     * @param CubeName The name of the cube to get information from.
+     * @param cube The {@Cube} to get the measures from.
      * @return the measures of the cube.
-     * @throws IOException If the connection to the database failes.
+     * @throws {@ConnectionException} If the connection to the database failes.
      */
-    public String getMeasures(String CubeName) throws Exception {
+    public String getMeasures(Cube cube) throws ConnectionException {
+
+        cube.setVarName("CUBE_NAME", false);
         String query = PrefixManager.createPrefixString() +
                 "SELECT ?CUBE_NAME ?MEASURE_NAME ?LABEL " +
                 "WHERE { ?CUBE_NAME qb:structure ?dsd. " +
                 "?dsd qb:component ?compSpec. " +
                 "?compSpec qb:measure ?MEASURE_NAME. " +
-                "?MEASURE_NAME rdfs:label ?LABEL. }";
-        if (!CubeName.equals("")) {
-            query = query.replace("}", "FILTER (?CUBE_NAME = code:" + CubeName + ").}"); // TODO generalize filter
-        }
+                "?MEASURE_NAME rdfs:label ?LABEL. " + cube.buildFilterString() + "}";
 
         return connection.executeSPARQL(query, format);
     }
 
     /**
-     * Returns the entities of a dimension. DimensionName and CubeName must not be empty!
-     * @param DimensionName The name of the dimension. <b>MUST BE A WHOLE URL</b> without "<" and ">".
-     * @param CubeName The name of the cube.
+     * Returns the entities of a dimension.
+     *
+     * @param dimension The {@Dimension} to get the Entities from.
+     * @param cube      The {@Cube} to get the Entities from.
      * @return The entities of the dimension.
-     * @throws IOException If the connection to the database failes.
+     * @throws {@ConnectionException} If the connection to the database failes.
      */
-    public String getEntities(String DimensionName, String CubeName) throws Exception {
+    public String getEntities(Dimension dimension, Cube cube) throws ConnectionException {
+
+        cube.setVarName("CUBE_NAME", false);
+        dimension.setVarName("DIMENSION_NAME", false);
         String query = PrefixManager.createPrefixString() +
                 "SELECT ?CUBE_NAME ?DIMENSION_NAME ?ENTITY_NAME ?LABEL " +
                 "WHERE { ?CUBE_NAME qb:structure ?dsd. " +
@@ -113,8 +113,8 @@ public class CubeManager {
                 "?obs qb:dataSet ?CUBE_NAME. " +
                 "?obs ?DIMENSION_NAME ?ENTITY_NAME. " +
                 "?ENTITY_NAME rdfs:label ?LABEL. " +
-                "FILTER (?CUBE_NAME = code:" + CubeName + "). " +
-                "FILTER (?DIMENSION_NAME = <" + DimensionName + ">). " +
+                cube.buildFilterString() +
+                dimension.buildFilterString() +
                 "} GROUP BY ?CUBE_NAME ?DIMENSION_NAME ?ENTITY_NAME ?LABEL"; // TODO generalize filter
 
         return connection.executeSPARQL(query, format);
