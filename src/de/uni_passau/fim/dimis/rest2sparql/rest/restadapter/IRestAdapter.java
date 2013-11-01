@@ -43,10 +43,10 @@ public interface IRestAdapter {
      *
      * @param method The method to check the parameters against.
      * @param params The {@List} of {@CubeObject}s representing the parameters.
-     * @return A {@List} of {@String}s where every {@String} names an invalid parameter and what's wrong with it.<p />
-     *         Returns an empty {@List}, if the {@List} of parameters match the one expected by the method.
+     * @return A {@String} that explains what is wrong with the parameters.<p />
+     *         Returns an empty {@String} (""), if the {@List} of parameters match the one expected by the method.
      */
-    List<String> validateMethodParams(Methods method, List<CubeObject> params);
+    String validateMethodParams(Methods method, List<CubeObject> params);
 
     /**
      * Returns a {@Set} of {@Methods} implemented by the adapter.
