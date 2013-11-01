@@ -16,25 +16,37 @@ import java.util.Set;
 public interface IRestAdapter {
 
     /**
-     * Execute the method passed by the method parameter.
+     * Executes the method passed by the method argument.<p />
+     * This method may, may not or may partly check if the method is valid an really takes no parameters.
+     * You are advised to validate that by using the {@link #validateMethodParams(Methods, java.util.List) validateMethodParams} method.<p />
+     * The behaviour of this method, supplied with invalid arguments, is unspecified!
      *
      * @param method The method to execute.
      * @return The result returned by the SPARQL backend.
-     * @throws MethodNotSupportedException If the method is not supported.
-     * @throws UnknownMethodException      If the method is not known by the system.
      */
-    String execute(Methods method) throws MethodNotSupportedException, UnknownMethodException;
+    String execute(Methods method);
 
     /**
-     * Execute the method indicated by the 'func' parameter in the params argument.
+     * Executes the method passed by the method argument and passes the {@List} of parameters.<p />
+     * This method may, may not or may partly check if the method and its parameters are valid .
+     * You are advised to validate that by using the {@link #validateMethodParams(Methods, java.util.List) validateMethodParams} method.<p />
+     * The behaviour of this method, supplied with invalid arguments, is unspecified!
      *
      * @param method The method to execute.
      * @param params A {@List} of parameters.
      * @return The result returned by the SPARQL backend.
-     * @throws MethodNotSupportedException If the method is not supported.
-     * @throws UnknownMethodException      If the method is not known by the system.
      */
-    String execute(Methods method, List<CubeObject> params) throws MethodNotSupportedException, UnknownMethodException;
+    String execute(Methods method, List<CubeObject> params);
+
+    /**
+     * Validates if the {@List} of parameters matches the expected parameters of a given method.
+     *
+     * @param method The method to check the parameters against.
+     * @param params The {@List} of {@CubeObject}s representing the parameters.
+     * @return A {@List} of {@String}s where every {@String} names an invalid parameter and what's wrong with it.<p />
+     *         Returns an empty {@List}, if the {@List} of parameters match the one expected by the method.
+     */
+    List<String> validateMethodParams(Methods method, List<CubeObject> params);
 
     /**
      * Returns a {@Set} of {@Methods} implemented by the adapter.
