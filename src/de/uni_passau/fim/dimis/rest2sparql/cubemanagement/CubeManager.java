@@ -45,7 +45,7 @@ public class CubeManager {
     public String getCubes() throws ConnectionException {
 
         String query = PrefixManager.createPrefixString() +
-                "SELECT ?CUBE_NAME ?LABEL ?COMMENT. " +
+                "SELECT ?CUBE_NAME ?LABEL ?COMMENT " +
                 "WHERE { ?CUBE_NAME a qb:DataSet. " +
                 "?CUBE_NAME rdfs:label ?LABEL. " +
                 "?CUBE_NAME rdfs:comment ?COMMENT.}";

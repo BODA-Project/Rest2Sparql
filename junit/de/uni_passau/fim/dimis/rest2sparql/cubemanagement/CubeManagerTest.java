@@ -6,7 +6,7 @@ import de.uni_passau.fim.dimis.rest2sparql.util.Dimension;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Created with IntelliJ IDEA.
@@ -18,6 +18,13 @@ import static org.junit.Assert.fail;
 public class CubeManagerTest {
     @Test
     public void testGetCubes() throws Exception {
+
+        CubeManager manager = new CubeManager(new CodeBigdataEngine());
+
+        String res = manager.getCubes();
+
+        assertTrue(res.length() > 1000);
+        assertTrue(res.contains("Dataset-f744647d-e493-4640-9bd6-2080779a5e77"));
 
     }
 
