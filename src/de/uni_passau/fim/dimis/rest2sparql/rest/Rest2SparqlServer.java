@@ -1,6 +1,7 @@
 package de.uni_passau.fim.dimis.rest2sparql.rest;
 
 import de.uni_passau.fim.dimis.rest2sparql.rest.restadapter.IRestAdapter;
+import de.uni_passau.fim.dimis.rest2sparql.rest.restadapter.Methods;
 import org.apache.http.*;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.DefaultBHttpServerConnection;
@@ -11,8 +12,11 @@ import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+
+import static de.uni_passau.fim.dimis.rest2sparql.triplestore.ITripleStoreConnection.OutputFormat;
 
 /**
  * Created with IntelliJ IDEA.
@@ -24,12 +28,22 @@ import java.util.Locale;
  */
 public class Rest2SparqlServer {
 
+    private static IRestAdapter adapter;
+    private static HashMap<String, OutputFormat> formats = new HashMap<>();
+
+    static {
+        formats.put("application/sparql-results+xml", OutputFormat.XML);
+        formats.put("application/sparql-results+json", OutputFormat.JSON);
+        formats.put("application/x-binary-rdf-results-table", OutputFormat.BINARY);
+        formats.put("text/tab-separated-values", OutputFormat.TSV);
+        formats.put("text/csv", OutputFormat.CSV);
+    }
+
     private int port;
-    private IRestAdapter adapter;
 
     public Rest2SparqlServer(IRestAdapter adapter, int port) {
         this.port = port;
-        this.adapter = adapter;
+        Rest2SparqlServer.adapter = adapter;
     }
 
     public boolean startServer() throws IOException {
@@ -66,10 +80,39 @@ public class Rest2SparqlServer {
             if (!method.equals("GET")) {
                 throw new MethodNotSupportedException(method + " method not supported");
             }
+
+            // ******************************
+            // Output format handling
+            // ******************************
+
+            // default format is XML
+            OutputFormat type = OutputFormat.XML;
+            boolean found = false;
+
+            // retrieve accepted format
+            for (Header h : request.getHeaders("Accept")) {
+                for (HeaderElement e : h.getElements()) {
+                    if (formats.containsKey(e.getName())) {
+                        type = formats.get(e.getName());
+                        found = true;
+                        break;
+                    }
+                }
+                if (found) break;
+            }
+
+            // set format
+            adapter.setOutputFormat(type);
+
+            // ******************************
+            // request execution
+            // ******************************
+            HttpEntity body;
+            // TODO set charset, filename etc. in result
+
+            // get and trim uri
             String target = request.getRequestLine().getUri();
             target = target.substring(target.indexOf("?") + 1);
-
-            HttpEntity body = null;
 
             // Validate the String
             List<String> invalidParams = URLConverter.validate(target);
@@ -82,25 +125,45 @@ public class Rest2SparqlServer {
                     sb.append('\n');
                 }
 
+                // set error message, content type and status
                 body = new StringEntity(sb.toString());
-                response.setStatusCode(HttpStatus.SC_OK); // TODO set correct response code
-            } else {
+                response.addHeader("Content-Type", "text/plain");
+                response.setStatusCode(HttpStatus.SC_BAD_REQUEST);
 
-                // TODO content header, content
-                response.setStatusCode(HttpStatus.SC_OK);
-                body = new StringEntity("OKAY!!");
 
             }
 
-            // System.out.println(target);
-            // List<NameValuePair> l = URLEncodedUtils.parse(target, Charset.defaultCharset());
+            // If the request is valid, execute it and return the result
+            else {
 
-            //for (NameValuePair p : l) {
-            //    System.out.println(p.getName() + ", " + p.getValue());
-            //}
+                String res = "";
+                Methods m = URLConverter.getMethod(target);
 
-            // response.setStatusCode(HttpStatus.SC_OK);
-            // StringEntity body = new StringEntity("OKAY!!");
+                switch (m) {
+
+                    case GET_CUBES:
+                        res = adapter.execute(m);
+                        break;
+                    case GET_DIMENSIONS:
+                    case GET_MEASURES:
+                    case GET_ENTITIES:
+                        res = adapter.execute(m, URLConverter.getParameters(target));
+                        break;
+                    case EXECUTE:
+                        // TODO
+                        response.setStatusCode(HttpStatus.SC_NOT_IMPLEMENTED);
+                        response.addHeader("Content-Type", "text/plain");
+                        body = new StringEntity("The execute function is not yes implemented!");
+                        return;
+                }
+
+                // set content, content type ans status code
+                body = new StringEntity(res);
+                response.addHeader("Content-Type", type.mimeType);
+                response.setStatusCode(HttpStatus.SC_OK);
+
+            }
+
             response.setEntity(body);
         }
 
