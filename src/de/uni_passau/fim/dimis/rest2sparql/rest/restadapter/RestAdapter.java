@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Set;
 
 import static de.uni_passau.fim.dimis.rest2sparql.rest.restadapter.Methods.*;
+import static de.uni_passau.fim.dimis.rest2sparql.triplestore.ITripleStoreConnection.OutputFormat;
 
 /**
  * Created with IntelliJ IDEA.
@@ -28,6 +29,7 @@ public class RestAdapter implements IRestAdapter {
     private Set<Methods> implementedMethods = new HashSet<>(5);
     private CubeManager manager;
     private ITripleStoreConnection connection;
+    private OutputFormat preferredFormat;
 
     public RestAdapter() {
 
@@ -156,6 +158,15 @@ public class RestAdapter implements IRestAdapter {
     @Override
     public Set<Methods> getMethods() {
         return Collections.unmodifiableSet(implementedMethods);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    @Override
+    public void setOutputFormat(OutputFormat format) {
+        manager.setOutputFormat(format);
+        this.preferredFormat = format;
     }
 
     private String buildBackendExceptionMsg(ConnectionException e) {

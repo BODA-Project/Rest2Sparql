@@ -5,6 +5,8 @@ import de.uni_passau.fim.dimis.rest2sparql.util.CubeObject;
 import java.util.List;
 import java.util.Set;
 
+import static de.uni_passau.fim.dimis.rest2sparql.triplestore.ITripleStoreConnection.OutputFormat;
+
 /**
  * Created with IntelliJ IDEA.
  * User: tommy
@@ -55,4 +57,11 @@ public interface IRestAdapter {
      */
     Set<Methods> getMethods();
 
+    /**
+     * Set the preferred {@OutputFormat} for the returned data.<p />
+     * The default should be {@link OutputFormat#XML}
+     *
+     * @param format The preferred {@OutputFormat}.
+     */
+    void setOutputFormat(OutputFormat format);
 }
