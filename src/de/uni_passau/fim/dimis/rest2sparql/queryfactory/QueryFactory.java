@@ -1,9 +1,6 @@
 package de.uni_passau.fim.dimis.rest2sparql.queryfactory;
 
-import de.uni_passau.fim.dimis.rest2sparql.util.CubeObject;
-import de.uni_passau.fim.dimis.rest2sparql.util.FixedDimension;
-import de.uni_passau.fim.dimis.rest2sparql.util.PrefixCollection;
-import de.uni_passau.fim.dimis.rest2sparql.util.SparqlPrefix;
+import de.uni_passau.fim.dimis.rest2sparql.util.*;
 
 import java.util.List;
 
@@ -17,15 +14,16 @@ import java.util.List;
 public class QueryFactory {
 
     private static final String OBSERVATION = "OBS_NAME";
-    private PrefixCollection PrefixManager = new PrefixCollection();
+    private static PrefixCollection PrefixManager = new PrefixCollection();
 
-    public QueryFactory() {
+    static {
         PrefixManager.addPrefix(new SparqlPrefix("qb", "http://purl.org/linked-data/cube#"));
         PrefixManager.addPrefix(new SparqlPrefix("code", "http://code-research.eu/resource/"));
         PrefixManager.addPrefix(new SparqlPrefix("rdfs", "http://www.w3.org/2000/01/rdf-schema#"));
     }
 
-    public String buildObservationQuery(String cubeName, List<CubeObject> objects) {
+    @Deprecated
+    public static String buildObservationQuery(String cubeName, List<CubeObject> objects) {
 
         generateVarNames(objects);
 
@@ -62,7 +60,82 @@ public class QueryFactory {
         return query.toString();
     }
 
-    private void generateVarNames(List<CubeObject> o) {
+    /**
+     * Builds a query to query for observations.
+     *
+     * @param objects The objects to include in the query.<p />
+     *                This has to include <b>exactly</b> one {@link Cube}.
+     *                If this constraint is not met, the behaviour is undefined.
+     * @return The query.
+     */
+    public static String buildObservationQuery(List<CubeObject> objects) {
+
+        generateVarNames(objects);
+        Cube cube = null;
+
+        StringBuilder selectString = new StringBuilder("SELECT ?" + OBSERVATION + " ");
+        StringBuilder whereString = new StringBuilder("WHERE { ?" + OBSERVATION + " a qb:Observation. ");
+        StringBuilder filters = new StringBuilder();
+
+        for (CubeObject c : objects) {
+
+            // if the current CubeObject is a Cube
+            if (c instanceof Cube) {
+
+                // if the first Cube is found, mark it
+                if (cube == null) {
+                    cube = (Cube) c;
+                }
+
+                // if this is the second Cube, something went wrong
+                else {
+                    throw new IllegalArgumentException();
+                }
+            }
+
+            // if it is not a Cube, add it to where string, because Cube needs special treatment
+            else {
+                // where string
+                whereString.append(c.buildPattern(OBSERVATION));
+            }
+
+            for (String s : c.getAllVarNames()) {
+                // select string
+                selectString.append("?");
+                selectString.append(s);
+                selectString.append(" ");
+            }
+
+            // filter string
+            filters.append(c.buildFilterString());
+            if (c instanceof FixedDimension) {
+                filters.append(((FixedDimension) c).buildEntityFilterString());
+            }
+        }
+
+        // if Cube was not found, something went wrong
+        if (cube == null) {
+            throw new IllegalArgumentException();
+        }
+
+        // bind to Cube
+        whereString.append("?");
+        whereString.append(OBSERVATION);
+        whereString.append(" qb:dataSet ?");
+        whereString.append(cube.getVarName());
+        whereString.append(". ");
+
+        StringBuilder query = new StringBuilder();
+        query.append(PrefixManager.createPrefixString());
+        query.append(selectString);
+        query.append(whereString);
+        query.append(filters);
+        query.append("}");
+
+        return query.toString();
+    }
+
+    private static void generateVarNames(List<CubeObject> o) {
 
         int i = 0;
         for (CubeObject c : o) {
