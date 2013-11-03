@@ -147,14 +147,9 @@ public class Rest2SparqlServer {
                     case GET_DIMENSIONS:
                     case GET_MEASURES:
                     case GET_ENTITIES:
+                    case EXECUTE:
                         res = adapter.execute(m, URLConverter.getParameters(target));
                         break;
-                    case EXECUTE:
-                        // TODO
-                        response.setStatusCode(HttpStatus.SC_NOT_IMPLEMENTED);
-                        response.addHeader("Content-Type", "text/plain");
-                        body = new StringEntity("The execute function is not yes implemented!");
-                        return;
                 }
 
                 // set content, content type ans status code
