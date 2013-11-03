@@ -1,6 +1,7 @@
 package de.uni_passau.fim.dimis.rest2sparql.rest.restadapter;
 
 import de.uni_passau.fim.dimis.rest2sparql.cubemanagement.CubeManager;
+import de.uni_passau.fim.dimis.rest2sparql.queryfactory.QueryFactory;
 import de.uni_passau.fim.dimis.rest2sparql.triplestore.CodeBigdataEngine;
 import de.uni_passau.fim.dimis.rest2sparql.triplestore.ITripleStoreConnection;
 import de.uni_passau.fim.dimis.rest2sparql.triplestore.util.ConnectionException;
@@ -139,9 +140,35 @@ public class RestAdapter implements IRestAdapter {
                 break;
 
             case EXECUTE:
-                // execute may take everything except no parameters
+                // there has to be at least one parameter
                 if (params.size() == 0) {
                     msg = "There were no parameters found. This function takes any number (> 0) and type of parameters.";
+                }
+
+                // there has to be exactly one cube in the list
+                else {
+                    boolean foundOnce = false;
+                    for (CubeObject c : params) {
+
+                        if (c instanceof Cube) {
+
+                            // if first cube found, set flag
+                            if (!foundOnce) {
+                                foundOnce = true;
+                            }
+
+                            // if second cube found, reset flag and exit for loop
+                            else {
+                                foundOnce = false;
+                                break;
+                            }
+                        }
+                    }
+
+                    // if flag is not set, write msg
+                    if (!foundOnce) {
+                        msg = "There has to be exactly one 'cube' parameter.";
+                    }
                 }
                 break;
 
@@ -223,7 +250,7 @@ public class RestAdapter implements IRestAdapter {
                 if (params.size() < 1) {
                     throw new IllegalArgumentException();
                 }
-                result = ""; // TODO implement
+                result = connection.executeSPARQL(QueryFactory.buildObservationQuery(params), preferredFormat);
                 break;
 
             default:

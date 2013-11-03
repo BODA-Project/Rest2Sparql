@@ -51,7 +51,7 @@ public class RestAdapter_validateTest {
 
         lst.add(new Dimension("someDim"));
         res = adapter.validateMethodParams(Methods.EXECUTE, lst);
-        Assert.assertEquals("", res);
+        Assert.assertEquals("There has to be exactly one 'cube' parameter.", res);
 
         lst.add(new Cube("someCube"));
         lst.add(new Measure("someMeasure"));
@@ -83,7 +83,6 @@ public class RestAdapter_validateTest {
         res = adapter.validateMethodParams(Methods.GET_MEASURES, lst);
         Assert.assertEquals("", res);
     }
-
 
     @Test
     public void testValidateMethodParams_getEntities() throws Exception {
