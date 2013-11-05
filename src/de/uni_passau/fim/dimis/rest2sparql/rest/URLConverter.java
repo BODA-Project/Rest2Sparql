@@ -13,7 +13,8 @@ import java.util.*;
  * User: tommy
  * Date: 10/31/13
  * Time: 12:57 PM
- * To change this template use File | Settings | File Templates.
+ * <p/>
+ * Class that contains a few static methods to validate and examine URLs.
  */
 public final class URLConverter {
 
@@ -38,7 +39,7 @@ public final class URLConverter {
      * Parses the given url and extracts the function parameter.
      *
      * @param url The url to parse.
-     * @return The {@Methods} that is indicated by the function parameter in the url.
+     * @return The {@link Methods} that is indicated by the function parameter in the url.
      */
     public static Methods getMethod(String url) {
 
@@ -62,10 +63,10 @@ public final class URLConverter {
     }
 
     /**
-     * Parses the given url and returns a {@List} of {@CubeObject}s generated from the parameters.
+     * Parses the given url and returns a {@link List} of {@link CubeObject}s generated from the parameters.
      *
      * @param url The url to parse.
-     * @return A {@List} of {@CubeObject}s generated from the parameters.
+     * @return A {@link List} of {@link CubeObject}s generated from the parameters.
      */
     public static List<CubeObject> getParameters(String url) {
 
@@ -97,11 +98,11 @@ public final class URLConverter {
     }
 
     /**
-     * Validates an url and returns a {@List} of {@String}s with the parameters in the url that are not vaild.
-     * Returns an empty {@List}, if the url is valid.
+     * Validates an url and returns a {@link List} of {@link String}s with the parameters in the url that are not vaild.
+     * Returns an empty {@link List}, if the url is valid.
      *
      * @param url The url to validate.
-     * @return A {@List} of {@String}s with the invalid parameters or an empty {@List} if all parameters are valid.
+     * @return A {@link List} of {@link String}s with the invalid parameters or an empty {@link List} if all parameters are valid.
      */
     public static List<String> validate(String url) {
 
@@ -126,9 +127,10 @@ public final class URLConverter {
                     // if function and no function parameter found before, set flag
                     if (!foundFunc) {
                         foundFunc = true;
+                    }
 
                     // if function but there was one before, set flag
-                    } else {
+                    else {
                         multipleFuncs = true;
                     }
 
@@ -152,10 +154,10 @@ public final class URLConverter {
     }
 
     /**
-     * Decides if a {@Dimension} or {@FixedDimension} is needed, creates the object and returns it.
+     * Decides if a {@link Dimension} or {@link FixedDimension} is needed, creates the object and returns it.
      *
      * @param s The part of the url to parse.
-     * @return A {@Dimension} or {@FixedDimension}.
+     * @return A {@link Dimension} or {@link FixedDimension}.
      */
     private static Dimension parseDimension(String s) {
 
