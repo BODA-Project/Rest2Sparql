@@ -9,7 +9,8 @@ import java.util.List;
  * User: tommy
  * Date: 10/22/13
  * Time: 4:55 PM
- * To change this template use File | Settings | File Templates.
+ *
+ * Class that contains static methods to build queries.
  */
 public class QueryFactory {
 

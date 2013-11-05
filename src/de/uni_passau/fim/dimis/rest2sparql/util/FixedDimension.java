@@ -5,7 +5,6 @@ package de.uni_passau.fim.dimis.rest2sparql.util;
  * User: tommy
  * Date: 10/24/13
  * Time: 10:08 AM
- * To change this template use File | Settings | File Templates.
  */
 public class FixedDimension extends Dimension {
 

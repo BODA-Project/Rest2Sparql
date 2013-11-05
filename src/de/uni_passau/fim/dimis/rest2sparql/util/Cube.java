@@ -5,7 +5,6 @@ package de.uni_passau.fim.dimis.rest2sparql.util;
  * User: tommy
  * Date: 10/30/13
  * Time: 4:06 PM
- * To change this template use File | Settings | File Templates.
  */
 public class Cube extends CubeObject {
     public Cube(String name) {

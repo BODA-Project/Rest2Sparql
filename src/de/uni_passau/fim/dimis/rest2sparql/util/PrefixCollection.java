@@ -9,16 +9,15 @@ import java.util.Set;
  * User: tommy
  * Date: 10/23/13
  * Time: 2:20 PM
- * To change this template use File | Settings | File Templates.
  */
 public class PrefixCollection {
 
     private LinkedHashMap<String, String> prefixes = new LinkedHashMap<>();
 
     /**
-     * Adds a {@SparqlPrefix}.
+     * Adds a {@link SparqlPrefix}.
      *
-     * @param p The {@SparqlPrefix} to add.
+     * @param p The {@link SparqlPrefix} to add.
      * @throws IllegalArgumentException If the prefix, abbreviation or URL already exist.
      */
     public void addPrefix(SparqlPrefix p) {
@@ -75,7 +74,7 @@ public class PrefixCollection {
     }
 
     /**
-     * Creates a {@String} of all prefixes that can be used in a SPARQL query. Prefixes are delimited by spaces.
+     * Creates a {@link String} of all prefixes that can be used in a SPARQL query. Prefixes are delimited by spaces.
      *
      * @return The prefixstring.
      */
@@ -84,9 +83,9 @@ public class PrefixCollection {
     }
 
     /**
-     * Creates a {@String} of all prefixes that can be used in a SPARQL query.
+     * Creates a {@link String} of all prefixes that can be used in a SPARQL query.
      *
-     * @param delimiter The {@String} to place between the prefixes.
+     * @param delimiter The {@link String} to place between the prefixes.
      * @return The prefixstring.
      */
     public String createPrefixString(String delimiter) {

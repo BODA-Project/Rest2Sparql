@@ -5,7 +5,6 @@ package de.uni_passau.fim.dimis.rest2sparql.sparql;
  * User: tommy
  * Date: 10/22/13
  * Time: 6:48 PM
- * To change this template use File | Settings | File Templates.
  */
 public class BasicQueryFilter extends QueryFilter {
 

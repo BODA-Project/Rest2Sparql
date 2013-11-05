@@ -40,7 +40,7 @@ public class CubeManager {
      * Returns a list of all cubes in the database. The list includes the unique cubename, and a label and description, if available.
      *
      * @return a list of all cubes in the database.
-     * @throws Exception If the connection to the database failes.
+     * @throws ConnectionException If the connection to the database failes.
      */
     public String getCubes() throws ConnectionException {
 
@@ -56,9 +56,9 @@ public class CubeManager {
     /**
      * Returns the dimensions of the cube with the given name.
      *
-     * @param cube The {@Cube} to get the dimensions from.
+     * @param cube The {@link Cube} to get the dimensions from.
      * @return the dimensions of the cube.
-     * @throws {@ConnectionException} If the connection to the database failes.
+     * @throws ConnectionException If the connection to the database failes.
      */
     public String getDimensions(Cube cube) throws ConnectionException {
 
@@ -76,9 +76,9 @@ public class CubeManager {
     /**
      * Returns the measures of the cube with the given name.
      *
-     * @param cube The {@Cube} to get the measures from.
+     * @param cube The {@link Cube} to get the measures from.
      * @return the measures of the cube.
-     * @throws {@ConnectionException} If the connection to the database failes.
+     * @throws ConnectionException If the connection to the database failes.
      */
     public String getMeasures(Cube cube) throws ConnectionException {
 
@@ -96,10 +96,10 @@ public class CubeManager {
     /**
      * Returns the entities of a dimension.
      *
-     * @param dimension The {@Dimension} to get the Entities from.
-     * @param cube      The {@Cube} to get the Entities from.
+     * @param dimension The {@link Dimension} to get the Entities from.
+     * @param cube      The {@link Cube} to get the Entities from.
      * @return The entities of the dimension.
-     * @throws {@ConnectionException} If the connection to the database failes.
+     * @throws ConnectionException If the connection to the database failes.
      */
     public String getEntities(Dimension dimension, Cube cube) throws ConnectionException {
 

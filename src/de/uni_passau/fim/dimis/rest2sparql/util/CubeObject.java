@@ -8,7 +8,6 @@ import java.util.List;
  * User: tommy
  * Date: 10/23/13
  * Time: 5:37 PM
- * To change this template use File | Settings | File Templates.
  */
 public abstract class CubeObject {
 

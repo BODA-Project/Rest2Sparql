@@ -21,7 +21,6 @@ import java.net.URISyntaxException;
  * User: tommy
  * Date: 10/22/13
  * Time: 11:14 AM
- * To change this template use File | Settings | File Templates.
  */
 public class CodeBigdataEngine implements ITripleStoreConnection {
 
@@ -36,7 +35,7 @@ public class CodeBigdataEngine implements ITripleStoreConnection {
 
     public String executeSPARQL(String query, OutputFormat format) throws ConnectionException {
 
-        URI uri = null;
+        URI uri;
         try {
             uri = new URIBuilder()
                     .setScheme(scheme)
@@ -59,16 +58,13 @@ public class CodeBigdataEngine implements ITripleStoreConnection {
             entity = new BufferedHttpEntity(response.getEntity());
         } catch (ClientProtocolException e) {
             System.out.println("shit!"); // TODO
-        } catch (HttpHostConnectException e) {
-            throw new ConnectionException(e);
         } catch (IOException e) {
-           throw new ConnectionException(e);
+            throw new ConnectionException(e);
         } finally {
             if (response != null) {
                 try {
                     response.close();
                 } catch (IOException e) {
-                    throw new ConnectionException(e);
                 }
             }
         }

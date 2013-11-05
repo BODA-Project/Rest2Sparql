@@ -5,7 +5,8 @@ package de.uni_passau.fim.dimis.rest2sparql.util;
  * User: tommy
  * Date: 10/23/13
  * Time: 2:04 PM
- * To change this template use File | Settings | File Templates.
+ *
+ * Class to represent a prefix in SPARQL.
  */
 public class SparqlPrefix {
 
@@ -19,7 +20,7 @@ public class SparqlPrefix {
         this.prefix = prefix;
         this.url = url;
 
-        this.hash = (new String(prefix + url)).hashCode();
+        this.hash = (prefix + url).hashCode();
         this.string = "PREFIX " + prefix + ": <" + url + ">";
     }
 

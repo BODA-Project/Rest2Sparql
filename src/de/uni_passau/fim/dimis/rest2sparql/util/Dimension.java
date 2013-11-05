@@ -7,7 +7,6 @@ import java.util.List;
  * User: tommy
  * Date: 10/24/13
  * Time: 10:53 AM
- * To change this template use File | Settings | File Templates.
  */
 public class Dimension extends CubeObject {
 

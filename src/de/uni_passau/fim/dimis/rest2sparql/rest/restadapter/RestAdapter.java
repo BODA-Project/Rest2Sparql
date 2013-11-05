@@ -23,7 +23,7 @@ import static de.uni_passau.fim.dimis.rest2sparql.triplestore.ITripleStoreConnec
  * Date: 10/29/13
  * Time: 12:17 PM
  * <p/>
- * This class implements {@IRestAdapter} and thus provides adapter functionality between the provided rest api and the backend.
+ * This class implements {@link IRestAdapter} and thus provides adapter functionality between the provided rest api and the backend.
  */
 public class RestAdapter implements IRestAdapter {
 

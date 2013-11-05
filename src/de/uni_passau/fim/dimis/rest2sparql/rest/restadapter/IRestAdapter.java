@@ -13,7 +13,7 @@ import static de.uni_passau.fim.dimis.rest2sparql.triplestore.ITripleStoreConnec
  * Date: 10/29/13
  * Time: 11:56 AM
  * <p/>
- * The {@IRestAdapter} defines all functions that have to be implemented by a class that works as an adapter between the REST Api and the REST2SPARQL layer.
+ * The {@link IRestAdapter} defines all functions that have to be implemented by a class that works as an adapter between the REST Api and the REST2SPARQL layer.
  */
 public interface IRestAdapter {
 
@@ -29,39 +29,39 @@ public interface IRestAdapter {
     String execute(Methods method);
 
     /**
-     * Executes the method passed by the method argument and passes the {@List} of parameters.<p />
+     * Executes the method passed by the method argument and passes the {@link List} of parameters.<p />
      * This method may, may not or may partly check if the method and its parameters are valid .
      * You are advised to validate that by using the {@link #validateMethodParams(Methods, java.util.List) validateMethodParams} method.<p />
      * The behaviour of this method, supplied with invalid arguments, is unspecified!
      *
      * @param method The method to execute.
-     * @param params A {@List} of parameters.
+     * @param params A {@link List} of parameters.
      * @return The result returned by the SPARQL backend.
      */
     String execute(Methods method, List<CubeObject> params);
 
     /**
-     * Validates if the {@List} of parameters matches the expected parameters of a given method.
+     * Validates if the {@link List} of parameters matches the expected parameters of a given method.
      *
      * @param method The method to check the parameters against.
-     * @param params The {@List} of {@CubeObject}s representing the parameters.
-     * @return A {@String} that explains what is wrong with the parameters.<p />
-     *         Returns an empty {@String} (""), if the {@List} of parameters match the one expected by the method.
+     * @param params The {@link List} of {@link CubeObject}s representing the parameters.
+     * @return A {@link String} that explains what is wrong with the parameters.<p />
+     *         Returns an empty {@link String} (""), if the {@link List} of parameters match the one expected by the method.
      */
     String validateMethodParams(Methods method, List<CubeObject> params);
 
     /**
-     * Returns a {@Set} of {@Methods} implemented by the adapter.
+     * Returns a {@link Set} of {@link Methods} implemented by the adapter.
      *
-     * @return a {@Set} of {@Methods} implemented by the adapter.
+     * @return a {@link Set} of {@link Methods} implemented by the adapter.
      */
     Set<Methods> getMethods();
 
     /**
-     * Set the preferred {@OutputFormat} for the returned data.<p />
+     * Set the preferred {@link OutputFormat} for the returned data.<p />
      * The default should be {@link OutputFormat#XML}
      *
-     * @param format The preferred {@OutputFormat}.
+     * @param format The preferred {@link OutputFormat}.
      */
     void setOutputFormat(OutputFormat format);
 }
