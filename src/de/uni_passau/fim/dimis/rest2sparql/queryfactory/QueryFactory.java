@@ -9,7 +9,7 @@ import java.util.List;
  * User: tommy
  * Date: 10/22/13
  * Time: 4:55 PM
- *
+ * <p/>
  * Class that contains static methods to build queries.
  */
 public class QueryFactory {
@@ -132,6 +132,49 @@ public class QueryFactory {
         query.append(whereString);
         query.append(filters);
         query.append("}");
+
+        return query.toString();
+    }
+
+    /**
+     * Builds a query to query for observations.
+     *
+     * @param queryDescriptor An object of the type {@link QueryDescriptor} that contains all information to build a query.
+     * @return The query.
+     */
+    public static String buildObservationQuery(QueryDescriptor queryDescriptor) {
+
+        queryDescriptor.generateVarNames();
+        Cube cube = null;
+
+        String selectString = queryDescriptor.selectString() + "?" + OBSERVATION + " ";
+        StringBuilder whereString = new StringBuilder("WHERE { ?" + OBSERVATION + " a qb:Observation. " + queryDescriptor.whereString(OBSERVATION, true));
+        String filters = queryDescriptor.filterString();
+
+
+        // if Cube was not found, something went wrong
+        if (queryDescriptor.getNofCubes() != 1) {
+            throw new IllegalArgumentException();
+        }
+
+        cube = queryDescriptor.getCubes().get(0);
+
+        // bind to Cube
+        whereString.append("?");
+        whereString.append(OBSERVATION);
+        whereString.append(" qb:dataSet ?");
+        whereString.append(cube.getVarName());
+        whereString.append(". ");
+
+        StringBuilder query = new StringBuilder();
+        query.append(PrefixManager.createPrefixString());
+        query.append(selectString);
+        query.append(whereString);
+        query.append(filters);
+        query.append("} ");
+        query.append(queryDescriptor.groupByString());
+        query.append(queryDescriptor.orderByString());
+        query.append(queryDescriptor.limitString());
 
         return query.toString();
     }
