@@ -6,6 +6,7 @@ package de.uni_passau.fim.dimis.rest2sparql.util;
  * Date: 10/24/13
  * Time: 10:08 AM
  */
+@Deprecated
 public class FixedDimension extends Dimension {
 
     private String entityName;
