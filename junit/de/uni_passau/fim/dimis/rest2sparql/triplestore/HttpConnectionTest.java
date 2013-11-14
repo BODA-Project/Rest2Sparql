@@ -7,7 +7,6 @@ import org.junit.Assert;
  * User: tommy
  * Date: 10/22/13
  * Time: 12:16 PM
- * To change this template use File | Settings | File Templates.
  */
 public class HttpConnectionTest {
     @org.junit.Test

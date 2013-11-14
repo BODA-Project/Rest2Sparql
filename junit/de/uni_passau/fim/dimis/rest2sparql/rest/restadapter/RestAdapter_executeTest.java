@@ -22,7 +22,6 @@ import static org.junit.Assert.assertTrue;
  * User: tommy
  * Date: 11/3/13
  * Time: 12:23 PM
- * To change this template use File | Settings | File Templates.
  */
 public class RestAdapter_executeTest {
 

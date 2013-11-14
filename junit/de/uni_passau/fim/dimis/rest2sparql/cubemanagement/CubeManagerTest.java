@@ -13,7 +13,6 @@ import static org.junit.Assert.assertTrue;
  * User: tommy
  * Date: 10/23/13
  * Time: 4:09 PM
- * To change this template use File | Settings | File Templates.
  */
 public class CubeManagerTest {
     @Test

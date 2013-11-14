@@ -21,7 +21,6 @@ import static org.junit.Assert.assertEquals;
  * User: tommy
  * Date: 10/31/13
  * Time: 2:37 PM
- * To change this template use File | Settings | File Templates.
  */
 public class Rest2SparqlServerTest {
 
@@ -43,7 +42,7 @@ public class Rest2SparqlServerTest {
                 "Here is a list:\n" +
                 "No parameter found that indicates which function to use!\n";
 
-        URI uri = null;
+        URI uri;
         uri = new URIBuilder()
                 .setScheme(scheme)
                 .setHost(host)
@@ -73,7 +72,7 @@ public class Rest2SparqlServerTest {
                 "Here is a list:\n" +
                 "There were multiple parameters found that indicate which function to use!\n";
 
-        URI uri = null;
+        URI uri;
         uri = new URIBuilder()
                 .setScheme(scheme)
                 .setHost(host)
@@ -106,7 +105,7 @@ public class Rest2SparqlServerTest {
                 "Unknown Function: 'someFunc'\n" +
                 "There were multiple parameters found that indicate which function to use!\n";
 
-        URI uri = null;
+        URI uri;
         uri = new URIBuilder()
                 .setScheme(scheme)
                 .setHost(host)
@@ -138,7 +137,7 @@ public class Rest2SparqlServerTest {
                 "Unknown Function: 'someFunc'\n" +
                 "There were multiple parameters found that indicate which function to use!\n";
 
-        URI uri = null;
+        URI uri;
         uri = new URIBuilder()
                 .setScheme(scheme)
                 .setHost(host)
@@ -169,7 +168,7 @@ public class Rest2SparqlServerTest {
                 "Here is a list:\n" +
                 "Invaid parameter: 'someParam'\n";
 
-        URI uri = null;
+        URI uri;
         uri = new URIBuilder()
                 .setScheme(scheme)
                 .setHost(host)
@@ -201,7 +200,7 @@ public class Rest2SparqlServerTest {
                 "Invaid parameter: 'someParam'\n" +
                 "Invaid parameter: 'anotherParam'\n";
 
-        URI uri = null;
+        URI uri;
         uri = new URIBuilder()
                 .setScheme(scheme)
                 .setHost(host)

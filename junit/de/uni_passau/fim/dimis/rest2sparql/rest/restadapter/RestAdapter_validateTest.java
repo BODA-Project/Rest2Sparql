@@ -16,7 +16,6 @@ import java.util.List;
  * User: tommy
  * Date: 11/1/13
  * Time: 2:46 PM
- * To change this template use File | Settings | File Templates.
  */
 public class RestAdapter_validateTest {
 
