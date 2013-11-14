@@ -10,6 +10,11 @@ public class FixedDimension extends Dimension {
 
     private String entityName;
 
+    public FixedDimension(String name, String entityName, Parameters p) {
+        super(name, p);
+        this.entityName = entityName;
+    }
+
     public FixedDimension(String name, String entityName) {
         super(name);
         this.entityName = entityName;

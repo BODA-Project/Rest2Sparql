@@ -12,6 +12,12 @@ public class Dimension extends CubeObject {
 
     protected String entityVarName;
 
+    public Dimension(String name, Parameters p) {
+        super(name, p);
+        this.entityVarName = "E_NAME";
+        VAR_NAME_PREFIX = "D_";
+    }
+
     public Dimension(String name) {
         super(name);
         this.entityVarName = "E_NAME";
@@ -22,6 +28,28 @@ public class Dimension extends CubeObject {
     public String buildPattern(String obsNameVar) {
         return "?" + obsNameVar + " ?" + getVarName() + " ?" + entityVarName + ". ";
     }
+
+    @Override
+    public String buildFilterString() {
+
+        if (params != null && params.filterRelation != null && params.filterRelation != Parameters.Relation.NONE) {
+            StringBuilder sb = new StringBuilder(super.buildFilterString());
+
+            sb.append(FILTER_PREFIX);
+            sb.append(entityVarName);
+            sb.append(' ');
+            sb.append(params.filterRelation.sign);
+            sb.append(" \"");
+            sb.append(params.filterValue);
+            sb.append("\"). ");
+
+            return sb.toString();
+        } else {
+            return super.buildFilterString();
+        }
+
+    }
+
 
     @Override
     public List<String> getAllVarNames() {

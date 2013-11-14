@@ -11,29 +11,50 @@ import java.util.List;
  */
 public abstract class CubeObject {
 
+    protected static final String FILTER_PREFIX = "FILTER (?";
+
+    protected String VAR_NAME_PREFIX;
     private String name;
     private String varName = "P_VAR";
     private SparqlPrefix prefix = null;
+    protected Parameters params;
 
-    protected String VAR_NAME_PREFIX;
+    public CubeObject(String name, Parameters p) {
+        this.name = name;
+        this.params = p;
+    }
 
     public CubeObject(String name) {
         this.name = name;
     }
 
-    private CubeObject(String name, SparqlPrefix prefix) {
+    private CubeObject(String name, Parameters p, SparqlPrefix prefix) {
         this.name = name;
+        this.params = p;
         this.prefix = prefix;
     }
 
     public abstract String buildPattern(String obsNameVar);
 
     public String buildFilterString() {
+
+        StringBuilder sb = new StringBuilder(FILTER_PREFIX);
+
         if (prefix == null) {
-            return "FILTER (" + "?" + varName + " = <" + name + ">). ";
+            sb.append(varName);
+            sb.append(" = <");
+            sb.append(name);
+            sb.append(">). ");
         } else {
-            return "FILTER (" + "?" + varName + " = <" + prefix.getAbbreviation() + ":" + name + ">). ";
+            sb.append(varName);
+            sb.append(" = <");
+            sb.append(prefix.getAbbreviation());
+            sb.append(":");
+            sb.append(name);
+            sb.append(">). ");
         }
+
+        return sb.toString();
     }
 
     public String getName() {
@@ -64,4 +85,7 @@ public abstract class CubeObject {
         }
     }
 
+    public Parameters getParams() {
+        return params;
+    }
 }

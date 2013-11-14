@@ -12,6 +12,12 @@ public class Measure extends CubeObject {
 
     private String valueVarName;
 
+    public Measure(String name, Parameters p) {
+        super(name, p);
+        VAR_NAME_PREFIX = "M_";
+        this.valueVarName = "V_NAME";
+    }
+
     public Measure(String name) {
         super(name);
         VAR_NAME_PREFIX = "M_";
@@ -21,6 +27,27 @@ public class Measure extends CubeObject {
     @Override
     public String buildPattern(String obsNameVar) {
         return "?" + obsNameVar + " ?" + getVarName() + " ?" + valueVarName + ". ";
+    }
+
+    @Override
+    public String buildFilterString() {
+
+        if (params != null && params.filterRelation != null && params.filterRelation != Parameters.Relation.NONE) {
+            StringBuilder sb = new StringBuilder(super.buildFilterString());
+
+            sb.append(FILTER_PREFIX);
+            sb.append(valueVarName);
+            sb.append(' ');
+            sb.append(params.filterRelation.sign);
+            sb.append(" \"");
+            sb.append(params.filterValue);
+            sb.append("\"). ");
+
+            return sb.toString();
+        } else {
+            return super.buildFilterString();
+        }
+
     }
 
     @Override

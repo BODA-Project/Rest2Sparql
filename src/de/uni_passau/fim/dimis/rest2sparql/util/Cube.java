@@ -7,6 +7,11 @@ package de.uni_passau.fim.dimis.rest2sparql.util;
  * Time: 4:06 PM
  */
 public class Cube extends CubeObject {
+    public Cube(String name, Parameters p) {
+        super(name, p);
+        VAR_NAME_PREFIX = "C_";
+    }
+
     public Cube(String name) {
         super(name);
         VAR_NAME_PREFIX = "C_";
