@@ -11,22 +11,39 @@ import java.util.List;
 public class Dimension extends CubeObject {
 
     protected String entityVarName;
+    private String entityLabelName;
 
     public Dimension(String name, Parameters p) {
         super(name, p);
         this.entityVarName = "E_NAME";
+        this.entityLabelName = "L_NAME";
         VAR_NAME_PREFIX = "D_";
     }
 
     public Dimension(String name) {
         super(name);
         this.entityVarName = "E_NAME";
+        this.entityLabelName = "L_NAME";
         VAR_NAME_PREFIX = "D_";
     }
 
     @Override
     public String buildPattern(String obsNameVar) {
-        return "?" + obsNameVar + " ?" + getVarName() + " ?" + entityVarName + ". ";
+
+        StringBuilder sb = new StringBuilder("?");
+        sb.append(obsNameVar);
+        sb.append(" ?");
+        sb.append(getVarName());
+        sb.append(" ?");
+        sb.append(entityVarName);
+        sb.append(". ");
+        sb.append("?");
+        sb.append(entityVarName);
+        sb.append(" <http://www.w3.org/2000/01/rdf-schema#label> ?");
+        sb.append(entityLabelName);
+        sb.append(". ");
+
+        return sb.toString();
     }
 
     @Override
@@ -55,9 +72,11 @@ public class Dimension extends CubeObject {
     public List<String> getAllVarNames() {
         List<String> retVal = super.getAllVarNames();
         retVal.add(entityVarName);
+        retVal.add(entityLabelName);
         return retVal;
     }
 
+    @SuppressWarnings("unused")
     public String getEntityVarName() {
         return entityVarName;
     }
@@ -66,9 +85,14 @@ public class Dimension extends CubeObject {
         this.entityVarName = "E_" + entityVarName;
     }
 
+    public void setEntityLabelName(String entityLabelName) {
+        this.entityLabelName = "L_" + entityLabelName;
+    }
+
     @Override
     public void setVarName(String varName, boolean usePrefix) {
         super.setVarName(varName, usePrefix);
         setEntityVarName(varName);
+        setEntityLabelName(varName);
     }
 }
