@@ -1,7 +1,9 @@
 package de.uni_passau.fim.dimis.rest2sparql.rest;
 
+import de.uni_passau.fim.dimis.rest2sparql.queryfactory.QueryFactory;
 import de.uni_passau.fim.dimis.rest2sparql.rest.restadapter.IRestAdapter;
 import de.uni_passau.fim.dimis.rest2sparql.rest.restadapter.Methods;
+import de.uni_passau.fim.dimis.rest2sparql.util.QueryDescriptor;
 import org.apache.http.*;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.DefaultBHttpServerConnection;
@@ -138,25 +140,42 @@ public class Rest2SparqlServer {
 
                 String res = "";
                 Methods m = URLConverter.getMethod(target);
+                QueryDescriptor descriptor = URLConverter.getQueryDescriptor(target);
+                System.out.println(QueryFactory.buildObservationQuery(descriptor));
 
-                switch (m) {
+                // check if request is valid
+                String validatorOutput = adapter.validateMethodParams(m, descriptor);
 
-                    case GET_CUBES:
-                        res = adapter.execute(m);
-                        break;
-                    case GET_DIMENSIONS:
-                    case GET_MEASURES:
-                    case GET_ENTITIES:
-                    case EXECUTE:
-                        res = adapter.execute(m, URLConverter.getParameters(target));
-                        break;
+                // if not valid
+                if (!validatorOutput.isEmpty()) {
+                    // set error message, content type and status
+                    body = new StringEntity(validatorOutput);
+                    response.addHeader("Content-Type", "text/plain");
+                    response.setStatusCode(HttpStatus.SC_BAD_REQUEST);
                 }
 
-                // set content, content type ans status code
-                body = new StringEntity(res);
-                response.addHeader("Content-Type", type.mimeType);
-                response.setStatusCode(HttpStatus.SC_OK);
+                // if valid, execute query
+                else {
+                    switch (m) {
 
+                        case GET_CUBES:
+                            res = adapter.execute(m);
+                            break;
+                        case GET_DIMENSIONS:
+                        case GET_MEASURES:
+                        case GET_ENTITIES:
+                            res = adapter.execute(m, descriptor);
+                            break;
+                        case EXECUTE:
+                            res = adapter.execute(m, descriptor);
+                            break;
+                    }
+
+                    // set content, content type ans status code
+                    body = new StringEntity(res);
+                    response.addHeader("Content-Type", type.mimeType);
+                    response.setStatusCode(HttpStatus.SC_OK);
+                }
             }
 
             response.setEntity(body);

@@ -8,6 +8,9 @@ import org.apache.http.client.utils.URLEncodedUtils;
 import java.nio.charset.Charset;
 import java.util.*;
 
+import static de.uni_passau.fim.dimis.rest2sparql.util.Parameters.AggregateFunction;
+import static de.uni_passau.fim.dimis.rest2sparql.util.Parameters.Relation;
+
 /**
  * Created with IntelliJ IDEA.
  * User: tommy
@@ -19,20 +22,52 @@ import java.util.*;
 public final class URLConverter {
 
     private static final String FUNCTION_STR = "func";
+    @SuppressWarnings("unused")
+    private static final char MASK = '\'';
     private static Map<String, Methods> strToMethMap = new HashMap<>();
     private static Set<String> validParams = new HashSet<>();
+    private static Set<String> validOpts = new HashSet<>();
+    private static Map<String, AggregateFunction> strToAggFuncMap = new HashMap<>();
+    private static Map<String, Relation> strToRelMap = new HashMap<>();
 
     static {
-        strToMethMap.put("getCubes", Methods.GET_CUBES);
-        strToMethMap.put("getDimensions", Methods.GET_DIMENSIONS);
-        strToMethMap.put("getMeasures", Methods.GET_MEASURES);
-        strToMethMap.put("getEntities", Methods.GET_ENTITIES);
-        strToMethMap.put("execute", Methods.EXECUTE);
+        strToMethMap.put("<getCubes>", Methods.GET_CUBES);
+        strToMethMap.put("<getDimensions>", Methods.GET_DIMENSIONS);
+        strToMethMap.put("<getMeasures>", Methods.GET_MEASURES);
+        strToMethMap.put("<getEntities>", Methods.GET_ENTITIES);
+        strToMethMap.put("<execute>", Methods.EXECUTE);
 
         validParams.add("func");
+        validParams.add("limit");
         validParams.add("c");
         validParams.add("d");
         validParams.add("m");
+
+        validOpts.add("v");         // value that has no explicit option name
+        validOpts.add("select");
+        validOpts.add("order");
+        validOpts.add("group");
+        validOpts.add("agg");
+        validOpts.add("filterR");
+        validOpts.add("filterV");
+        validOpts.add("havingAgg");
+        validOpts.add("havingR");
+        validOpts.add("havingV");
+
+        strToAggFuncMap.put("count", AggregateFunction.COUNT);
+        strToAggFuncMap.put("sum", AggregateFunction.SUM);
+        strToAggFuncMap.put("min", AggregateFunction.MIN);
+        strToAggFuncMap.put("max", AggregateFunction.MAX);
+        strToAggFuncMap.put("avg", AggregateFunction.AVG);
+        strToAggFuncMap.put("group_concat", AggregateFunction.GROUP_CONCAT);
+        strToAggFuncMap.put("sample", AggregateFunction.SAMPLE);
+
+        strToRelMap.put("smaller", Relation.SMALLER);
+        strToRelMap.put("smaller_or_eq", Relation.SMALLER_OR_EQUAL);
+        strToRelMap.put("eq", Relation.EQUAL);
+        strToRelMap.put("not_eq", Relation.NOT_EQUAL);
+        strToRelMap.put("bigger", Relation.BIGGER);
+        strToRelMap.put("bigger_or_eq", Relation.BIGGER_OR_EQUAL);
     }
 
     /**
@@ -68,6 +103,8 @@ public final class URLConverter {
      * @param url The url to parse.
      * @return A {@link List} of {@link CubeObject}s generated from the parameters.
      */
+    @Deprecated
+    @SuppressWarnings("unused")
     public static List<CubeObject> getParameters(String url) {
 
         List<NameValuePair> l = URLEncodedUtils.parse(url, Charset.defaultCharset());
@@ -75,16 +112,20 @@ public final class URLConverter {
 
         for (NameValuePair p : l) {
 
+            Map<String, String> opts = parseOpts(p.getValue());
+            Parameters param = parseValue(opts);
+
             switch (p.getName()) {
                 case "c":
-                    params.add(new Cube(p.getValue()));
+                    params.add(new Cube(opts.get("v"), param));
                     break;
                 case "d":
-                    params.add(parseDimension(p.getValue()));
+                    params.add(new Dimension(opts.get("v"), param));
                     break;
                 case "m":
-                    params.add(new Measure(p.getValue()));
+                    params.add(new Measure(opts.get("v"), param));
                     break;
+                case "limit":
                 case "func":
                     // Nothing to do
                     break;
@@ -95,6 +136,48 @@ public final class URLConverter {
         }
 
         return params;
+    }
+
+    /**
+     * Parses the given url and returns a {@link QueryDescriptor} generated from the parameters.
+     *
+     * @param url The url to parse.
+     * @return A {@link QueryDescriptor} generated from the parameters.
+     */
+    public static QueryDescriptor getQueryDescriptor(String url) {
+
+        List<NameValuePair> l = URLEncodedUtils.parse(url, Charset.defaultCharset());
+        List<CubeObject> params = new ArrayList<>(l.size());
+        int limit = -1;
+
+        for (NameValuePair p : l) {
+
+            Map<String, String> opts = parseOpts(p.getValue());
+            Parameters param = parseValue(opts);
+
+            switch (p.getName()) {
+                case "c":
+                    params.add(new Cube(opts.get("v"), param));
+                    break;
+                case "d":
+                    params.add(new Dimension(opts.get("v"), param));
+                    break;
+                case "m":
+                    params.add(new Measure(opts.get("v"), param));
+                    break;
+                case "limit":
+                    limit = Integer.parseInt(opts.get("v"));
+                    break;
+                case "func":
+                    // Nothing to do
+                    break;
+                default:
+                    throw new IllegalArgumentException("There are invalid parameters in the url! Use the validate method first!");
+            }
+
+        }
+
+        return new QueryDescriptor(params, limit);
     }
 
     /**
@@ -139,6 +222,21 @@ public final class URLConverter {
                         invalidParams.add("Unknown Function: \'" + p.getValue() + "\'");
                     }
                 }
+
+                // check if all options are valid
+                else {
+                    Map<String, String> opts = parseOpts(p.getValue());
+
+                    for (Map.Entry<String, String> e : opts.entrySet()) {
+                        if (!validOpts.contains(e.getKey())) {
+                            invalidParams.add("Invaid option: \'" + e.getKey() + "\' in parameter \'" + p.getName() + "\'");
+                        } else {
+                            if (!validateOpts(e.getKey(), e.getValue())) {
+                                invalidParams.add("Invaid value: \'" + e.getValue() + "\' in option \'" + e.getKey() + "\' in parameter \'" + p.getName() + "\'");
+                            }
+                        }
+                    }
+                }
             }
         }
 
@@ -159,6 +257,8 @@ public final class URLConverter {
      * @param s The part of the url to parse.
      * @return A {@link Dimension} or {@link FixedDimension}.
      */
+    @Deprecated
+    @SuppressWarnings("unused, deprecation")
     private static Dimension parseDimension(String s) {
 
         Dimension retVal;
@@ -170,5 +270,162 @@ public final class URLConverter {
         }
 
         return retVal;
+    }
+
+    private static Map<String, String> parseOpts(String s) {
+
+        HashMap<String, String> retVal = new HashMap<>();
+
+        String[] parts = s.split(">,");
+
+        // the first value is no real option with a key, so just strip the leading '<' and tailing '>'
+        if (parts[0].charAt(0) == '<' && parts[0].charAt(parts[0].length() - 1) == '>') {
+            parts[0] = parts[0].substring(1, parts[0].length() - 1);
+        } else if (parts[0].charAt(0) == '<') {
+            parts[0] = parts[0].substring(1, parts[0].length());
+        } else if (parts[0].charAt(parts[0].length() - 1) == '>') {
+            parts[0] = parts[0].substring(0, parts[0].length() - 1);
+        }
+        retVal.put("v", parts[0]);
+
+        String key, value;
+        String[] pair;
+        for (int i = 1; i < parts.length; i++) {
+
+            pair = parts[i].split("=<");
+            key = pair[0];
+            value = parts[i].split("=<")[1].split(">")[0];
+
+            retVal.put(key, value);
+        }
+
+        return retVal;
+    }
+
+    private static Parameters parseValue(Map<String, String> opts) {
+
+        ParametersFactory paramFac = new ParametersFactory();
+
+        for (Map.Entry<String, String> e : opts.entrySet()) {
+
+            switch (e.getKey()) {
+
+                case "v":
+                    break;
+
+                case "select":
+                    switch (e.getValue()) {
+                        case "true":
+                            paramFac.setSelect(true);
+                            break;
+                        case "false":
+                            paramFac.setSelect(false);
+                            break;
+                        default:
+                            throw new IllegalArgumentException();
+                    }
+                    break;
+
+                case "order":
+                    try {
+                        paramFac.setOrderBy(Integer.parseInt(e.getValue()));
+                    } catch (NumberFormatException ex) {
+                        throw new IllegalArgumentException();
+                    }
+                    break;
+
+                case "group":
+                    switch (e.getValue()) {
+                        case "true":
+                            paramFac.setSelect(true);
+                            break;
+                        case "false":
+                            paramFac.setSelect(false);
+                            break;
+                        default:
+                            throw new IllegalArgumentException();
+                    }
+                    break;
+
+                case "agg":
+                    if (strToAggFuncMap.containsKey(e.getValue())) {
+                        paramFac.setAggregate(strToAggFuncMap.get(e.getValue()));
+                    } else {
+                        throw new IllegalArgumentException();
+                    }
+                    break;
+
+                case "filterR":
+                    if (strToRelMap.containsKey(e.getValue())) {
+                        paramFac.setFilterRelation(strToRelMap.get(e.getValue()));
+                    } else {
+                        throw new IllegalArgumentException();
+                    }
+                    break;
+
+                case "filterV":
+                    paramFac.setFilterValue(e.getValue());
+                    break;
+
+                case "havingAgg":
+                    if (strToAggFuncMap.containsKey(e.getValue())) {
+                        paramFac.setHavingAggregate(strToAggFuncMap.get(e.getValue()));
+                    } else {
+                        throw new IllegalArgumentException();
+                    }
+                    break;
+
+                case "havingR":
+                    if (strToRelMap.containsKey(e.getValue())) {
+                        paramFac.setFilterRelation(strToRelMap.get(e.getValue()));
+                    } else {
+                        throw new IllegalArgumentException();
+                    }
+                    break;
+
+                case "havingV":
+                    paramFac.setHavingValue(e.getValue());
+                    break;
+
+                default:
+                    throw new IllegalArgumentException();
+            }
+        }
+
+        return paramFac.buildParameters();
+    }
+
+    private static boolean validateOpts(String key, String value) {
+
+        switch (key) {
+
+            case "havingV":
+            case "filterV":
+            case "v":
+                return true;
+
+            case "group":
+            case "select":
+                return !(!value.equals("true") && !value.equals("false"));
+
+            case "order":
+                try {
+                    Integer.parseInt(value);
+                } catch (NumberFormatException e) {
+                    return false;
+                }
+                return true;
+
+            case "havingAgg":
+            case "agg":
+                return strToAggFuncMap.containsKey(value);
+
+            case "havingR":
+            case "filterR":
+                return strToRelMap.containsKey(value);
+
+            default:
+                throw new IllegalArgumentException();
+        }
     }
 }
