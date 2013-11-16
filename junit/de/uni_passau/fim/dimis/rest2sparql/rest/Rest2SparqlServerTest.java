@@ -8,7 +8,6 @@ import org.apache.http.entity.BufferedHttpEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -78,8 +77,8 @@ public class Rest2SparqlServerTest {
                 .setHost(host)
                 .setPort(port)
                 .setPath(path)
-                .addParameter("func", "getDimensions")
-                .addParameter("func", "execute")
+                .addParameter("func", "<getDimensions>")
+                .addParameter("func", "<execute>")
                 .build();
 
         HttpGet htpg = new HttpGet(uri);
@@ -101,8 +100,8 @@ public class Rest2SparqlServerTest {
 
         String exp = "The URL contains invalid parameters!\n" +
                 "Here is a list:\n" +
-                "Unknown Function: 'getDimension'\n" +
-                "Unknown Function: 'someFunc'\n" +
+                "Unknown Function: '<getDimension>'\n" +
+                "Unknown Function: '<someFunc>'\n" +
                 "There were multiple parameters found that indicate which function to use!\n";
 
         URI uri;
@@ -111,8 +110,8 @@ public class Rest2SparqlServerTest {
                 .setHost(host)
                 .setPort(port)
                 .setPath(path)
-                .addParameter("func", "getDimension")
-                .addParameter("func", "someFunc")
+                .addParameter("func", "<getDimension>")
+                .addParameter("func", "<someFunc>")
                 .build();
 
         HttpGet htpg = new HttpGet(uri);
@@ -134,7 +133,7 @@ public class Rest2SparqlServerTest {
 
         String exp = "The URL contains invalid parameters!\n" +
                 "Here is a list:\n" +
-                "Unknown Function: 'someFunc'\n" +
+                "Unknown Function: '<someFunc>'\n" +
                 "There were multiple parameters found that indicate which function to use!\n";
 
         URI uri;
@@ -143,8 +142,8 @@ public class Rest2SparqlServerTest {
                 .setHost(host)
                 .setPort(port)
                 .setPath(path)
-                .addParameter("func", "getDimensions")
-                .addParameter("func", "someFunc")
+                .addParameter("func", "<getDimensions>")
+                .addParameter("func", "<someFunc>")
                 .build();
 
         HttpGet htpg = new HttpGet(uri);
@@ -174,8 +173,8 @@ public class Rest2SparqlServerTest {
                 .setHost(host)
                 .setPort(port)
                 .setPath(path)
-                .addParameter("func", "getDimensions")
-                .addParameter("someParam", "someValue")
+                .addParameter("func", "<getDimensions>")
+                .addParameter("someParam", "<someValue>")
                 .build();
 
         HttpGet htpg = new HttpGet(uri);
@@ -206,9 +205,9 @@ public class Rest2SparqlServerTest {
                 .setHost(host)
                 .setPort(port)
                 .setPath(path)
-                .addParameter("func", "getDimensions")
-                .addParameter("someParam", "someValue")
-                .addParameter("anotherParam", "anotherValue")
+                .addParameter("func", "<getDimensions>")
+                .addParameter("someParam", "<someValue>")
+                .addParameter("anotherParam", "<anotherValue>")
                 .build();
 
         HttpGet htpg = new HttpGet(uri);
