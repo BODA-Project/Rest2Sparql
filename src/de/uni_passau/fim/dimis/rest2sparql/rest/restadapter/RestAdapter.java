@@ -8,6 +8,7 @@ import de.uni_passau.fim.dimis.rest2sparql.triplestore.util.ConnectionException;
 import de.uni_passau.fim.dimis.rest2sparql.util.Cube;
 import de.uni_passau.fim.dimis.rest2sparql.util.CubeObject;
 import de.uni_passau.fim.dimis.rest2sparql.util.Dimension;
+import de.uni_passau.fim.dimis.rest2sparql.util.QueryDescriptor;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -18,18 +19,13 @@ import static de.uni_passau.fim.dimis.rest2sparql.rest.restadapter.Methods.*;
 import static de.uni_passau.fim.dimis.rest2sparql.triplestore.ITripleStoreConnection.OutputFormat;
 
 /**
- * Created with IntelliJ IDEA.
- * User: tommy
- * Date: 10/29/13
- * Time: 12:17 PM
- * <p/>
  * This class implements {@link IRestAdapter} and thus provides adapter functionality between the provided rest api and the backend.
  */
 public class RestAdapter implements IRestAdapter {
 
-    private Set<Methods> implementedMethods = new HashSet<>(5);
-    private CubeManager manager;
-    private ITripleStoreConnection connection;
+    private final Set<Methods> implementedMethods = new HashSet<>(5);
+    private final CubeManager manager;
+    private final ITripleStoreConnection connection;
     private OutputFormat preferredFormat;
 
     public RestAdapter() {
@@ -89,6 +85,23 @@ public class RestAdapter implements IRestAdapter {
      */
     @Override
     public String execute(Methods method, List<CubeObject> params) {
+
+        String result;
+
+        try {
+            result = exec(method, params);
+        } catch (ConnectionException e) {
+            result = buildBackendExceptionMsg(e);
+        }
+
+        return result;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    @Override
+    public String execute(Methods method, QueryDescriptor params) {
 
         String result;
 
@@ -183,6 +196,47 @@ public class RestAdapter implements IRestAdapter {
      * @inheritDoc
      */
     @Override
+    public String validateMethodParams(Methods method, QueryDescriptor params) {
+        String msg = "";
+
+        switch (method) {
+
+            case GET_CUBES:
+                if (params.size() > 0) {
+                    msg = "This method does not take any parameters.";
+                }
+                break;
+
+            case GET_DIMENSIONS:
+            case GET_MEASURES:
+                if (params.size() != 1 || params.nofCubes() != 1) {
+                    msg = "This method takes exactly one parameter of the type 'cube'.";
+                }
+                break;
+
+            case GET_ENTITIES:
+                if (params.size() != 2 || params.nofCubes() != 1 || params.nofDimensions() != 1) {
+                    msg = "This method takes exactly two parameters of the types 'cube' and 'dimension'.";
+                }
+                break;
+
+            case EXECUTE:
+                if (params.size() == 0 || params.nofCubes() != 1) {
+                    msg = "There has to be exactly one 'cube' parameter.";
+                }
+                break;
+
+            default:
+                throw new MethodNotSupportedException("This method is not supported by this adapter.");
+        }
+
+        return msg;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    @Override
     public Set<Methods> getMethods() {
         return Collections.unmodifiableSet(implementedMethods);
     }
@@ -250,6 +304,45 @@ public class RestAdapter implements IRestAdapter {
                 if (params.size() < 1) {
                     throw new IllegalArgumentException();
                 }
+                result = connection.executeSPARQL(QueryFactory.buildObservationQuery(params), preferredFormat);
+                break;
+
+            default:
+                throw new MethodNotSupportedException("This method is not supported by this adapter.");
+        }
+
+        return result;
+    }
+
+    private String exec(Methods method, QueryDescriptor params) throws ConnectionException {
+        String result;
+
+        switch (method) {
+            case GET_CUBES:
+                throw new UnknownMethodException("This method does not take any parameters.");
+
+            case GET_MEASURES:
+                if (params.nofCubes() < 1) {
+                    throw new IllegalArgumentException();
+                }
+                result = manager.getMeasures(params.getCubes().get(0));
+                break;
+
+            case GET_ENTITIES:
+                if (params.nofCubes() < 1 || params.nofDimensions() < 1) {
+                    throw new IllegalArgumentException();
+                }
+                result = manager.getEntities(params.getDimensions().get(0), params.getCubes().get(0));
+                break;
+
+            case GET_DIMENSIONS:
+                if (params.nofCubes() < 1) {
+                    throw new IllegalArgumentException();
+                }
+                result = manager.getDimensions(params.getCubes().get(0));
+                break;
+
+            case EXECUTE:
                 result = connection.executeSPARQL(QueryFactory.buildObservationQuery(params), preferredFormat);
                 break;
 
