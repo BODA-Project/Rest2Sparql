@@ -1,27 +1,47 @@
 package de.uni_passau.fim.dimis.rest2sparql.util;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Created with IntelliJ IDEA.
- * User: tommy
- * Date: 11/6/13
- * Time: 1:16 PM
- * To change this template use File | Settings | File Templates.
+ * The {@link QueryDescriptor} encapsulates all Information about a query and provides methods to build parts of a SPARQL query.
  */
 public class QueryDescriptor {
 
     private List<CubeObject> cubeObjects;
     private int limit = -1;
+    private int nofCubes = 0, nofDimensions = 0, nofMeasures = 0;
+    private List<Cube> cubes = new LinkedList<>();
+    private List<Dimension> dimensions = new LinkedList<>();
+    private List<Measure> measures = new LinkedList<>();
 
     public QueryDescriptor(List<CubeObject> objects) {
         this.cubeObjects = objects;
+        init();
     }
 
     public QueryDescriptor(List<CubeObject> objects, int limit) {
         this.cubeObjects = objects;
         this.limit = limit;
+        init();
+    }
+
+    private void init() {
+
+        for (CubeObject co : cubeObjects) {
+            if (co instanceof Cube) {
+                cubes.add((Cube) co);
+                nofCubes++;
+            } else if (co instanceof Dimension) {
+                dimensions.add((Dimension) co);
+                nofDimensions++;
+            } else if (co instanceof Measure) {
+                measures.add((Measure) co);
+                nofMeasures++;
+            }
+        }
+
     }
 
     /**
@@ -76,6 +96,7 @@ public class QueryDescriptor {
      *
      * @return the FILTER string.
      */
+    @SuppressWarnings("deprecation")
     public String filterString() {
         StringBuilder sb = new StringBuilder();
 
@@ -160,18 +181,6 @@ public class QueryDescriptor {
         return somethingAdded ? sb.toString() : "";
     }
 
-    public List<Cube> getCubes() {
-        LinkedList<Cube> cubes = new LinkedList<>();
-
-        for (CubeObject co : cubeObjects) {
-            if (co instanceof Cube) {
-                cubes.add((Cube) co);
-            }
-        }
-
-        return cubes;
-    }
-
     /**
      * Generates names for the variables.
      */
@@ -185,19 +194,54 @@ public class QueryDescriptor {
 
     }
 
+    public List<Cube> getCubes() {
+        return Collections.unmodifiableList(cubes);
+    }
+
+    public List<Dimension> getDimensions() {
+        return Collections.unmodifiableList(dimensions);
+    }
+
+    @SuppressWarnings("unused")
+    public List<Measure> getMeasures() {
+        return Collections.unmodifiableList(measures);
+    }
+
     /**
-     * Returns the number of {@link CubeObject} where instanceof {@link Cube} is true. <b>Complexity: O(n)</b>
+     * Returns the number of {@link CubeObject} where instanceof {@link Cube} is true.
      *
      * @return the number of {@link CubeObject} where instanceof {@link Cube} is true.
      */
-    public int getNofCubes() {
-        int i = 0;
-        for (CubeObject co : cubeObjects) {
-            if (co instanceof Cube) {
-                i++;
-            }
-        }
-        return i;
+    public int nofCubes() {
+        return nofCubes;
+    }
+
+    /**
+     * Returns the number of {@link CubeObject} where instanceof {@link Dimension} is true.
+     *
+     * @return the number of {@link CubeObject} where instanceof {@link Dimension} is true.
+     */
+    public int nofDimensions() {
+        return nofDimensions;
+    }
+
+    /**
+     * Returns the number of {@link CubeObject} where instanceof {@link Measure} is true.
+     *
+     * @return the number of {@link CubeObject} where instanceof {@link Measure} is true.
+     */
+    @SuppressWarnings("unused")
+    public int nofMeasures() {
+        return nofMeasures;
+    }
+
+    /**
+     * Returns the number of objects in the {@link QueryDescriptor}.
+     *
+     * @return the number of objects in the {@link QueryDescriptor}.
+     */
+    public int size() {
+        return cubeObjects.size();
     }
 }
 

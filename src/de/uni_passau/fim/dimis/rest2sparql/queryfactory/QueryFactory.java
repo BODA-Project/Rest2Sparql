@@ -24,6 +24,7 @@ public class QueryFactory {
     }
 
     @Deprecated
+    @SuppressWarnings("deprecation")
     public static String buildObservationQuery(String cubeName, List<CubeObject> objects) {
 
         generateVarNames(objects);
@@ -69,6 +70,7 @@ public class QueryFactory {
      *                If this constraint is not met, the behaviour is undefined.
      * @return The query.
      */
+    @SuppressWarnings("deprecation")
     public static String buildObservationQuery(List<CubeObject> objects) {
 
         generateVarNames(objects);
@@ -145,7 +147,7 @@ public class QueryFactory {
     public static String buildObservationQuery(QueryDescriptor queryDescriptor) {
 
         queryDescriptor.generateVarNames();
-        Cube cube = null;
+        Cube cube;
 
         String selectString = queryDescriptor.selectString() + "?" + OBSERVATION + " ";
         StringBuilder whereString = new StringBuilder("WHERE { ?" + OBSERVATION + " a qb:Observation. " + queryDescriptor.whereString(OBSERVATION, true));
@@ -153,7 +155,7 @@ public class QueryFactory {
 
 
         // if Cube was not found, something went wrong
-        if (queryDescriptor.getNofCubes() != 1) {
+        if (queryDescriptor.nofCubes() != 1) {
             throw new IllegalArgumentException();
         }
 
