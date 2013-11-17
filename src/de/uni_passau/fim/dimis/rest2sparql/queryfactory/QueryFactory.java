@@ -24,7 +24,6 @@ public class QueryFactory {
     }
 
     @Deprecated
-    @SuppressWarnings("deprecation")
     public static String buildObservationQuery(String cubeName, List<CubeObject> objects) {
 
         generateVarNames(objects);
@@ -70,7 +69,6 @@ public class QueryFactory {
      *                If this constraint is not met, the behaviour is undefined.
      * @return The query.
      */
-    @SuppressWarnings("deprecation")
     public static String buildObservationQuery(List<CubeObject> objects) {
 
         generateVarNames(objects);

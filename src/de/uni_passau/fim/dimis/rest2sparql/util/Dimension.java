@@ -53,7 +53,7 @@ public class Dimension extends CubeObject {
             StringBuilder sb = new StringBuilder(super.buildFilterString());
 
             sb.append(FILTER_PREFIX);
-            sb.append(entityVarName);
+            sb.append(entityLabelName);
             sb.append(' ');
             sb.append(params.filterRelation.sign);
             sb.append(" \"");

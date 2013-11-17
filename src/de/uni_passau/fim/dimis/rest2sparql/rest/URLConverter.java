@@ -44,6 +44,7 @@ public final class URLConverter {
         validParams.add("m");
 
         validOpts.add("v");         // value that has no explicit option name
+        validOpts.add("fix");       // may only occur in dimensions an fixes it to a specified entity
         validOpts.add("select");
         validOpts.add("order");
         validOpts.add("group");
@@ -113,22 +114,30 @@ public final class URLConverter {
         for (NameValuePair p : l) {
 
             Map<String, String> opts = parseOpts(p.getValue());
-            Parameters param = parseValue(opts);
 
             switch (p.getName()) {
                 case "c":
-                    params.add(new Cube(opts.get("v"), param));
+                    params.add(new Cube(opts.get("v"), parseValue(opts)));
                     break;
+
                 case "d":
-                    params.add(new Dimension(opts.get("v"), param));
+                    if (opts.containsKey("fix")) {
+                        String tmp = opts.remove("fix");
+                        params.add(new FixedDimension(opts.get("v"), tmp, parseValue(opts)));
+                    } else {
+                        params.add(new Dimension(opts.get("v"), parseValue(opts)));
+                    }
                     break;
+
                 case "m":
-                    params.add(new Measure(opts.get("v"), param));
+                    params.add(new Measure(opts.get("v"), parseValue(opts)));
                     break;
+
                 case "limit":
                 case "func":
                     // Nothing to do
                     break;
+
                 default:
                     throw new IllegalArgumentException("There are invalid parameters in the url! Use the validate method first!");
             }
@@ -153,24 +162,33 @@ public final class URLConverter {
         for (NameValuePair p : l) {
 
             Map<String, String> opts = parseOpts(p.getValue());
-            Parameters param = parseValue(opts);
 
             switch (p.getName()) {
                 case "c":
-                    params.add(new Cube(opts.get("v"), param));
+                    params.add(new Cube(opts.get("v"), parseValue(opts)));
                     break;
+
                 case "d":
-                    params.add(new Dimension(opts.get("v"), param));
+                    if (opts.containsKey("fix")) {
+                        String tmp = opts.remove("fix");
+                        params.add(new FixedDimension(opts.get("v"), tmp, parseValue(opts)));
+                    } else {
+                        params.add(new Dimension(opts.get("v"), parseValue(opts)));
+                    }
                     break;
+
                 case "m":
-                    params.add(new Measure(opts.get("v"), param));
+                    params.add(new Measure(opts.get("v"), parseValue(opts)));
                     break;
+
                 case "limit":
                     limit = Integer.parseInt(opts.get("v"));
                     break;
+
                 case "func":
                     // Nothing to do
                     break;
+
                 default:
                     throw new IllegalArgumentException("There are invalid parameters in the url! Use the validate method first!");
             }
@@ -228,9 +246,19 @@ public final class URLConverter {
                     Map<String, String> opts = parseOpts(p.getValue());
 
                     for (Map.Entry<String, String> e : opts.entrySet()) {
+
+                        // check if option is valid
                         if (!validOpts.contains(e.getKey())) {
                             invalidParams.add("Invaid option: \'" + e.getKey() + "\' in parameter \'" + p.getName() + "\'");
-                        } else {
+                        }
+
+                        // fix is only allowed in dimensions
+                        else if (e.getKey().equals("fix") && !p.getName().equals("d")) {
+                            invalidParams.add("The option \'fix\' can only applied to dimensions");
+                        }
+
+                        // check if value is valid
+                        else {
                             if (!validateOpts(e.getKey(), e.getValue())) {
                                 invalidParams.add("Invaid value: \'" + e.getValue() + "\' in option \'" + e.getKey() + "\' in parameter \'" + p.getName() + "\'");
                             }
@@ -258,7 +286,7 @@ public final class URLConverter {
      * @return A {@link Dimension} or {@link FixedDimension}.
      */
     @Deprecated
-    @SuppressWarnings("unused, deprecation")
+    @SuppressWarnings("unused")
     private static Dimension parseDimension(String s) {
 
         Dimension retVal;
@@ -294,7 +322,7 @@ public final class URLConverter {
 
             pair = parts[i].split("=<");
             key = pair[0];
-            value = parts[i].split("=<")[1].split(">")[0];
+            value = pair[1].split(">")[0];
 
             retVal.put(key, value);
         }
@@ -311,6 +339,7 @@ public final class URLConverter {
             switch (e.getKey()) {
 
                 case "v":
+                case "fix":
                     break;
 
                 case "select":
@@ -402,6 +431,7 @@ public final class URLConverter {
             case "havingV":
             case "filterV":
             case "v":
+            case "fix":
                 return true;
 
             case "group":

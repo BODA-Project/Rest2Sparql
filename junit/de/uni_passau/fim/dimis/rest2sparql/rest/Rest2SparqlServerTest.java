@@ -96,6 +96,38 @@ public class Rest2SparqlServerTest {
     }
 
     @Test
+    public void testInvalidURL_WrongFix() throws Exception {
+
+        String exp = "The URL contains invalid parameters!\n" +
+                "Here is a list:\n" +
+                "The option 'fix' can only applied to dimensions\n";
+
+        URI uri;
+        uri = new URIBuilder()
+                .setScheme(scheme)
+                .setHost(host)
+                .setPort(port)
+                .setPath(path)
+                .addParameter("func", "<execute>")
+                .addParameter("c", "<http://code-research.eu/resource/Dataset-f744647d-e493-4640-9bd6-2080779a5e77>,select=<false>")
+                .addParameter("m", "<http://dbpedia.org/resource/Water_level>,fix=<http://code-research.eu/resource/Entity_310cde12-35a3-457f-b64f-558f60f6c9f4>")
+                .build();
+
+        HttpGet htpg = new HttpGet(uri);
+        //htpg.addHeader("Accept", format.mimeType);
+        CloseableHttpClient client = HttpClients.createDefault();
+        CloseableHttpResponse response = client.execute(htpg);
+        BufferedHttpEntity entity = new BufferedHttpEntity(response.getEntity());
+
+        assertEquals(exp, EntityUtils.toString(entity));
+
+        if (response != null) {
+            response.close();
+        }
+
+    }
+
+    @Test
     public void testInvalidURL_MultInvalidFuncs() throws Exception {
 
         String exp = "The URL contains invalid parameters!\n" +

@@ -96,15 +96,11 @@ public class QueryDescriptor {
      *
      * @return the FILTER string.
      */
-    @SuppressWarnings("deprecation")
     public String filterString() {
         StringBuilder sb = new StringBuilder();
 
         for (CubeObject co : cubeObjects) {
             sb.append(co.buildFilterString());
-            if (co instanceof FixedDimension) {
-                sb.append(((FixedDimension) co).buildEntityFilterString());
-            }
         }
 
         return sb.toString();
