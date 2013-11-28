@@ -11,17 +11,20 @@ import java.util.List;
 public class Measure extends CubeObject {
 
     private String valueVarName;
+    private String valueAggName;
 
     public Measure(String name, Parameters p) {
         super(name, p);
         VAR_NAME_PREFIX = "M_";
         this.valueVarName = "V_NAME";
+        this.valueAggName = "V_NAME_AGG";
     }
 
     public Measure(String name) {
         super(name);
         VAR_NAME_PREFIX = "M_";
         this.valueVarName = "V_NAME";
+        this.valueAggName = "V_NAME_AGG";
     }
 
     @Override
@@ -48,6 +51,28 @@ public class Measure extends CubeObject {
             return super.buildFilterString();
         }
 
+    }
+
+    @Override
+    public String buildSelectToken() {
+
+        if (params.aggregate == Parameters.AggregateFunction.NONE) {
+            StringBuilder sb = new StringBuilder();
+            for (String s : this.getAllVarNames()) {
+                sb.append('?');
+                sb.append(s);
+                sb.append(' ');
+            }
+            return sb.toString();
+        } else {
+            return super.buildSelectTokenHelper(valueVarName, valueAggName);
+        }
+
+    }
+
+    @Override
+    public String buildHavingToken() {
+        return super.buildHavingTokenHelper(valueVarName);
     }
 
     @Override

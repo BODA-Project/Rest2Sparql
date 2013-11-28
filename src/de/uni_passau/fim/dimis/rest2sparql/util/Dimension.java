@@ -12,11 +12,13 @@ public class Dimension extends CubeObject {
 
     protected String entityVarName;
     private String entityLabelName;
+    private String entityLabelAggName;
 
     public Dimension(String name, Parameters p) {
         super(name, p);
         this.entityVarName = "E_NAME";
         this.entityLabelName = "L_NAME";
+        this.entityLabelAggName = "L_NAME_AGG";
         VAR_NAME_PREFIX = "D_";
     }
 
@@ -24,6 +26,7 @@ public class Dimension extends CubeObject {
         super(name);
         this.entityVarName = "E_NAME";
         this.entityLabelName = "L_NAME";
+        this.entityLabelAggName = "L_NAME_AGG";
         VAR_NAME_PREFIX = "D_";
     }
 
@@ -67,6 +70,27 @@ public class Dimension extends CubeObject {
 
     }
 
+    @Override
+    public String buildSelectToken() {
+
+        if (params.aggregate == Parameters.AggregateFunction.NONE) {
+            StringBuilder sb = new StringBuilder();
+            for (String s : this.getAllVarNames()) {
+                sb.append('?');
+                sb.append(s);
+                sb.append(' ');
+            }
+            return sb.toString();
+        } else {
+            return super.buildSelectTokenHelper(entityLabelName, entityLabelAggName);
+        }
+
+    }
+
+    @Override
+    public String buildHavingToken() {
+        return super.buildHavingTokenHelper(entityLabelName);
+    }
 
     @Override
     public List<String> getAllVarNames() {
@@ -87,6 +111,7 @@ public class Dimension extends CubeObject {
 
     public void setEntityLabelName(String entityLabelName) {
         this.entityLabelName = "L_" + entityLabelName;
+        this.entityLabelAggName = this.entityLabelName + "_AGG";
     }
 
     @Override

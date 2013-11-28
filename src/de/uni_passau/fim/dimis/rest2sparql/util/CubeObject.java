@@ -57,6 +57,10 @@ public abstract class CubeObject {
         return sb.toString();
     }
 
+    public abstract String buildSelectToken();
+
+    public abstract String buildHavingToken();
+
     public String getName() {
         return name;
     }
@@ -87,5 +91,34 @@ public abstract class CubeObject {
 
     public Parameters getParams() {
         return params;
+    }
+
+    protected String buildSelectTokenHelper(String varName, String varAggName) {
+
+        StringBuilder sb = new StringBuilder("?");
+        sb.append('(');
+        sb.append(params.aggregate.name());
+        sb.append("(?");
+        sb.append(varName);
+        sb.append(") AS ?");
+        sb.append(varAggName);
+        sb.append(") ");
+        return sb.toString();
+
+    }
+
+    protected String buildHavingTokenHelper (String varName) {
+
+        StringBuilder sb = new StringBuilder(params.havingAggregate.name());
+
+        sb.append("(?");
+        sb.append(varName);
+        sb.append(") ");
+        sb.append(params.havingRelation.sign);
+        sb.append(' ');
+        sb.append(params.havingValue);
+
+        return sb.toString();
+
     }
 }

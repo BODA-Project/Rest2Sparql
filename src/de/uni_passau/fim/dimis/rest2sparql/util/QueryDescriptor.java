@@ -63,11 +63,7 @@ public class QueryDescriptor {
 
         for (CubeObject co : cubeObjects) {
             if (co.getParams().select) {
-                for (String s : co.getAllVarNames()) {
-                    sb.append('?');
-                    sb.append(s);
-                    sb.append(' ');
-                }
+                sb.append(co.buildSelectToken());
             }
         }
 

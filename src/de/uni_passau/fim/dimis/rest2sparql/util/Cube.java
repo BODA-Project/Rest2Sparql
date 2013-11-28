@@ -26,4 +26,26 @@ public class Cube extends CubeObject {
     public String buildPattern(String obsNameVar) {
         return null;
     }
+
+    @Override
+    public String buildSelectToken() {
+
+        if (params.aggregate == Parameters.AggregateFunction.NONE) {
+            StringBuilder sb = new StringBuilder();
+            for (String s : this.getAllVarNames()) {
+                sb.append('?');
+                sb.append(s);
+                sb.append(' ');
+            }
+            return sb.toString();
+        } else {
+            return super.buildSelectTokenHelper(getVarName(), getVarName() + "_AGG");
+        }
+
+    }
+
+    @Override
+    public String buildHavingToken() {
+        return super.buildHavingTokenHelper(getVarName());
+    }
 }
