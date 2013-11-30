@@ -174,6 +174,30 @@ public class QueryDescriptor {
     }
 
     /**
+     * Builds a HAVING statement for a SPARQL query.
+     * It can handle only one argument in the statement!
+     *
+     * @return the HAVING statement.
+     */
+    public String havingString() {
+
+        CubeObject having = null;
+
+        for (CubeObject c : cubeObjects) {
+            if (c.params.havingAggregate != Parameters.AggregateFunction.NONE) {
+                having = c;
+                break;
+            }
+        }
+
+        if (having != null) {
+            return "HAVING(" + having.buildHavingToken() + ") ";
+        } else {
+            return "";
+        }
+    }
+
+    /**
      * Generates names for the variables.
      */
     public void generateVarNames() {

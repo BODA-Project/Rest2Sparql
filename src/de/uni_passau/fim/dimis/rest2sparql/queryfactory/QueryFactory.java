@@ -173,6 +173,7 @@ public class QueryFactory {
         query.append(filters);
         query.append("} ");
         query.append(queryDescriptor.groupByString());
+        query.append(queryDescriptor.havingString());
         query.append(queryDescriptor.orderByString());
         query.append(queryDescriptor.limitString());
 
