@@ -12,13 +12,13 @@ public class Dimension extends CubeObject {
 
     protected String entityVarName;
     private String entityLabelName;
-    private String entityLabelAggName;
+    //private String entityLabelAggName;
 
     public Dimension(String name, Parameters p) {
         super(name, p);
         this.entityVarName = "E_NAME";
         this.entityLabelName = "L_NAME";
-        this.entityLabelAggName = "L_NAME_AGG";
+        //this.entityLabelAggName = "L_NAME_AGG";
         VAR_NAME_PREFIX = "D_";
     }
 
@@ -26,7 +26,7 @@ public class Dimension extends CubeObject {
         super(name);
         this.entityVarName = "E_NAME";
         this.entityLabelName = "L_NAME";
-        this.entityLabelAggName = "L_NAME_AGG";
+        //this.entityLabelAggName = "L_NAME_AGG";
         VAR_NAME_PREFIX = "D_";
     }
 
@@ -82,7 +82,7 @@ public class Dimension extends CubeObject {
             }
             return sb.toString();
         } else {
-            return super.buildSelectTokenHelper(entityLabelName, entityLabelAggName);
+            return super.buildSelectTokenHelper(getVarName(), getVarName() + "_AGG");
         }
 
     }
@@ -111,7 +111,7 @@ public class Dimension extends CubeObject {
 
     public void setEntityLabelName(String entityLabelName) {
         this.entityLabelName = "L_" + entityLabelName;
-        this.entityLabelAggName = this.entityLabelName + "_AGG";
+        //this.entityLabelAggName = this.entityLabelName + "_AGG";
     }
 
     @Override
