@@ -15,6 +15,7 @@ public class QueryDescriptor {
     private List<Cube> cubes = new LinkedList<>();
     private List<Dimension> dimensions = new LinkedList<>();
     private List<Measure> measures = new LinkedList<>();
+    private boolean isGrouped = false;
 
     public QueryDescriptor(List<CubeObject> objects) {
         this.cubeObjects = objects;
@@ -39,6 +40,10 @@ public class QueryDescriptor {
             } else if (co instanceof Measure) {
                 measures.add((Measure) co);
                 nofMeasures++;
+            }
+
+            if (co.params.groupBy) {
+                isGrouped = true;
             }
         }
 
@@ -259,5 +264,13 @@ public class QueryDescriptor {
     public int size() {
         return cubeObjects.size();
     }
-}
 
+    /**
+     * Returns <code>true</code> if a GROUP BY statement occurs in the query.
+     *
+     * @return <code>true</code> if a GROUP BY statement occurs in the query.
+     */
+    public boolean isGrouped() {
+        return isGrouped;
+    }
+}
