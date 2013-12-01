@@ -147,8 +147,19 @@ public class QueryFactory {
         queryDescriptor.generateVarNames();
         Cube cube;
 
-        String selectString = queryDescriptor.selectString() + "?" + OBSERVATION + " ";
-        StringBuilder whereString = new StringBuilder("WHERE { ?" + OBSERVATION + " a qb:Observation. " + queryDescriptor.whereString(OBSERVATION, true));
+        StringBuilder selectString = new StringBuilder(queryDescriptor.selectString());
+
+        // only show the observation names, if there is no GROUP BY statement in the query
+        if (!queryDescriptor.isGrouped()) {
+            selectString.append('?');
+            selectString.append(OBSERVATION);
+            selectString.append(' ');
+        }
+
+        StringBuilder whereString = new StringBuilder("WHERE { ?");
+        whereString.append(OBSERVATION);
+        whereString.append(" a qb:Observation. ");
+        whereString.append(queryDescriptor.whereString(OBSERVATION, true));
         String filters = queryDescriptor.filterString();
 
 
