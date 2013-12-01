@@ -95,8 +95,7 @@ public abstract class CubeObject {
 
     protected String buildSelectTokenHelper(String varName, String varAggName) {
 
-        StringBuilder sb = new StringBuilder("?");
-        sb.append('(');
+        StringBuilder sb = new StringBuilder("(");
         sb.append(params.aggregate.name());
         sb.append("(?");
         sb.append(varName);
