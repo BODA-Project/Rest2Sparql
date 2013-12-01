@@ -366,10 +366,10 @@ public final class URLConverter {
                 case "group":
                     switch (e.getValue()) {
                         case "true":
-                            paramFac.setSelect(true);
+                            paramFac.setGroupBy(true);
                             break;
                         case "false":
-                            paramFac.setSelect(false);
+                            paramFac.setGroupBy(false);
                             break;
                         default:
                             throw new IllegalArgumentException();
@@ -406,7 +406,7 @@ public final class URLConverter {
 
                 case "havingR":
                     if (strToRelMap.containsKey(e.getValue())) {
-                        paramFac.setFilterRelation(strToRelMap.get(e.getValue()));
+                        paramFac.setHavingRelation(strToRelMap.get(e.getValue()));
                     } else {
                         throw new IllegalArgumentException();
                     }
