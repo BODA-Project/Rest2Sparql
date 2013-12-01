@@ -1,6 +1,7 @@
 package de.uni_passau.fim.dimis.rest2sparql.util;
 
 import java.util.List;
+import static de.uni_passau.fim.dimis.rest2sparql.util.Parameters.AggregateFunction;
 
 /**
  * Created with IntelliJ IDEA.
@@ -74,12 +75,29 @@ public class Dimension extends CubeObject {
     public String buildSelectToken() {
 
         if (params.aggregate == Parameters.AggregateFunction.NONE) {
+
             StringBuilder sb = new StringBuilder();
-            for (String s : this.getAllVarNames()) {
+
+            // if group by this dimension, sample the entities and labels
+            if (params.groupBy) {
+
                 sb.append('?');
-                sb.append(s);
+                sb.append(getVarName());
                 sb.append(' ');
+
+                sb.append(super.buildSelectTokenHelper(entityVarName, entityVarName + "_AGG", AggregateFunction.SAMPLE));
+                sb.append(super.buildSelectTokenHelper(entityLabelName, entityLabelName + "_AGG", AggregateFunction.SAMPLE));
             }
+
+            // generate normal select
+            else {
+                for (String s : this.getAllVarNames()) {
+                    sb.append('?');
+                    sb.append(s);
+                    sb.append(' ');
+                }
+            }
+
             return sb.toString();
         } else {
             return super.buildSelectTokenHelper(getVarName(), getVarName() + "_AGG");
