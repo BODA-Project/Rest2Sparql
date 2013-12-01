@@ -28,6 +28,7 @@ public abstract class CubeObject {
         this.name = name;
     }
 
+    @SuppressWarnings("unused")
     private CubeObject(String name, Parameters p, SparqlPrefix prefix) {
         this.name = name;
         this.params = p;
@@ -95,8 +96,14 @@ public abstract class CubeObject {
 
     protected String buildSelectTokenHelper(String varName, String varAggName) {
 
+        return buildSelectTokenHelper(varName, varAggName, params.aggregate);
+
+    }
+
+    protected String buildSelectTokenHelper(String varName, String varAggName, Parameters.AggregateFunction func) {
+
         StringBuilder sb = new StringBuilder("(");
-        sb.append(params.aggregate.name());
+        sb.append(func.name());
         sb.append("(?");
         sb.append(varName);
         sb.append(") AS ?");
