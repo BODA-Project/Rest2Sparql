@@ -17,7 +17,7 @@ public abstract class CubeObject {
     private String name;
     private String varName = "P_VAR";
     private SparqlPrefix prefix = null;
-    protected Parameters params;
+    public Parameters params;
 
     public CubeObject(String name, Parameters p) {
         this.name = name;

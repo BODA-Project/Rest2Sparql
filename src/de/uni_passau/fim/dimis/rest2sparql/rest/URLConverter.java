@@ -1,5 +1,6 @@
 package de.uni_passau.fim.dimis.rest2sparql.rest;
 
+import de.uni_passau.fim.dimis.rest2sparql.queryfactory.QueryDescriptor;
 import de.uni_passau.fim.dimis.rest2sparql.rest.restadapter.Methods;
 import de.uni_passau.fim.dimis.rest2sparql.util.*;
 import org.apache.http.NameValuePair;
@@ -148,10 +149,10 @@ public final class URLConverter {
     }
 
     /**
-     * Parses the given url and returns a {@link QueryDescriptor} generated from the parameters.
+     * Parses the given url and returns a {@link de.uni_passau.fim.dimis.rest2sparql.queryfactory.QueryDescriptor} generated from the parameters.
      *
      * @param url The url to parse.
-     * @return A {@link QueryDescriptor} generated from the parameters.
+     * @return A {@link de.uni_passau.fim.dimis.rest2sparql.queryfactory.QueryDescriptor} generated from the parameters.
      */
     public static QueryDescriptor getQueryDescriptor(String url) {
 

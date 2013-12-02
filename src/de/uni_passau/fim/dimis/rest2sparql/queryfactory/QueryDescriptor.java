@@ -1,4 +1,6 @@
-package de.uni_passau.fim.dimis.rest2sparql.util;
+package de.uni_passau.fim.dimis.rest2sparql.queryfactory;
+
+import de.uni_passau.fim.dimis.rest2sparql.util.*;
 
 import java.util.Collections;
 import java.util.LinkedList;

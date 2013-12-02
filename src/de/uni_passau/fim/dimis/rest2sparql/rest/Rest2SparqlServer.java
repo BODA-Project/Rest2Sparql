@@ -3,7 +3,7 @@ package de.uni_passau.fim.dimis.rest2sparql.rest;
 import de.uni_passau.fim.dimis.rest2sparql.queryfactory.QueryFactory;
 import de.uni_passau.fim.dimis.rest2sparql.rest.restadapter.IRestAdapter;
 import de.uni_passau.fim.dimis.rest2sparql.rest.restadapter.Methods;
-import de.uni_passau.fim.dimis.rest2sparql.util.QueryDescriptor;
+import de.uni_passau.fim.dimis.rest2sparql.queryfactory.QueryDescriptor;
 import org.apache.http.*;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.DefaultBHttpServerConnection;

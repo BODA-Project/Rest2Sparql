@@ -8,7 +8,7 @@ import de.uni_passau.fim.dimis.rest2sparql.triplestore.util.ConnectionException;
 import de.uni_passau.fim.dimis.rest2sparql.util.Cube;
 import de.uni_passau.fim.dimis.rest2sparql.util.CubeObject;
 import de.uni_passau.fim.dimis.rest2sparql.util.Dimension;
-import de.uni_passau.fim.dimis.rest2sparql.util.QueryDescriptor;
+import de.uni_passau.fim.dimis.rest2sparql.queryfactory.QueryDescriptor;
 
 import java.util.Collections;
 import java.util.HashSet;

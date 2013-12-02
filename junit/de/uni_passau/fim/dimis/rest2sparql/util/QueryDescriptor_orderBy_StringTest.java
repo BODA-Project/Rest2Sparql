@@ -1,5 +1,6 @@
 package de.uni_passau.fim.dimis.rest2sparql.util;
 
+import de.uni_passau.fim.dimis.rest2sparql.queryfactory.QueryDescriptor;
 import junit.framework.Assert;
 import org.junit.Test;
 

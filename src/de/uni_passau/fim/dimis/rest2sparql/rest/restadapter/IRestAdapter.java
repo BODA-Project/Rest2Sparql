@@ -1,7 +1,7 @@
 package de.uni_passau.fim.dimis.rest2sparql.rest.restadapter;
 
 import de.uni_passau.fim.dimis.rest2sparql.util.CubeObject;
-import de.uni_passau.fim.dimis.rest2sparql.util.QueryDescriptor;
+import de.uni_passau.fim.dimis.rest2sparql.queryfactory.QueryDescriptor;
 
 import java.util.List;
 import java.util.Set;
