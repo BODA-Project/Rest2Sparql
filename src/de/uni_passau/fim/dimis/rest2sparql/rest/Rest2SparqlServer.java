@@ -1,6 +1,5 @@
 package de.uni_passau.fim.dimis.rest2sparql.rest;
 
-import de.uni_passau.fim.dimis.rest2sparql.queryfactory.QueryFactory;
 import de.uni_passau.fim.dimis.rest2sparql.rest.restadapter.IRestAdapter;
 import de.uni_passau.fim.dimis.rest2sparql.rest.restadapter.Methods;
 import de.uni_passau.fim.dimis.rest2sparql.queryfactory.QueryDescriptor;
@@ -141,7 +140,6 @@ public class Rest2SparqlServer {
                 String res = "";
                 Methods m = URLConverter.getMethod(target);
                 QueryDescriptor descriptor = URLConverter.getQueryDescriptor(target);
-                System.out.println(QueryFactory.buildObservationQuery(descriptor));
 
                 // check if request is valid
                 String validatorOutput = adapter.validateMethodParams(m, descriptor);
