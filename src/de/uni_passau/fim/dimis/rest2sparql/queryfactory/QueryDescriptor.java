@@ -172,7 +172,11 @@ public class QueryDescriptor {
                 somethingAdded = true;
 
                 sb.append('?');
-                sb.append(co.getVarName());
+                if (co instanceof Dimension) {
+                    sb.append(((Dimension) co).getEntityVarName());
+                } else {
+                    sb.append(co.getVarName());
+                }
                 sb.append(' ');
             }
         }

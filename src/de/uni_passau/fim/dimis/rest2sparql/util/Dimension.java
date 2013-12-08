@@ -82,10 +82,11 @@ public class Dimension extends CubeObject {
             if (params.groupBy) {
 
                 sb.append('?');
-                sb.append(getVarName());
+                sb.append(entityVarName);
                 sb.append(' ');
 
-                sb.append(super.buildSelectTokenHelper(entityVarName, entityVarName + "_AGG", AggregateFunction.SAMPLE));
+                // sb.append(super.buildSelectTokenHelper(entityVarName, entityVarName + "_AGG", AggregateFunction.SAMPLE));
+                sb.append(super.buildSelectTokenHelper(getVarName(), entityVarName + "_AGG", AggregateFunction.SAMPLE));
                 sb.append(super.buildSelectTokenHelper(entityLabelName, entityLabelName + "_AGG", AggregateFunction.SAMPLE));
             }
 
@@ -118,7 +119,6 @@ public class Dimension extends CubeObject {
         return retVal;
     }
 
-    @SuppressWarnings("unused")
     public String getEntityVarName() {
         return entityVarName;
     }
