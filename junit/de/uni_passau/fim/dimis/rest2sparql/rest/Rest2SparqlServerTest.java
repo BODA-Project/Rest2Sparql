@@ -1,6 +1,5 @@
 package de.uni_passau.fim.dimis.rest2sparql.rest;
 
-import de.uni_passau.fim.dimis.rest2sparql.rest.restadapter.RestAdapter;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.utils.URIBuilder;
@@ -8,7 +7,6 @@ import org.apache.http.entity.BufferedHttpEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.net.URI;
@@ -26,13 +24,7 @@ public class Rest2SparqlServerTest {
     private static final String scheme = "http";
     private static final String host = "localhost";
     private static final int port = 8080;
-    private static final String path = "/";
-
-    @BeforeClass
-    public static void setUpBeforeClass() throws Exception {
-        Rest2SparqlServer server = new Rest2SparqlServer(new RestAdapter(), 8080);
-        server.startServer();
-    }
+    private static final String path = "/backend";
 
     @Test
     public void testInvalidURL_NoFunc() throws Exception {
