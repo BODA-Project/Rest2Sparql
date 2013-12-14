@@ -1,253 +1,145 @@
 package de.uni_passau.fim.dimis.rest2sparql.rest;
 
+import de.uni_passau.fim.dimis.rest2sparql.queryfactory.QueryDescriptor;
 import de.uni_passau.fim.dimis.rest2sparql.rest.restadapter.IRestAdapter;
 import de.uni_passau.fim.dimis.rest2sparql.rest.restadapter.Methods;
-import de.uni_passau.fim.dimis.rest2sparql.queryfactory.QueryDescriptor;
-import org.apache.http.*;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.DefaultBHttpServerConnection;
-import org.apache.http.impl.DefaultBHttpServerConnectionFactory;
-import org.apache.http.protocol.*;
+import de.uni_passau.fim.dimis.rest2sparql.rest.restadapter.RestAdapter;
+import de.uni_passau.fim.dimis.rest2sparql.triplestore.ITripleStoreConnection;
 
+import javax.servlet.ServletException;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.io.InterruptedIOException;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.io.PrintWriter;
+import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
-
-import static de.uni_passau.fim.dimis.rest2sparql.triplestore.ITripleStoreConnection.OutputFormat;
 
 /**
- * Created with IntelliJ IDEA.
- * User: tommy
- * Date: 10/24/13
- * Time: 2:38 PM
- * <p/>
- * <a href="http://hc.apache.org/httpcomponents-core-4.3.x/httpcore/examples/org/apache/http/examples/ElementalHttpServer.java">Apache Documentation</a>
+ *
  */
-public class Rest2SparqlServer {
+public class Rest2SparqlServlet extends HttpServlet {
 
     private static IRestAdapter adapter;
-    private static HashMap<String, OutputFormat> formats = new HashMap<>();
+    private static HashMap<String, ITripleStoreConnection.OutputFormat> formats = new HashMap<>();
+
+    public static final int CODE_OK = 200;
+    public static final int CODE_BAD_REQ = 400;
 
     static {
-        formats.put("application/sparql-results+xml", OutputFormat.XML);
-        formats.put("application/sparql-results+json", OutputFormat.JSON);
-        formats.put("application/x-binary-rdf-results-table", OutputFormat.BINARY);
-        formats.put("text/tab-separated-values", OutputFormat.TSV);
-        formats.put("text/csv", OutputFormat.CSV);
+        formats.put("application/sparql-results+xml", ITripleStoreConnection.OutputFormat.XML);
+        formats.put("application/sparql-results+json", ITripleStoreConnection.OutputFormat.JSON);
+        formats.put("application/x-binary-rdf-results-table", ITripleStoreConnection.OutputFormat.BINARY);
+        formats.put("text/tab-separated-values", ITripleStoreConnection.OutputFormat.TSV);
+        formats.put("text/csv", ITripleStoreConnection.OutputFormat.CSV);
     }
 
-    private int port;
-
-    public Rest2SparqlServer(IRestAdapter adapter, int port) {
-        this.port = port;
-        Rest2SparqlServer.adapter = adapter;
+    @Override
+    public void init() throws ServletException {
+        adapter = new RestAdapter();
+        super.init();
     }
 
-    public boolean startServer() throws IOException {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
-        // Set up the HTTP protocol processor
-        HttpProcessor httpproc = HttpProcessorBuilder.create()
-                .add(new ResponseDate())
-                .add(new ResponseServer("Test/1.1"))
-                .add(new ResponseContent())
-                .add(new ResponseConnControl()).build();
-
-        // Set up request handlers
-        UriHttpRequestHandlerMapper reqistry = new UriHttpRequestHandlerMapper();
-        reqistry.register("*", new HttpRestHandler());
-
-        // Set up the HTTP service
-        HttpService httpService = new HttpService(httpproc, reqistry);
-
-        Thread t = new RequestListenerThread(port, httpService);
-        t.setDaemon(false);
-        t.start();
-
-        return false; // TODO
     }
 
-    static class HttpRestHandler implements HttpRequestHandler {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        // ******************************
+        // Output format handling
+        // ******************************
 
-        @Override
-        public void handle(HttpRequest request,
-                           HttpResponse response,
-                           HttpContext context) throws HttpException, IOException {
+        // default format is XML
+        ITripleStoreConnection.OutputFormat type = ITripleStoreConnection.OutputFormat.XML;
 
-            String method = request.getRequestLine().getMethod().toUpperCase(Locale.ENGLISH);
-            if (!method.equals("GET")) {
-                throw new MethodNotSupportedException(method + " method not supported");
+        // retrieve accepted format
+        String header = request.getHeader("accept");
+        if (header != null && !header.equals("")) {
+            type = formats.get(header);
+        }
+
+        // set format
+        adapter.setOutputFormat(type);
+
+        // ******************************
+        // request execution
+        // ******************************
+
+        // get and trim uri
+        String target = request.getQueryString();
+
+        // Validate the String
+        List<String> invalidParams = URLConverter.validate(target);
+
+        // If the URL contains invalid parameters, notify the user
+        if (!invalidParams.isEmpty()) {
+            StringBuilder sb = new StringBuilder("The URL contains invalid parameters!\nHere is a list:\n");
+            for (String s : invalidParams) {
+                sb.append(s);
+                sb.append('\n');
             }
 
-            // ******************************
-            // Output format handling
-            // ******************************
+            // set error message, content type and status
+            PrintWriter out = response.getWriter();
+            out.write(sb.toString());
+            out.close();
+            response.setContentType("text/plain");
+            response.setStatus(CODE_BAD_REQ);
 
-            // default format is XML
-            OutputFormat type = OutputFormat.XML;
-            boolean found = false;
+        }
 
-            // retrieve accepted format
-            for (Header h : request.getHeaders("Accept")) {
-                for (HeaderElement e : h.getElements()) {
-                    if (formats.containsKey(e.getName())) {
-                        type = formats.get(e.getName());
-                        found = true;
-                        break;
-                    }
-                }
-                if (found) break;
-            }
+        // If the request is valid, execute it and return the result
+        else {
 
-            // set format
-            adapter.setOutputFormat(type);
+            String res = "";
+            Methods m = URLConverter.getMethod(target);
+            QueryDescriptor descriptor = URLConverter.getQueryDescriptor(target);
 
-            // ******************************
-            // request execution
-            // ******************************
-            HttpEntity body;
-            // TODO set charset, filename etc. in result
+            // check if request is valid
+            String validatorOutput = adapter.validateMethodParams(m, descriptor);
 
-            // get and trim uri
-            String target = request.getRequestLine().getUri();
-            target = target.substring(target.indexOf("?") + 1);
-
-            // Validate the String
-            List<String> invalidParams = URLConverter.validate(target);
-
-            // If the URL contains invalid parameters, notify the user
-            if (!invalidParams.isEmpty()) {
-                StringBuilder sb = new StringBuilder("The URL contains invalid parameters!\nHere is a list:\n");
-                for (String s : invalidParams) {
-                    sb.append(s);
-                    sb.append('\n');
-                }
-
+            // if not valid
+            if (!validatorOutput.isEmpty()) {
                 // set error message, content type and status
-                body = new StringEntity(sb.toString());
-                response.addHeader("Content-Type", "text/plain");
-                response.setStatusCode(HttpStatus.SC_BAD_REQUEST);
-
-
+                PrintWriter out = response.getWriter();
+                out.write(validatorOutput);
+                out.close();
+                response.setContentType("text/plain");
+                response.setStatus(CODE_BAD_REQ);
             }
 
-            // If the request is valid, execute it and return the result
+            // if valid, execute query
             else {
+                switch (m) {
 
-                String res = "";
-                Methods m = URLConverter.getMethod(target);
-                QueryDescriptor descriptor = URLConverter.getQueryDescriptor(target);
-
-                // check if request is valid
-                String validatorOutput = adapter.validateMethodParams(m, descriptor);
-
-                // if not valid
-                if (!validatorOutput.isEmpty()) {
-                    // set error message, content type and status
-                    body = new StringEntity(validatorOutput);
-                    response.addHeader("Content-Type", "text/plain");
-                    response.setStatusCode(HttpStatus.SC_BAD_REQUEST);
+                    case GET_CUBES:
+                        res = adapter.execute(m);
+                        break;
+                    case GET_DIMENSIONS:
+                    case GET_MEASURES:
+                    case GET_ENTITIES:
+                        res = adapter.execute(m, descriptor);
+                        break;
+                    case EXECUTE:
+                        res = adapter.execute(m, descriptor);
+                        break;
                 }
 
-                // if valid, execute query
-                else {
-                    switch (m) {
-
-                        case GET_CUBES:
-                            res = adapter.execute(m);
-                            break;
-                        case GET_DIMENSIONS:
-                        case GET_MEASURES:
-                        case GET_ENTITIES:
-                            res = adapter.execute(m, descriptor);
-                            break;
-                        case EXECUTE:
-                            res = adapter.execute(m, descriptor);
-                            break;
-                    }
-
-                    // set content, content type ans status code
-                    body = new StringEntity(res);
-                    response.addHeader("Content-Type", type.mimeType);
-                    response.setStatusCode(HttpStatus.SC_OK);
-                }
-            }
-
-            response.setEntity(body);
-        }
-
-    }
-
-    static class RequestListenerThread extends Thread {
-
-        private final HttpConnectionFactory<DefaultBHttpServerConnection> connFactory;
-        private final ServerSocket socket;
-        private final HttpService httpService;
-
-        public RequestListenerThread(int port, HttpService service) throws IOException {
-
-            connFactory = DefaultBHttpServerConnectionFactory.INSTANCE;
-            socket = new ServerSocket(port);
-            httpService = service;
-        }
-
-        @Override
-        public void run() {
-            while (!Thread.interrupted()) {
-                try {
-                    // Set up HTTP connection
-                    Socket socket = this.socket.accept();
-                    HttpServerConnection conn = this.connFactory.createConnection(socket);
-
-                    // Start worker thread
-                    Thread t = new WorkerThread(this.httpService, conn);
-                    t.setDaemon(true);
-                    t.start();
-                } catch (InterruptedIOException ex) {
-                    break;
-                } catch (IOException e) {
-                    System.err.println("I/O error initialising connection thread: "
-                            + e.getMessage());
-                    break;
-                }
-            }
-        }
-    }
-
-    static class WorkerThread extends Thread {
-
-        private final HttpService httpservice;
-        private final HttpServerConnection conn;
-
-        public WorkerThread(
-                final HttpService httpservice,
-                final HttpServerConnection conn) {
-            super();
-            this.httpservice = httpservice;
-            this.conn = conn;
-        }
-
-        @Override
-        public void run() {
-            HttpContext context = new BasicHttpContext(null);
-            try {
-                while (!Thread.interrupted() && this.conn.isOpen()) {
-                    this.httpservice.handleRequest(this.conn, context);
-                }
-            } catch (ConnectionClosedException ex) {
-                System.err.println("Client closed connection");
-            } catch (IOException ex) {
-                System.err.println("I/O error: " + ex.getMessage());
-            } catch (HttpException ex) {
-                System.err.println("Unrecoverable HTTP protocol violation: " + ex.getMessage());
-            } finally {
-                try {
-                    this.conn.shutdown();
-                } catch (IOException ignore) {
-                }
+                // set content, content type ans status code
+                byte[] b = res.getBytes(Charset.forName("UTF-8"));
+                //PrintWriter out = response.getWriter();
+                //out.write(res);
+                ServletOutputStream out = response.getOutputStream();
+                out.write(b);
+                out.flush();
+                out.close();
+                response.setContentType(type.mimeType);
+                //response.addHeader("Content-Type", type.mimeType);
+                response.setHeader("Content-Disposition", "attachment; filename=\"sparql\"");
+                response.setCharacterEncoding("UTF-8");
+                response.setStatus(CODE_OK);
             }
         }
 

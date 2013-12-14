@@ -1,6 +1,7 @@
 package de.uni_passau.fim.dimis.rest2sparql.rest.restadapter;
 
 import de.uni_passau.fim.dimis.rest2sparql.cubemanagement.CubeManager;
+import de.uni_passau.fim.dimis.rest2sparql.queryfactory.QueryDescriptor;
 import de.uni_passau.fim.dimis.rest2sparql.queryfactory.QueryFactory;
 import de.uni_passau.fim.dimis.rest2sparql.triplestore.CodeBigdataEngine;
 import de.uni_passau.fim.dimis.rest2sparql.triplestore.ITripleStoreConnection;
@@ -8,7 +9,6 @@ import de.uni_passau.fim.dimis.rest2sparql.triplestore.util.ConnectionException;
 import de.uni_passau.fim.dimis.rest2sparql.util.Cube;
 import de.uni_passau.fim.dimis.rest2sparql.util.CubeObject;
 import de.uni_passau.fim.dimis.rest2sparql.util.Dimension;
-import de.uni_passau.fim.dimis.rest2sparql.queryfactory.QueryDescriptor;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -36,6 +36,7 @@ public class RestAdapter implements IRestAdapter {
         manager = new CubeManager(connection);
     }
 
+    @SuppressWarnings("unused")
     public RestAdapter(ITripleStoreConnection connection) {
 
         init();

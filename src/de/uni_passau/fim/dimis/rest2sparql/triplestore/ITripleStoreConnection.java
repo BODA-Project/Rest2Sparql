@@ -2,8 +2,6 @@ package de.uni_passau.fim.dimis.rest2sparql.triplestore;
 
 import de.uni_passau.fim.dimis.rest2sparql.triplestore.util.ConnectionException;
 
-import java.io.IOException;
-
 /**
  * Created with IntelliJ IDEA.
  * User: tommy

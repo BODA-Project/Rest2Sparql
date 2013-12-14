@@ -1,6 +1,7 @@
 package de.uni_passau.fim.dimis.rest2sparql.util;
 
 import java.util.List;
+
 import static de.uni_passau.fim.dimis.rest2sparql.util.Parameters.AggregateFunction;
 
 /**
