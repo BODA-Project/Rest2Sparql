@@ -1,11 +1,4 @@
-<%--
-  Created by IntelliJ IDEA.
-  User: tommy
-  Date: 12/13/13
-  Time: 1:11 PM
-  To change this template use File | Settings | File Templates.
---%>
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
@@ -13,15 +6,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="">
     <meta name="author" content="">
-    <link rel="shortcut icon" href="../../docs-assets/ico/favicon.png">
+    <!--<link rel="shortcut icon" href="../../docs-assets/ico/favicon.png">-->
 
     <!-- Scripts for the API -->
     <script src="./js/cubeloader.js"></script>
 
-    <title>Navbar Template for Bootstrap</title>
+
+    <title>REST 2 SPARQL</title>
 
     <!-- Bootstrap core CSS -->
     <link href="./css/bootstrap.css" rel="stylesheet">
+
 
     <!-- Custom styles for this template -->
     <!-- <link href="navbar.css" rel="stylesheet"> -->
@@ -96,7 +91,7 @@
                         <ul id="to_getDCubeLst" class="dropdown-menu to_CubeLst">
                         </ul>
                     </div>
-                    <input type="text" id="to_getDCubeTxt" class="to_CubeTxt form-control" value="Please select a cube">
+                    <input type="text" id="to_getDCubeTxt" class="to_CubeTxt form-control" placeholder="Please select a cube">
                     <div class="input-group-btn">
                         <button type="button" class="btn btn-default" tabindex="-1" onclick="loadDimensions()">Go!</button>
                     </div>
@@ -104,7 +99,6 @@
             </div><!-- /.col-lg-12 -->
         </div><!-- /.row -->
     </form>
-
 
     <h3>Get Measures</h3>
 
@@ -117,7 +111,7 @@
                         <ul id="to_getMCubeLst" class="dropdown-menu to_CubeLst">
                         </ul>
                     </div>
-                    <input type="text" id="to_getMCubeTxt" class="to_CubeTxt form-control" value="Please select a cube">
+                    <input type="text" id="to_getMCubeTxt" class="to_CubeTxt form-control" placeholder="Please select a cube">
                     <div class="input-group-btn">
                         <button type="button" class="btn btn-default" tabindex="-1" onclick="loadMeasures()">Go!</button>
                     </div>
@@ -137,21 +131,105 @@
                         <ul id="to_getECubeLst" class="dropdown-menu to_CubeLst">
                         </ul>
                     </div>
-                    <input type="text" id="to_getECubeTxt" class="form-control to_CubeTxt" value="Please select a cube">
+                    <input type="text" id="to_getECubeTxt" class="form-control to_CubeTxt" placeholder="Please select a cube">
                     <div class="input-group-btn">
                         <button type="button" id="to_getEDimBtn" class="to_DimBtn btn btn-default dropdown-toggle" data-toggle="dropdown">Dimension <span class="caret"></span></button>
                         <ul id="to_getEDimLst" class="to_DimLst dropdown-menu">
                         </ul>
                     </div>
-                    <input id="to_getEDimTxt" type="text" class="to_DimTxt form-control" value="Please select a dimension">
+                    <input id="to_getEDimTxt" type="text" class="to_DimTxt form-control" placeholder="Please select a dimension">
                     <div class="input-group-btn">
                         <button type="button" class="btn btn-default" tabindex="-1" onclick="loadEntities()">Go!</button>
                     </div>
                 </div><!-- /.input-group -->
-            </div><!-- /.input-group -->
-        </div><!-- /.col-lg-12 -->
-</div><!-- /.row -->
-</form>
+            </div><!-- /.col-lg-12 -->
+        </div><!-- /.row -->
+    </form>
+
+    <h3>Create Query</h3>
+
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th>Object</th>
+            <th>Select</th>
+            <th>Groub by</th>
+            <th>Order by</th>
+            <th>Aggregate</th>
+            <th>Filter</th>
+            <th>Filter value</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <th>DIM 1</th>
+            <th><input type="checkbox"></th>
+            <th><input type="checkbox"></th>
+            <th><input type="text" class="form-control" maxlength="3" size="3" value="-1"></th>
+            <th><select class="selectpicker show-tick form-control">
+                <option>NONE</option>
+                <option>COUNT</option>
+                <option>SUM</option>
+                <option>MIN</option>
+                <option>MAX</option>
+                <option>AVG</option>
+                <option>GROUP CONCAT</option>
+            </select></th>
+            <th><select class="selectpicker show-tick form-control">
+                <option>NONE</option>
+                <option>&lt;</option>
+                <option>&lt;=</option>
+                <option>&gt;</option>
+                <option>&gt;=</option>
+                <option>==</option>
+                <option>!=</option>
+            </select></th>
+            <th><input type="text" class="form-control" size="3"></th>
+        </tr>
+        </tbody>
+    </table>
+
+<!--
+    <div class="row">
+        <div class="col-sm-2">
+            <p class="form-control-static">Dimension_1</p>
+
+            <div class="form-group">
+                <label class="checkbox-inline">
+                    <input type="checkbox"> Select
+                </label>
+                <label class="checkbox-inline">
+                    <input type="checkbox"> Group By
+                </label>
+            </div>
+            <div class="input-group">
+                <div class="input-group-btn">
+                    <button type="button" id="to_TODO_1" class="to_CubeBtn btn btn-default dropdown-toggle"
+                            data-toggle="dropdown">Filter <span class="caret"></span></button>
+                    <ul id="to_TODO_2" class="dropdown-menu to_CubeLst">
+                        <li><a href="#">==</a></li>
+                    </ul>
+                </div>
+                <input type="text" id="to_TODO_3" class="to_CubeTxt form-control" placeholder="Filtervalue">
+            </div>
+        </div>
+    </div>
+-->
+
+    <h3>Last Queries</h3>
+
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th>Query</th>
+        </tr>
+        </thead>
+        <tbody id="to_historyTable">
+        <tr>
+            <th></th>
+        </tr>
+        </tbody>
+    </table>
 
 <!-- Main component for a primary marketing message or call to action -->
 <!--      <div class="jumbotron">
