@@ -57,7 +57,11 @@ public class Rest2SparqlServlet extends HttpServlet {
         // retrieve accepted format
         String header = request.getHeader("accept");
         if (header != null && !header.equals("")) {
-            type = formats.get(header);
+            for (String s : header.split(",")) {
+                if (formats.containsKey(s)) {
+                    type = formats.get(header);
+                }
+            }
         }
 
         // set format
