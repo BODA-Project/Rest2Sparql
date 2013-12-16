@@ -6,7 +6,8 @@
 // Const
 //
 var cubeURL = "./backend?func=<getCubes>";
-var queryPrefix = "http://localhost:8080/backend?func=<execute>&";
+var host = "http://localhost:8080/";
+var queryPrefix = host + "backend?func=<execute>&";
 
 //
 // TEMPLATES
@@ -67,6 +68,9 @@ function loadCubes() {
     ajaxReq.open("GET", cubeURL, true);
     ajaxReq.setRequestHeader("accept", "application/sparql-results+json");
     ajaxReq.send();
+
+    addToQueryList(host + cubeURL.substr(2));
+
 }
 
 function loadDimensions() {
@@ -88,6 +92,8 @@ function loadDimensions() {
     ajaxReq.setRequestHeader("accept", "application/sparql-results+json");
     ajaxReq.send();
 
+    addToQueryList(host + tmp.substr(2));
+
 }
 
 function loadMeasures() {
@@ -107,6 +113,8 @@ function loadMeasures() {
     ajaxReq.open("GET", tmp, true);
     ajaxReq.setRequestHeader("accept", "application/sparql-results+json");
     ajaxReq.send();
+
+    addToQueryList(host + tmp.substr(2));
 
 }
 
@@ -128,6 +136,8 @@ function loadEntities() {
     ajaxReq.open("GET", tmp, true);
     ajaxReq.setRequestHeader("accept", "application/sparql-results+json");
     ajaxReq.send();
+
+    addToQueryList(host + tmp.substr(2));
 
 }
 
@@ -288,5 +298,20 @@ function createQuery() {
         }
 
     }
+
+}
+
+function addToQueryList(entry) {
+
+    var tr = document.createElement("tr");
+    var th = document.createElement("th");
+    var a = document.createElement("a");
+    a.setAttribute("href", entry);
+    var text = document.createTextNode(entry);
+
+    document.getElementById("to_historyTable").insertBefore(tr, document.getElementById("to_historyTable").firstChild);
+    tr.appendChild(th);
+    th.appendChild(a);
+    a.appendChild(text);
 
 }
