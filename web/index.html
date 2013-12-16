@@ -153,68 +153,24 @@
         <tr>
             <th>Object</th>
             <th>Select</th>
-            <th>Groub by</th>
+            <th>Group by</th>
             <th>Order by</th>
             <th>Aggregate</th>
             <th>Filter</th>
             <th>Filter value</th>
         </tr>
         </thead>
-        <tbody>
-        <tr>
-            <th>DIM 1</th>
-            <th><input type="checkbox"></th>
-            <th><input type="checkbox"></th>
-            <th><input type="text" class="form-control" maxlength="3" size="3" value="-1"></th>
-            <th><select class="selectpicker show-tick form-control">
-                <option>NONE</option>
-                <option>COUNT</option>
-                <option>SUM</option>
-                <option>MIN</option>
-                <option>MAX</option>
-                <option>AVG</option>
-                <option>GROUP CONCAT</option>
-            </select></th>
-            <th><select class="selectpicker show-tick form-control">
-                <option>NONE</option>
-                <option>&lt;</option>
-                <option>&lt;=</option>
-                <option>&gt;</option>
-                <option>&gt;=</option>
-                <option>==</option>
-                <option>!=</option>
-            </select></th>
-            <th><input type="text" class="form-control" size="3"></th>
-        </tr>
+        <tbody id="to_queryForm">
         </tbody>
     </table>
-
-<!--
-    <div class="row">
-        <div class="col-sm-2">
-            <p class="form-control-static">Dimension_1</p>
-
-            <div class="form-group">
-                <label class="checkbox-inline">
-                    <input type="checkbox"> Select
-                </label>
-                <label class="checkbox-inline">
-                    <input type="checkbox"> Group By
-                </label>
-            </div>
-            <div class="input-group">
-                <div class="input-group-btn">
-                    <button type="button" id="to_TODO_1" class="to_CubeBtn btn btn-default dropdown-toggle"
-                            data-toggle="dropdown">Filter <span class="caret"></span></button>
-                    <ul id="to_TODO_2" class="dropdown-menu to_CubeLst">
-                        <li><a href="#">==</a></li>
-                    </ul>
-                </div>
-                <input type="text" id="to_TODO_3" class="to_CubeTxt form-control" placeholder="Filtervalue">
-            </div>
+    <form class="form-inline" role="form">
+        <div class="checkbox" id="to_selectCube">
+            <label>
+                <input type="checkbox"> Select cube
+            </label>
         </div>
-    </div>
--->
+        <button type="button" class="btn btn-default" tabindex="-1" onclick="createQuery()">Create query</button>
+    </form>
 
     <h3>Last Queries</h3>
 
@@ -225,21 +181,11 @@
         </tr>
         </thead>
         <tbody id="to_historyTable">
-        <tr>
-            <th></th>
+        <tr><!-- DUMMY -->
         </tr>
         </tbody>
     </table>
 
-<!-- Main component for a primary marketing message or call to action -->
-<!--      <div class="jumbotron">
-        <h1>Navbar example</h1>
-        <p>This example is a quick exercise to illustrate how the default, static navbar and fixed to top navbar work. It includes the responsive CSS and HTML, so it also adapts to your viewport and device.</p>
-        <p>
-          <a class="btn btn-lg btn-primary" href="../../components/#navbar" role="button">View navbar docs &raquo;</a>
-        </p>
-      </div>
--->
 </div> <!-- /container -->
 
 

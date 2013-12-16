@@ -1,10 +1,48 @@
 //
 
 // http://code-research.eu/resource/Dataset-96284d7c-6825-424a-9733-7f5e7e88fe92
+
+//
+// Const
+//
 var cubeURL = "./backend?func=<getCubes>";
+var queryPrefix = "http://localhost:8080/backend?func=<execute>&";
+
+//
+// TEMPLATES
+//
 var dimsURL = "./backend?func=<getDimensions>&c=<__cube__>";
 var measURL = "./backend?func=<getMeasures>&c=<__cube__>";
 var entsURL = "./backend?func=<getEntities>&c=<__cube__>&d=<__dimension__>";
+
+var queryFormTempl =
+    "<th>__object__</th>" +
+    "<th><input type=\"checkbox\"></th>" +
+    "<th><input type=\"checkbox\"></th>" +
+    "<th><input type=\"text\" class=\"form-control\" maxlength=\"3\" size=\"3\" value=\"-1\"></th>" +
+    "<th><select class=\"selectpicker show-tick form-control\">" +
+        "<option>NONE</option>" +
+        "<option>COUNT</option>" +
+        "<option>SUM</option>" +
+        "<option>MIN</option>" +
+        "<option>MAX</option>" +
+        "<option>AVG</option>" +
+        "<option>GROUP CONCAT</option>" +
+    "</select></th>" +
+    "<th><select class=\"selectpicker show-tick form-control\">" +
+        "<option>NONE</option>" +
+        "<option>&lt;</option>" +
+        "<option>&lt;=</option>" +
+        "<option>&gt;</option>" +
+        "<option>&gt;=</option>" +
+        "<option>==</option>" +
+        "<option>!=</option>" +
+    "</select></th>" +
+    "<th><input type=\"text\" class=\"form-control\" size=\"3\"></th>";
+
+var quDimTmpl = "d=<__dim__>,select=<__select__>,group=<__group__>,order=<__order__>,agg=<__agg__>,filterR=<__filterR__>,filterV=<__filterV__>";
+var quMeasTmpl = "m=<__meas__>,select=<__select__>,group=<__group__>,order=<__order__>,agg=<__agg__>,filterR=<__filterR__>,filterV=<__filterV__>";
+var quCubeTmpl = "c=<__cube__>";
 
 var cubes;
 var dims;
@@ -33,8 +71,7 @@ function loadCubes() {
 
 function loadDimensions() {
 
-    selectedCube = document.getElementById("to_getDCubeTxt").value;
-    applyCube(selectedCube);
+    applyCube(document.getElementById("to_getDCubeTxt").value);
 
     var ajaxReq = new XMLHttpRequest();
 
@@ -55,14 +92,14 @@ function loadDimensions() {
 
 function loadMeasures() {
 
-    selectedCube = document.getElementById("to_getMCubeTxt").value;
-    applyCube(selectedCube);
+    applyCube(document.getElementById("to_getMCubeTxt").value);
 
     var ajaxReq = new XMLHttpRequest();
 
     ajaxReq.onreadystatechange = function () {
         if (ajaxReq.readyState == 4 && ajaxReq.status == 200) {
             meas = JSON.parse(ajaxReq.responseText);
+            showMeasures();
         }
     };
 
@@ -75,8 +112,7 @@ function loadMeasures() {
 
 function loadEntities() {
 
-    selectedCube = document.getElementById("to_getECubeTxt").value;
-    applyCube(selectedCube);
+    applyCube(document.getElementById("to_getECubeTxt").value);
     selectedDim = document.getElementById("to_getEDimTxt").value;
 
     var ajaxReq = new XMLHttpRequest();
@@ -102,9 +138,13 @@ function applyCube(cubeName) {
     for (var i = 0; i < txtID.length; i++) {
         var txt = document.getElementById(txtID[i]);
         txt.value = cubeName;
-        selectedCube = cubeName;
     }
 
+    if (selectedCube != cubeName) {
+        clearQueryBuilderForm();
+    }
+
+    selectedCube = cubeName;
 }
 
 //This function is added dynamically to items in a dropdown list. It is NOT unused!
@@ -189,8 +229,64 @@ function showDims() {
         li.appendChild(a);
 
         par.appendChild(li);
+
+        // Add Dimension to QueryBuilderForm
+        //Fields from JSON
+        //noinspection JSUnresolvedVariable
+        addObjectToQueryBuilderForm(dims.results.bindings[i].DIMENSION_NAME.value, "dimension");
+
     }
 
 }
 
+function showMeasures() {
 
+    //Fields from JSON
+    //noinspection JSUnresolvedVariable
+    for (var i = 0; i < meas.results.bindings.length; i++) {
+
+        // Add Dimension to QueryBuilderForm
+        //Fields from JSON
+        //noinspection JSUnresolvedVariable
+        addObjectToQueryBuilderForm(meas.results.bindings[i].MEASURE_NAME.value, "measure");
+
+    }
+
+}
+
+function addObjectToQueryBuilderForm(name, objectType) {
+
+    var tmp = queryFormTempl.replace("__object__", name);
+
+    var tr = document.createElement("tr");
+    tr.setAttribute("data-type", objectType);
+    document.getElementById("to_queryForm").appendChild(tr);
+    tr.innerHTML = tmp;
+
+}
+
+function clearQueryBuilderForm() {
+
+    while (document.getElementById("to_queryForm").hasChildNodes()) {
+        document.getElementById("to_queryForm").removeChild(document.getElementById("to_queryForm").firstChild);
+    }
+
+}
+
+function createQuery() {
+
+    var queryForm = document.getElementById("to_queryForm");
+    var entries = queryForm.childNodes;
+    var query = queryPrefix;
+
+    for (var i = 0; i < entries.length; i++) {
+
+        if (entries[i].getAttribute("data-type") == "measure") {
+
+        } else if (entries[i].getAttribute("data-type") == "dimension") {
+
+        }
+
+    }
+
+}
