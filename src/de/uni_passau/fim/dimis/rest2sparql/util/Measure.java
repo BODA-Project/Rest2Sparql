@@ -42,9 +42,12 @@ public class Measure extends CubeObject {
             sb.append(valueVarName);
             sb.append(' ');
             sb.append(params.filterRelation.sign);
-            sb.append(" \"");
+//            sb.append(" \"");
+//            sb.append(params.filterValue);
+//            sb.append("\"). ");
+            sb.append(" ");
             sb.append(params.filterValue);
-            sb.append("\"). ");
+            sb.append("). ");
 
             return sb.toString();
         } else {

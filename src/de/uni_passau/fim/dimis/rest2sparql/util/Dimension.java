@@ -61,9 +61,12 @@ public class Dimension extends CubeObject {
             sb.append(entityLabelName);
             sb.append(' ');
             sb.append(params.filterRelation.sign);
-            sb.append(" \"");
+//            sb.append(" \"");
+//            sb.append(params.filterValue);
+//            sb.append("\"). ");
+            sb.append(" ");
             sb.append(params.filterValue);
-            sb.append("\"). ");
+            sb.append("). ");
 
             return sb.toString();
         } else {
