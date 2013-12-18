@@ -14,7 +14,7 @@ aggMap["<="] = "smaller_or_eq";
 aggMap["=="] = "eq";
 aggMap["!="] = "not_eq";
 aggMap[">"] = "bigger";
-aggMap[">!"] = "bigger_or_eq";
+aggMap[">="] = "bigger_or_eq";
 
 //
 // TEMPLATES
