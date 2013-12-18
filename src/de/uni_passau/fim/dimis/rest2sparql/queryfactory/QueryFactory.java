@@ -21,6 +21,7 @@ public class QueryFactory {
         PrefixManager.addPrefix(new SparqlPrefix("qb", "http://purl.org/linked-data/cube#"));
         PrefixManager.addPrefix(new SparqlPrefix("code", "http://code-research.eu/resource/"));
         PrefixManager.addPrefix(new SparqlPrefix("rdfs", "http://www.w3.org/2000/01/rdf-schema#"));
+        PrefixManager.addPrefix(new SparqlPrefix("xsd", "http://www.w3.org/2001/XMLSchema#"));
     }
 
     @Deprecated
