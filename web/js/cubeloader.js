@@ -8,6 +8,13 @@
 var cubeURL = "./backend?func=<getCubes>";
 var host = "http://localhost:8080/";
 var queryPrefix = host + "backend?func=<execute>&";
+var aggMap = {};
+aggMap["<"] = "smaller";
+aggMap["<="] = "smaller_or_eq";
+aggMap["=="] = "eq";
+aggMap["!="] = "not_eq";
+aggMap[">"] = "bigger";
+aggMap[">!"] = "bigger_or_eq";
 
 //
 // TEMPLATES
@@ -22,16 +29,17 @@ var queryFormTempl =
     "<th><input type=\"checkbox\"></th>" +
     "<th><input type=\"text\" class=\"form-control\" maxlength=\"3\" size=\"3\" value=\"-1\"></th>" +
     "<th><select class=\"selectpicker show-tick form-control\">" +
-        "<option>NONE</option>" +
-        "<option>COUNT</option>" +
-        "<option>SUM</option>" +
-        "<option>MIN</option>" +
-        "<option>MAX</option>" +
-        "<option>AVG</option>" +
-        "<option>GROUP CONCAT</option>" +
+        "<option>none</option>" +
+        "<option>count</option>" +
+        "<option>sum</option>" +
+        "<option>min</option>" +
+        "<option>max</option>" +
+        "<option>avg</option>" +
+        "<option>group_concat</option>" +
+        "<option>sample</option>" +
     "</select></th>" +
     "<th><select class=\"selectpicker show-tick form-control\">" +
-        "<option>NONE</option>" +
+        "<option>none</option>" +
         "<option>&lt;</option>" +
         "<option>&lt;=</option>" +
         "<option>&gt;</option>" +
@@ -41,9 +49,8 @@ var queryFormTempl =
     "</select></th>" +
     "<th><input type=\"text\" class=\"form-control\" size=\"3\"></th>";
 
-var quDimTmpl = "d=<__dim__>,select=<__select__>,group=<__group__>,order=<__order__>,agg=<__agg__>,filterR=<__filterR__>,filterV=<__filterV__>";
-var quMeasTmpl = "m=<__meas__>,select=<__select__>,group=<__group__>,order=<__order__>,agg=<__agg__>,filterR=<__filterR__>,filterV=<__filterV__>";
-var quCubeTmpl = "c=<__cube__>";
+var quDiMeTmpl = "__obj__,select=<__select__>,group=<__group__>,order=<__order__>,agg=<__agg__>,filterR=<__filterR__>,filterV=<__filterV__>";
+var quCubeTmpl = "c=<__cube__>,select=<__select__>";
 
 var cubes;
 var dims;
@@ -291,14 +298,39 @@ function createQuery() {
 
     for (var i = 0; i < entries.length; i++) {
 
+        var tmp = quDiMeTmpl;
+
         if (entries[i].getAttribute("data-type") == "measure") {
-
+            tmp = tmp.replace("__obj__", "m=<" + entries[i].firstChild.textContent + ">");
         } else if (entries[i].getAttribute("data-type") == "dimension") {
-
+            tmp = tmp.replace("__obj__", "d=<" + entries[i].firstChild.textContent + ">");
         }
+
+        tmp = tmp.replace("__select__", entries[i].childNodes[1].firstChild.checked.toString())
+            .replace("__group__", entries[i].childNodes[2].firstChild.checked.toString())
+            .replace("__order__", entries[i].childNodes[3].firstChild.value);
+
+        if (entries[i].childNodes[4].firstChild.value != "none") {
+            tmp = tmp.replace("__agg__", entries[i].childNodes[4].firstChild.value);
+        } else {
+            tmp = tmp.replace(",agg=<__agg__>", "");
+        }
+
+        if (entries[i].childNodes[5].firstChild.value != "none") {
+            tmp = tmp.replace("__filterR__", aggMap[entries[i].childNodes[5].firstChild.value])
+                .replace("__filterV__", entries[i].childNodes[6].firstChild.value);
+        } else {
+            tmp = tmp.replace(",filterR=<__filterR__>,filterV=<__filterV__>", "");
+        }
+
+        query += tmp;
+        query += "&";
 
     }
 
+    query += quCubeTmpl.replace("__cube__", selectedCube).replace("__select__", document.getElementById("to_selectCube").checked.toString());
+
+    addToQueryList(query);
 }
 
 function addToQueryList(entry) {
