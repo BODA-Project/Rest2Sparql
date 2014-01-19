@@ -339,6 +339,7 @@ function addToQueryList(entry) {
     var th = document.createElement("th");
     var a = document.createElement("a");
     a.setAttribute("href", entry);
+    a.setAttribute("target", "_blank");
     var text = document.createTextNode(entry);
 
     document.getElementById("to_historyTable").insertBefore(tr, document.getElementById("to_historyTable").firstChild);
