@@ -47,15 +47,16 @@ var queryFormTempl =
         "<option>==</option>" +
         "<option>!=</option>" +
     "</select></th>" +
-    "<th><input type=\"text\" class=\"form-control\" size=\"3\"></th>";
+    "<th><input type=\"text\" class=\"form-control\" size=\"3\"></th>" +
+    "<th id=\"to_fix_field\"></th>";
 
-var quDiMeTmpl = "__obj__,select=<__select__>,group=<__group__>,order=<__order__>,agg=<__agg__>,filterR=<__filterR__>,filterV=<__filterV__>";
+var quDiMeTmpl = "__obj__,select=<__select__>,group=<__group__>,order=<__order__>,agg=<__agg__>,filterR=<__filterR__>,filterV=<__filterV__>,fix=<__fix__>";
 var quCubeTmpl = "c=<__cube__>,select=<__select__>";
 
 var cubes;
 var dims;
 var meas;
-var ents;
+var ents = {};
 
 var selectedCube = null;
 var selectedDim = null;
@@ -125,32 +126,33 @@ function loadMeasures() {
 
 }
 
-function loadEntities() {
+function loadEntities(dim) {
 
-    applyCube(document.getElementById("to_getECubeTxt").value);
-    selectedDim = document.getElementById("to_getEDimTxt").value;
+    //applyCube(document.getElementById("to_getECubeTxt").value);
+    //selectedDim = document.getElementById("to_getEDimTxt").value;
 
     var ajaxReq = new XMLHttpRequest();
 
-    ajaxReq.onreadystatechange = function () {
+    /*ajaxReq.onreadystatechange = function () {
         if (ajaxReq.readyState == 4 && ajaxReq.status == 200) {
-            ents = JSON.parse(ajaxReq.responseText);
+            ents[selectedDim] = JSON.parse(ajaxReq.responseText);
         }
-    };
+    };*/
 
     var tmp = entsURL.replace("__cube__", selectedCube);
-    tmp = tmp.replace("__dimension__", selectedDim);
-    ajaxReq.open("GET", tmp, true);
+    tmp = tmp.replace("__dimension__", dim);
+    ajaxReq.open("GET", tmp, false);
     ajaxReq.setRequestHeader("accept", "application/sparql-results+json");
     ajaxReq.send();
+    ents[dim] = JSON.parse(ajaxReq.responseText);
 
-    addToQueryList(host + tmp.substr(2));
+    //addToQueryList(host + tmp.substr(2));
 
 }
 
 function applyCube(cubeName) {
 
-    var txtID = ["to_getDCubeTxt", "to_getMCubeTxt", "to_getECubeTxt"];
+    var txtID = ["to_getDCubeTxt", "to_getMCubeTxt"]; //, "to_getECubeTxt"];
 
     for (var i = 0; i < txtID.length; i++) {
         var txt = document.getElementById(txtID[i]);
@@ -179,8 +181,8 @@ function applyDim(dimName) {
 function showCubes() {
 
     var par = [document.getElementById("to_getDCubeLst"),
-        document.getElementById("to_getMCubeLst"),
-        document.getElementById("to_getECubeLst")];
+        document.getElementById("to_getMCubeLst")];
+        //document.getElementById("to_getECubeLst")];
 
     //var pText = ["to_getDCubeTxt", "to_getMCubeTxt", "to_getECubeTxt"];
 
@@ -213,14 +215,14 @@ function showCubes() {
 
 function showDims() {
 
-    var par = document.getElementById("to_getEDimLst");
+    /*var par = document.getElementById("to_getEDimLst");
 
     // clear list
     while (par.hasChildNodes()) {
 
         par.removeChild(par.firstChild);
 
-    }
+    }*/
 
     // fill list
 
@@ -228,7 +230,7 @@ function showDims() {
     //noinspection JSUnresolvedVariable
     for (var i = 0; i < dims.results.bindings.length; i++) {
 
-        var href = document.createAttribute("href");
+        /*var href = document.createAttribute("href");
 
         //Fields from JSON
         //noinspection JSUnresolvedVariable
@@ -245,7 +247,7 @@ function showDims() {
         var li = document.createElement("li");
         li.appendChild(a);
 
-        par.appendChild(li);
+        par.appendChild(li);*/
 
         // Add Dimension to QueryBuilderForm
         //Fields from JSON
@@ -280,6 +282,40 @@ function addObjectToQueryBuilderForm(name, objectType) {
     document.getElementById("to_queryForm").appendChild(tr);
     tr.innerHTML = tmp;
 
+    document.getElementById("to_fix_field").setAttribute("id", "to_fix_" + name);
+
+    if (objectType == "dimension") {
+
+        loadEntities(name);
+
+        // add the selectpicker
+        var select = document.createElement("select");
+        select.className = "selectpicker show-tick form-control";
+        document.getElementById("to_fix_" + name).appendChild(select);
+
+        // add "none" as first option
+        var opt = document.createElement("option");
+        opt.setAttribute("value", "none");
+        var txt = document.createTextNode("none");
+        opt.appendChild(txt);
+        select.appendChild(opt);
+
+        /* *** Add further Entities *** */
+        //Fields from JSON
+        //noinspection JSUnresolvedVariable
+        for (var i = 0; i < ents[name].results.bindings.length; i++) {
+            opt = document.createElement("option");
+            //Fields from JSON
+            //noinspection JSUnresolvedVariable
+            opt.setAttribute("value", ents[name].results.bindings[i].ENTITY_NAME.value);
+
+            //Fields from JSON
+            //noinspection JSUnresolvedVariable
+            txt = document.createTextNode(ents[name].results.bindings[i].LABEL.value);
+            opt.appendChild(txt);
+            select.appendChild(opt);
+        }
+    }
 }
 
 function clearQueryBuilderForm() {
@@ -302,20 +338,33 @@ function createQuery() {
 
         if (entries[i].getAttribute("data-type") == "measure") {
             tmp = tmp.replace("__obj__", "m=<" + entries[i].firstChild.textContent + ">");
+
+            // measures can't be fixed
+            tmp = tmp.replace(",fix=<__fix__>", "");
         } else if (entries[i].getAttribute("data-type") == "dimension") {
             tmp = tmp.replace("__obj__", "d=<" + entries[i].firstChild.textContent + ">");
+
+            // set fix if necessary
+            if (entries[i].childNodes[7].firstChild.value == "none") {
+                tmp = tmp.replace(",fix=<__fix__>", "");
+            } else {
+                tmp = tmp.replace("__fix__", entries[i].childNodes[7].firstChild.value);
+            }
         }
 
+        // set select, group and order
         tmp = tmp.replace("__select__", entries[i].childNodes[1].firstChild.checked.toString())
             .replace("__group__", entries[i].childNodes[2].firstChild.checked.toString())
             .replace("__order__", entries[i].childNodes[3].firstChild.value);
 
+        // set aggregate if necessary
         if (entries[i].childNodes[4].firstChild.value != "none") {
             tmp = tmp.replace("__agg__", entries[i].childNodes[4].firstChild.value);
         } else {
             tmp = tmp.replace(",agg=<__agg__>", "");
         }
 
+        // set filter if necessary
         if (entries[i].childNodes[5].firstChild.value != "none") {
             tmp = tmp.replace("__filterR__", aggMap[entries[i].childNodes[5].firstChild.value])
                 .replace("__filterV__", entries[i].childNodes[6].firstChild.value);
