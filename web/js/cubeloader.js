@@ -345,7 +345,8 @@ function createQuery() {
             tmp = tmp.replace("__obj__", "d=<" + entries[i].firstChild.textContent + ">");
 
             // set fix if necessary
-            if (entries[i].childNodes[7].firstChild.value == "none") {
+            // HACK - hide bug with duplicate dimensions
+            if (!entries[i].childNodes[7].hasChildNodes() || entries[i].childNodes[7].firstChild.value == "none") {
                 tmp = tmp.replace(",fix=<__fix__>", "");
             } else {
                 tmp = tmp.replace("__fix__", entries[i].childNodes[7].firstChild.value);
