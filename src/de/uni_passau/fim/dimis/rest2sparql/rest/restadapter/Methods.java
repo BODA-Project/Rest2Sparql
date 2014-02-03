@@ -14,6 +14,7 @@ public enum Methods {
     GET_DIMENSIONS,
     GET_MEASURES,
     GET_ENTITIES,
-    EXECUTE;
+    EXECUTE,
+    GET_HASH;
 
 }

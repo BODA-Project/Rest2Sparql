@@ -37,6 +37,7 @@ public final class URLConverter {
         strToMethMap.put("<getMeasures>", Methods.GET_MEASURES);
         strToMethMap.put("<getEntities>", Methods.GET_ENTITIES);
         strToMethMap.put("<execute>", Methods.EXECUTE);
+        strToMethMap.put("<getHash>", Methods.GET_HASH);
 
         validParams.add("func");
         validParams.add("limit");
@@ -255,7 +256,7 @@ public final class URLConverter {
 
                         // fix is only allowed in dimensions
                         else if (e.getKey().equals("fix") && !p.getName().equals("d")) {
-                            invalidParams.add("The option \'fix\' can only applied to dimensions");
+                            invalidParams.add("The option \'fix\' can only be applied to dimensions");
                         }
 
                         // check if value is valid
