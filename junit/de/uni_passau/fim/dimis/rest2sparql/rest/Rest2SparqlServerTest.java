@@ -92,7 +92,7 @@ public class Rest2SparqlServerTest {
 
         String exp = "The URL contains invalid parameters!\n" +
                 "Here is a list:\n" +
-                "The option 'fix' can only applied to dimensions\n";
+                "The option 'fix' can only be applied to dimensions\n";
 
         URI uri;
         uri = new URIBuilder()
