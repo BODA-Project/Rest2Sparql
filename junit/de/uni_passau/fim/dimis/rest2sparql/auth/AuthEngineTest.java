@@ -4,6 +4,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -32,6 +33,8 @@ public class AuthEngineTest {
     public void testCheckHash() throws Exception {
 
         assertTrue(authEngine.checkHash("asdf", "9f4bcf6125bc4a590db7db2e9a23349208f4818c15974019c4a6bf3b4c242fff"));
+        assertFalse(authEngine.checkHash("asdf", "9f4bcf6125bc4a590db7db2e9a23349208f4818c15974019c4a6bf3b4c242ff0"));
+        assertFalse(authEngine.checkHash("asdg", "9f4bcf6125bc4a590db7db2e9a23349208f4818c15974019c4a6bf3b4c242fff"));
 
     }
 }
