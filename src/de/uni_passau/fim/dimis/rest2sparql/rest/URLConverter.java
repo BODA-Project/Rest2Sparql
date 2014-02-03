@@ -41,6 +41,8 @@ public final class URLConverter {
 
         validParams.add("func");
         validParams.add("limit");
+        validParams.add("id");
+        validParams.add("hash");
         validParams.add("c");
         validParams.add("d");
         validParams.add("m");
@@ -160,6 +162,7 @@ public final class URLConverter {
         List<NameValuePair> l = URLEncodedUtils.parse(url, Charset.defaultCharset());
         List<CubeObject> params = new ArrayList<>(l.size());
         int limit = -1;
+        String ID = null, hash = null;
 
         for (NameValuePair p : l) {
 
@@ -187,6 +190,14 @@ public final class URLConverter {
                     limit = Integer.parseInt(opts.get("v"));
                     break;
 
+                case "id":
+                    ID = opts.get("v");
+                    break;
+
+                case "hash" :
+                    hash = opts.get("v");
+                    break;
+
                 case "func":
                     // Nothing to do
                     break;
@@ -197,7 +208,11 @@ public final class URLConverter {
 
         }
 
-        return new QueryDescriptor(params, limit);
+        if (ID == null || hash == null) {
+            return new QueryDescriptor(params, limit);
+        } else {
+            return new QueryDescriptor(params, limit, ID, hash);
+        }
     }
 
     /**

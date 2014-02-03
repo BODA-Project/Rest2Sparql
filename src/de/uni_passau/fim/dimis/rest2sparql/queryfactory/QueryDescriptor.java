@@ -19,6 +19,8 @@ public class QueryDescriptor {
     private List<Measure> measures = new LinkedList<>();
     private boolean isGrouped = false;
 
+    private String ID = null, hash = null;
+
     public QueryDescriptor(List<CubeObject> objects) {
         this.cubeObjects = objects;
         init();
@@ -27,6 +29,14 @@ public class QueryDescriptor {
     public QueryDescriptor(List<CubeObject> objects, int limit) {
         this.cubeObjects = objects;
         this.limit = limit;
+        init();
+    }
+
+    public QueryDescriptor(List<CubeObject> objects, int limit, String ID, String hash) {
+        this.cubeObjects = objects;
+        this.limit = limit;
+        this.ID = ID;
+        this.hash = hash;
         init();
     }
 
