@@ -47,15 +47,24 @@ public class AuthEngine {
      *
      * @param ID The ID to hash.
      * @return The hash.
-     * @throws NoSuchAlgorithmException     This should never happen!
-     * @throws UnsupportedEncodingException This should never happen!
      */
-    public String createHash(String ID) throws NoSuchAlgorithmException, UnsupportedEncodingException {
+    public String createHash(String ID) {
 
-        MessageDigest md = MessageDigest.getInstance("SHA-256");
+        MessageDigest md = null;
+        try {
+            md = MessageDigest.getInstance("SHA-256");
+        } catch (NoSuchAlgorithmException e) {
+            System.err.println("There is something very, very wrong!");
+            e.printStackTrace();
+        }
 
         String saltedId = ID + SALT;
-        md.update(saltedId.getBytes("UTF-8"));
+        try {
+            md.update(saltedId.getBytes("UTF-8"));
+        } catch (UnsupportedEncodingException e) {
+            System.err.println("There is something very, very wrong!");
+            e.printStackTrace();
+        }
 
         byte[] digest = md.digest();
 
@@ -69,15 +78,24 @@ public class AuthEngine {
      * @param ID   The ID to check.
      * @param hash The hash to check the ID against.
      * @return {@code true} if the ID matches the hash, {@code false} otherwise.
-     * @throws NoSuchAlgorithmException     This should never happen!
-     * @throws UnsupportedEncodingException This should never happen!
      */
-    public boolean checkHash(String ID, String hash) throws NoSuchAlgorithmException, UnsupportedEncodingException {
+    public boolean checkHash(String ID, String hash) {
 
-        MessageDigest md = MessageDigest.getInstance("SHA-256");
+        MessageDigest md = null;
+        try {
+            md = MessageDigest.getInstance("SHA-256");
+        } catch (NoSuchAlgorithmException e) {
+            System.err.println("There is something very, very wrong!");
+            e.printStackTrace();
+        }
 
         String saltedId = ID + SALT;
-        md.update(saltedId.getBytes("UTF-8"));
+        try {
+            md.update(saltedId.getBytes("UTF-8"));
+        } catch (UnsupportedEncodingException e) {
+            System.err.println("There is something very, very wrong!");
+            e.printStackTrace();
+        }
 
         byte[] digest = md.digest();
 
