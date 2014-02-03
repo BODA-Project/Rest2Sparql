@@ -1,5 +1,6 @@
 package de.uni_passau.fim.dimis.rest2sparql.rest;
 
+import de.uni_passau.fim.dimis.rest2sparql.auth.AuthEngine;
 import de.uni_passau.fim.dimis.rest2sparql.queryfactory.QueryDescriptor;
 import de.uni_passau.fim.dimis.rest2sparql.rest.restadapter.IRestAdapter;
 import de.uni_passau.fim.dimis.rest2sparql.rest.restadapter.Methods;
@@ -23,10 +24,17 @@ import java.util.List;
 public class Rest2SparqlServlet extends HttpServlet {
 
     private static IRestAdapter adapter;
+    private static AuthEngine authEngine;
     private static HashMap<String, ITripleStoreConnection.OutputFormat> formats = new HashMap<>();
 
     public static final int CODE_OK = 200;
     public static final int CODE_BAD_REQ = 400;
+    public static final int CODE_UNAUTHED = 401;
+
+    public static final String MSG_UNAUTHED = "To access this resource, you have to provide an ID and a hash.\n" +
+            "You can get your ID an the hash by using the getHash function and providing your mendeley username and password.\n\n" +
+            "If you see this message but provided an ID and a hash one of it (or both) may be incorrect.";
+    public static final byte[] MSG_UNAUTHED_BYTES = MSG_UNAUTHED.getBytes(Charset.forName("UTF-8"));
 
     static {
         formats.put("application/sparql-results+xml", ITripleStoreConnection.OutputFormat.XML);
@@ -39,6 +47,7 @@ public class Rest2SparqlServlet extends HttpServlet {
     @Override
     public void init() throws ServletException {
         adapter = new RestAdapter();
+        authEngine = new AuthEngine("SomeVerySecretSalt123+!");
         super.init();
     }
 
@@ -116,34 +125,52 @@ public class Rest2SparqlServlet extends HttpServlet {
 
             // if valid, execute query
             else {
-                switch (m) {
 
-                    case GET_CUBES:
-                        res = adapter.execute(m);
-                        break;
-                    case GET_DIMENSIONS:
-                    case GET_MEASURES:
-                    case GET_ENTITIES:
-                        res = adapter.execute(m, descriptor);
-                        break;
-                    case EXECUTE:
-                        res = adapter.execute(m, descriptor);
-                        break;
+                // check the id and hash
+                boolean authorized = descriptor.getID() != null &&
+                        descriptor.getHash() != null &&
+                        authEngine.checkHash(descriptor.getID(), descriptor.getHash());
+
+                // if the check failed, send auth-msg
+                if (!authorized) {
+
+                    // set content, content type ans status code
+                    ServletOutputStream out = response.getOutputStream();
+                    out.write(MSG_UNAUTHED_BYTES);
+                    out.flush();
+                    out.close();
+                    response.setContentType("text/plain");
+                    response.setCharacterEncoding("UTF-8");
+                    response.setStatus(CODE_UNAUTHED);
+
+                } else {
+
+                    switch (m) {
+
+                        case GET_CUBES:
+                            res = adapter.execute(m);
+                            break;
+                        case GET_DIMENSIONS:
+                        case GET_MEASURES:
+                        case GET_ENTITIES:
+                            res = adapter.execute(m, descriptor);
+                            break;
+                        case EXECUTE:
+                            res = adapter.execute(m, descriptor);
+                            break;
+                    }
+
+                    // set content, content type ans status code
+                    byte[] b = res.getBytes(Charset.forName("UTF-8"));
+                    ServletOutputStream out = response.getOutputStream();
+                    out.write(b);
+                    out.flush();
+                    out.close();
+                    response.setContentType(type.mimeType);
+                    response.setHeader("Content-Disposition", "attachment; filename=\"sparql\"");
+                    response.setCharacterEncoding("UTF-8");
+                    response.setStatus(CODE_OK);
                 }
-
-                // set content, content type ans status code
-                byte[] b = res.getBytes(Charset.forName("UTF-8"));
-                //PrintWriter out = response.getWriter();
-                //out.write(res);
-                ServletOutputStream out = response.getOutputStream();
-                out.write(b);
-                out.flush();
-                out.close();
-                response.setContentType(type.mimeType);
-                //response.addHeader("Content-Type", type.mimeType);
-                response.setHeader("Content-Disposition", "attachment; filename=\"sparql\"");
-                response.setCharacterEncoding("UTF-8");
-                response.setStatus(CODE_OK);
             }
         }
 

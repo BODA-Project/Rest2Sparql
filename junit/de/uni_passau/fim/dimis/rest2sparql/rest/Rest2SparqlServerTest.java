@@ -247,4 +247,36 @@ public class Rest2SparqlServerTest {
         }
 
     }
+
+    @Test
+    public void testInvalidURL_InvalidCreds() throws Exception {
+
+        String exp = "To access this resource, you have to provide an ID and a hash.\n" +
+                "You can get your ID an the hash by using the getHash function and providing your mendeley username and password.\n\n" +
+                "If you see this message but provided an ID and a hash one of it (or both) may be incorrect.";
+
+        URI uri;
+        uri = new URIBuilder()
+                .setScheme(scheme)
+                .setHost(host)
+                .setPort(port)
+                .setPath(path)
+                .addParameter("func", "<getCubes>")
+                .addParameter("id", "<someID>")
+                .addParameter("hash", "<someHash>")
+                .build();
+
+        HttpGet htpg = new HttpGet(uri);
+        //htpg.addHeader("Accept", format.mimeType);
+        CloseableHttpClient client = HttpClients.createDefault();
+        CloseableHttpResponse response = client.execute(htpg);
+        BufferedHttpEntity entity = new BufferedHttpEntity(response.getEntity());
+
+        assertEquals(exp, EntityUtils.toString(entity));
+
+        if (response != null) {
+            response.close();
+        }
+
+    }
 }
