@@ -231,6 +231,14 @@ public class QueryDescriptor {
 
     }
 
+    public String getID() {
+        return ID;
+    }
+
+    public String getHash() {
+        return hash;
+    }
+
     public List<Cube> getCubes() {
         return Collections.unmodifiableList(cubes);
     }
