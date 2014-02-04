@@ -5,9 +5,9 @@
 //
 // Const
 //
-var cubeURL = "./backend?func=<getCubes>";
+var cubeURL = "./backend?func=<getCubes>&id=<__id__>&hash=<__hash__>";
 var host = "http://localhost:8080/";
-var queryPrefix = host + "backend?func=<execute>&";
+var queryPrefix = host + "backend?func=<execute>&id=<__id__>&hash=<__hash__>&";
 var aggMap = {};
 aggMap["<"] = "smaller";
 aggMap["<="] = "smaller_or_eq";
@@ -19,9 +19,9 @@ aggMap[">="] = "bigger_or_eq";
 //
 // TEMPLATES
 //
-var dimsURL = "./backend?func=<getDimensions>&c=<__cube__>";
-var measURL = "./backend?func=<getMeasures>&c=<__cube__>";
-var entsURL = "./backend?func=<getEntities>&c=<__cube__>&d=<__dimension__>";
+var dimsURL = "./backend?func=<getDimensions>&c=<__cube__>&id=<__id__>&hash=<__hash__>";
+var measURL = "./backend?func=<getMeasures>&c=<__cube__>&id=<__id__>&hash=<__hash__>";
+var entsURL = "./backend?func=<getEntities>&c=<__cube__>&d=<__dimension__>&id=<__id__>&hash=<__hash__>";
 
 var queryFormTempl =
     "<th>__object__</th>" +
@@ -73,11 +73,13 @@ function loadCubes() {
         }
     };
 
-    ajaxReq.open("GET", cubeURL, true);
+    var tmp = cubeURL.replace("__id__", document.getElementById("to_authIDField").value);
+    tmp = tmp.replace("__hash__", document.getElementById("to_authTokenField").value);
+    ajaxReq.open("GET", tmp, true);
     ajaxReq.setRequestHeader("accept", "application/sparql-results+json");
     ajaxReq.send();
 
-    addToQueryList(host + cubeURL.substr(2));
+    addToQueryList(host + tmp.substr(2));
 
 }
 
@@ -96,6 +98,8 @@ function loadDimensions() {
     };
 
     var tmp = dimsURL.replace("__cube__", selectedCube);
+    tmp = tmp.replace("__id__", document.getElementById("to_authIDField").value);
+    tmp = tmp.replace("__hash__", document.getElementById("to_authTokenField").value);
     ajaxReq.open("GET", tmp, true);
     ajaxReq.setRequestHeader("accept", "application/sparql-results+json");
     ajaxReq.send();
@@ -118,6 +122,8 @@ function loadMeasures() {
     };
 
     var tmp = measURL.replace("__cube__", selectedCube);
+    tmp = tmp.replace("__id__", document.getElementById("to_authIDField").value);
+    tmp = tmp.replace("__hash__", document.getElementById("to_authTokenField").value);
     ajaxReq.open("GET", tmp, true);
     ajaxReq.setRequestHeader("accept", "application/sparql-results+json");
     ajaxReq.send();
@@ -140,6 +146,8 @@ function loadEntities(dim) {
     };*/
 
     var tmp = entsURL.replace("__cube__", selectedCube);
+    tmp = tmp.replace("__id__", document.getElementById("to_authIDField").value);
+    tmp = tmp.replace("__hash__", document.getElementById("to_authTokenField").value);
     tmp = tmp.replace("__dimension__", dim);
     ajaxReq.open("GET", tmp, false);
     ajaxReq.setRequestHeader("accept", "application/sparql-results+json");
@@ -330,7 +338,8 @@ function createQuery() {
 
     var queryForm = document.getElementById("to_queryForm");
     var entries = queryForm.childNodes;
-    var query = queryPrefix;
+    var query = queryPrefix.replace("__id__", document.getElementById("to_authIDField").value)
+                .replace("__hash__", document.getElementById("to_authTokenField").value);
 
     for (var i = 0; i < entries.length; i++) {
 
