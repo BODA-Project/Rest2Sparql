@@ -208,11 +208,7 @@ public final class URLConverter {
 
         }
 
-        if (ID == null || hash == null) {
-            return new QueryDescriptor(params, limit);
-        } else {
-            return new QueryDescriptor(params, limit, ID, hash);
-        }
+        return new QueryDescriptor(params, limit, ID, hash);
     }
 
     /**
