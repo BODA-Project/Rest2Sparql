@@ -37,6 +37,9 @@ public class Rest2SparqlServlet extends HttpServlet {
             "If you see this message but provided an ID and a hash one of it (or both) may be incorrect.";
     public static final byte[] MSG_UNAUTHED_BYTES = MSG_UNAUTHED.getBytes(Charset.forName("UTF-8"));
 
+    public static final String MSG_NO_ID_GET_HASH = "To get the auth token, you have to provide an ID!";
+    public static final byte[] MSG_NO_ID_GET_HASH_BYTES = MSG_NO_ID_GET_HASH.getBytes(Charset.forName("UTF-8"));
+
     static {
         formats.put("application/sparql-results+xml", ITripleStoreConnection.OutputFormat.XML);
         formats.put("application/sparql-results+json", ITripleStoreConnection.OutputFormat.JSON);
@@ -111,21 +114,38 @@ public class Rest2SparqlServlet extends HttpServlet {
             Methods m = URLConverter.getMethod(target);
             QueryDescriptor descriptor = URLConverter.getQueryDescriptor(target);
 
-            // check if request is valid
-            String validatorOutput = adapter.validateMethodParams(m, descriptor);
+            if (m == Methods.GET_HASH) {
 
-            // if not valid
-            if (!validatorOutput.isEmpty()) {
-                // set error message, content type and status
-                PrintWriter out = response.getWriter();
-                out.write(validatorOutput);
-                out.close();
-                response.setContentType("text/plain");
-                response.setStatus(CODE_BAD_REQ);
-            }
+                // if no id is provided, return 400
+                if (descriptor.getID() == null) {
 
-            // if valid, execute query
-            else {
+                    // set content, content type ans status code
+                    ServletOutputStream out = response.getOutputStream();
+                    out.write(MSG_NO_ID_GET_HASH_BYTES);
+                    out.flush();
+                    out.close();
+                    response.setContentType("text/plain");
+                    response.setCharacterEncoding("UTF-8");
+                    response.setStatus(CODE_BAD_REQ);
+
+                } else {
+
+                    res = authEngine.createHash(descriptor.getID());
+
+                    // set content, content type ans status code
+                    byte[] b = res.getBytes(Charset.forName("UTF-8"));
+                    ServletOutputStream out = response.getOutputStream();
+                    out.write(b);
+                    out.flush();
+                    out.close();
+                    response.setContentType(type.mimeType);
+                    response.setHeader("Content-Disposition", "attachment; filename=\"sparql\"");
+                    response.setCharacterEncoding("UTF-8");
+                    response.setStatus(CODE_OK);
+
+                }
+
+            } else {
 
                 // check the id and hash
                 boolean authorized = descriptor.getID() != null &&
@@ -146,34 +166,37 @@ public class Rest2SparqlServlet extends HttpServlet {
 
                 } else {
 
-                    switch (m) {
+                    // check if request is valid
+                    String validatorOutput = adapter.validateMethodParams(m, descriptor);
 
-                        case GET_CUBES:
-                            res = adapter.execute(m, descriptor);
-                            break;
-                        case GET_DIMENSIONS:
-                        case GET_MEASURES:
-                        case GET_ENTITIES:
-                            res = adapter.execute(m, descriptor);
-                            break;
-                        case EXECUTE:
-                            res = adapter.execute(m, descriptor);
-                            break;
+                    // if not valid
+                    if (!validatorOutput.isEmpty()) {
+                        // set error message, content type and status
+                        PrintWriter out = response.getWriter();
+                        out.write(validatorOutput);
+                        out.close();
+                        response.setContentType("text/plain");
+                        response.setStatus(CODE_BAD_REQ);
                     }
 
-                    // set content, content type ans status code
-                    byte[] b = res.getBytes(Charset.forName("UTF-8"));
-                    ServletOutputStream out = response.getOutputStream();
-                    out.write(b);
-                    out.flush();
-                    out.close();
-                    response.setContentType(type.mimeType);
-                    response.setHeader("Content-Disposition", "attachment; filename=\"sparql\"");
-                    response.setCharacterEncoding("UTF-8");
-                    response.setStatus(CODE_OK);
+                    // if valid, execute query
+                    else {
+
+                        res = adapter.execute(m, descriptor);
+
+                        // set content, content type ans status code
+                        byte[] b = res.getBytes(Charset.forName("UTF-8"));
+                        ServletOutputStream out = response.getOutputStream();
+                        out.write(b);
+                        out.flush();
+                        out.close();
+                        response.setContentType(type.mimeType);
+                        response.setHeader("Content-Disposition", "attachment; filename=\"sparql\"");
+                        response.setCharacterEncoding("UTF-8");
+                        response.setStatus(CODE_OK);
+                    }
                 }
             }
         }
-
     }
 }
