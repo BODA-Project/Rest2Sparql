@@ -297,4 +297,16 @@ public class QueryDescriptor {
     public boolean isGrouped() {
         return isGrouped;
     }
+
+    /**
+     * Creates a graph pattern to filter for a special importer ID.
+     * @param ID The ID to filter for.
+     * @return The pattern to include in the query.
+     */
+    public static String buildIDCheck(String ID) {
+
+        String template = "?CUBE_NAME prov:wasGeneratedBy ?import. ?import prov:wasStartedBy ?importer. ?importer rdfs:label \">>ID<<\"^^xsd:string. ";
+        return template.replace(">>ID<<", ID);
+
+    }
 }
