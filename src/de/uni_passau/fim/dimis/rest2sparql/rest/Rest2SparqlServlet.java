@@ -2,6 +2,7 @@ package de.uni_passau.fim.dimis.rest2sparql.rest;
 
 import de.uni_passau.fim.dimis.rest2sparql.auth.AuthEngine;
 import de.uni_passau.fim.dimis.rest2sparql.queryfactory.QueryDescriptor;
+import de.uni_passau.fim.dimis.rest2sparql.queryfactory.QueryFactory;
 import de.uni_passau.fim.dimis.rest2sparql.rest.restadapter.IRestAdapter;
 import de.uni_passau.fim.dimis.rest2sparql.rest.restadapter.Methods;
 import de.uni_passau.fim.dimis.rest2sparql.rest.restadapter.RestAdapter;
@@ -148,7 +149,7 @@ public class Rest2SparqlServlet extends HttpServlet {
                     switch (m) {
 
                         case GET_CUBES:
-                            res = adapter.execute(m);
+                            res = adapter.execute(m, descriptor);
                             break;
                         case GET_DIMENSIONS:
                         case GET_MEASURES:

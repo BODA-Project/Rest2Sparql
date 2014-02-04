@@ -106,6 +106,11 @@ public class RestAdapter implements IRestAdapter {
 
         String result;
 
+        // Check for ID to avoid an NullPointerException later on
+        if (params.getID() == null) {
+            throw new IllegalArgumentException("The parameters have to include an ID that is not null!");
+        }
+
         try {
             result = exec(method, params);
         } catch (ConnectionException e) {
@@ -320,27 +325,30 @@ public class RestAdapter implements IRestAdapter {
 
         switch (method) {
             case GET_CUBES:
-                throw new UnknownMethodException("This method does not take any parameters.");
+                result = manager.getCubes(params.getID());
+                // No illegal argument appropriate any more, because in the params is the id
+                // throw new UnknownMethodException("This method does not take any parameters.");
+                break;
 
             case GET_MEASURES:
                 if (params.nofCubes() < 1) {
                     throw new IllegalArgumentException();
                 }
-                result = manager.getMeasures(params.getCubes().get(0));
+                result = manager.getMeasures(params.getCubes().get(0), params.getID());
                 break;
 
             case GET_ENTITIES:
                 if (params.nofCubes() < 1 || params.nofDimensions() < 1) {
                     throw new IllegalArgumentException();
                 }
-                result = manager.getEntities(params.getDimensions().get(0), params.getCubes().get(0));
+                result = manager.getEntities(params.getDimensions().get(0), params.getCubes().get(0), params.getID());
                 break;
 
             case GET_DIMENSIONS:
                 if (params.nofCubes() < 1) {
                     throw new IllegalArgumentException();
                 }
-                result = manager.getDimensions(params.getCubes().get(0));
+                result = manager.getDimensions(params.getCubes().get(0), params.getID());
                 break;
 
             case EXECUTE:

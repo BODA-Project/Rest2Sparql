@@ -101,6 +101,9 @@ public class QueryDescriptor {
             }
         }
 
+        // add id-check
+        sb.append(buildIDCheck(ID));
+
         return sb.toString();
     }
 
