@@ -53,13 +53,19 @@ public class Rest2SparqlServlet extends HttpServlet {
 
     @Override
     public void init(ServletConfig servletConfig) throws ServletException {
+
         String host = servletConfig.getInitParameter("host");
+        if (host == null) {
+            throw new IllegalArgumentException("No host specified!");
+        }
+
         int port = 8080;
         try {
             port = Integer.parseInt(servletConfig.getInitParameter("port"));
         } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("Non-numeric value in port config!");
+            throw new IllegalArgumentException("Non-numeric or no value in port config!");
         }
+
         ITripleStoreConnection con = null;
         switch (servletConfig.getInitParameter("engine")) {
             case "bigdata":
@@ -72,9 +78,9 @@ public class Rest2SparqlServlet extends HttpServlet {
                 con = new CodeVirtuosoEngine(host, port);
                 break;
             default:
-                throw new IllegalArgumentException("Unknown value in engine config!");
+                throw new IllegalArgumentException("Unknown or no value in engine config!");
         }
-        System.out.println(host + "  " + port + "  " + servletConfig.getInitParameter("engine"));
+
         //adapter = new RestAdapter();
         adapter = new RestAdapter(con);
         authEngine = new AuthEngine("SomeVerySecretSalt123+!");
