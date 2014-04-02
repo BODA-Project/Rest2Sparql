@@ -15,21 +15,27 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-public class CodeBigdataEngine extends CodeEngine {
+public class CodeVirtuosoEngine extends CodeEngine {
 
     private static final String scheme = "http";
-    private static final String path = "/bigdata/sparql";
+    private static final String path = "/sparql";
     private static final String param1 = "query";
 
-    public CodeBigdataEngine(String host, int port) {
+
+    public CodeVirtuosoEngine(String host, int port) {
         super(host, port);
     }
 
     @Deprecated
-    public CodeBigdataEngine() {
+    public CodeVirtuosoEngine() {
     }
 
     public String executeSPARQL(String query, OutputFormat format) throws ConnectionException {
+
+        String output_format = "xml";
+        if (format == OutputFormat.JSON) {
+            output_format = "json";
+        }
 
         URI uri;
         try {
@@ -39,13 +45,14 @@ public class CodeBigdataEngine extends CodeEngine {
                     .setPort(port)
                     .setPath(path)
                     .setParameter(param1, query)
+                    .setParameter("format", output_format)
                     .build();
         } catch (URISyntaxException e) {
             throw new QueryException("Your query broke the URIBuilder!");
         }
 
         HttpGet htpg = new HttpGet(uri);
-        htpg.addHeader("Accept", format.mimeType);
+        //htpg.addHeader("Accept", format.mimeType);
         CloseableHttpClient client = HttpClients.createDefault();
         CloseableHttpResponse response = null;
         BufferedHttpEntity entity = null;
