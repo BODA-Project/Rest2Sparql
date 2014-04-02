@@ -5,8 +5,9 @@
 //
 // Const
 //
+var port = String("8888");
 var cubeURL = "./backend?func=<getCubes>&id=<__id__>&hash=<__hash__>";
-var host = "http://localhost:8080/";
+var host = "http://localhost:" + port + "/";
 var queryPrefix = host + "backend?func=<execute>&id=<__id__>&hash=<__hash__>&";
 var aggMap = {};
 aggMap["<"] = "smaller";
