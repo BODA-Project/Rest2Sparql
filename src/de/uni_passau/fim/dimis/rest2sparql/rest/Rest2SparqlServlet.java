@@ -2,12 +2,15 @@ package de.uni_passau.fim.dimis.rest2sparql.rest;
 
 import de.uni_passau.fim.dimis.rest2sparql.auth.AuthEngine;
 import de.uni_passau.fim.dimis.rest2sparql.queryfactory.QueryDescriptor;
-import de.uni_passau.fim.dimis.rest2sparql.queryfactory.QueryFactory;
 import de.uni_passau.fim.dimis.rest2sparql.rest.restadapter.IRestAdapter;
 import de.uni_passau.fim.dimis.rest2sparql.rest.restadapter.Methods;
 import de.uni_passau.fim.dimis.rest2sparql.rest.restadapter.RestAdapter;
+import de.uni_passau.fim.dimis.rest2sparql.triplestore.CodeBigdataEngine;
+import de.uni_passau.fim.dimis.rest2sparql.triplestore.CodeMarmottaEngine;
+import de.uni_passau.fim.dimis.rest2sparql.triplestore.CodeVirtuosoEngine;
 import de.uni_passau.fim.dimis.rest2sparql.triplestore.ITripleStoreConnection;
 
+import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServlet;
@@ -49,8 +52,31 @@ public class Rest2SparqlServlet extends HttpServlet {
     }
 
     @Override
-    public void init() throws ServletException {
-        adapter = new RestAdapter();
+    public void init(ServletConfig servletConfig) throws ServletException {
+        String host = servletConfig.getInitParameter("host");
+        int port = 8080;
+        try {
+            port = Integer.parseInt(servletConfig.getInitParameter("port"));
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Non-numeric value in port config!");
+        }
+        ITripleStoreConnection con = null;
+        switch (servletConfig.getInitParameter("engine")) {
+            case "bigdata":
+                con = new CodeBigdataEngine(host, port);
+                break;
+            case "marmotta":
+                con = new CodeMarmottaEngine(host, port);
+                break;
+            case "virtuoso":
+                con = new CodeVirtuosoEngine(host, port);
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown value in engine config!");
+        }
+        System.out.println(host + "  " + port + "  " + servletConfig.getInitParameter("engine"));
+        //adapter = new RestAdapter();
+        adapter = new RestAdapter(con);
         authEngine = new AuthEngine("SomeVerySecretSalt123+!");
         super.init();
     }
@@ -182,6 +208,7 @@ public class Rest2SparqlServlet extends HttpServlet {
                     // if valid, execute query
                     else {
 
+//                        System.out.println(QueryFactory.buildObservationQuery(descriptor));
                         res = adapter.execute(m, descriptor);
 
                         // set content, content type ans status code

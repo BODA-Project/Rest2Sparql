@@ -8,6 +8,20 @@
     <servlet>
         <servlet-name>Backend</servlet-name>
         <servlet-class>de.uni_passau.fim.dimis.rest2sparql.rest.Rest2SparqlServlet</servlet-class>
+
+        <init-param>
+            <param-name>engine</param-name>
+            <param-value>virtuoso</param-value>
+        </init-param>
+        <init-param>
+            <param-name>host</param-name>
+            <param-value>localhost</param-value>
+        </init-param>
+        <init-param>
+            <param-name>port</param-name>
+            <param-value>8890</param-value>
+        </init-param>
+
     </servlet>
     <servlet-mapping>
         <servlet-name>Backend</servlet-name>
