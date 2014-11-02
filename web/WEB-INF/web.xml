@@ -11,7 +11,8 @@
 
         <init-param>
             <param-name>engine</param-name>
-            <param-value>virtuoso</param-value>
+            <!--<param-value>virtuoso</param-value>-->
+            <param-value>bigdata</param-value>
         </init-param>
         <init-param>
             <param-name>host</param-name>
@@ -19,7 +20,7 @@
         </init-param>
         <init-param>
             <param-name>port</param-name>
-            <param-value>8890</param-value>
+            <param-value>8080</param-value>
         </init-param>
 
     </servlet>

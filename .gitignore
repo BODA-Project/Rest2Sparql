@@ -1,3 +1,8 @@
 bin/*
 out/*
 .idea/workspace.xml
+/build/
+/nbproject/private/
+/dist/
+/lib/CopyLibs/
+/lib/javaee-endorsed-api-6.0/
