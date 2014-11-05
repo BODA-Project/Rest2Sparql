@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description" content="RDF Datacube Visualization">
+        <meta name="author" content="Anton Weinast">
+        <link rel="shortcut icon" href="img/favicon.png">
+
+        <title>Rest2Sparql GUI (Example)</title>
+
+        <!-- Bootstrap -->
+        <link href="css/bootstrap.min.css" rel="stylesheet">
+        <link href="css/bootstrap-theme.min.css" rel="stylesheet">
+        <link href="css/main.css" rel="stylesheet">
+
+        <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+        <!--[if lt IE 9]>
+          <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+          <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+        <![endif]-->
+    </head>
+    <body>
+
+        <!-- Navigation -->
+        <nav class="navbar navbar-default navbar-static-top" role="navigation">
+
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="index.html">Rest2Sparql</a>
+            </div>
+
+            <div class="collapse navbar-collapse">
+                <form class="navbar-form navbar-right">
+                    <div class="form-group">
+                        <!--<label for="id">ID</label>-->
+                        <input type="text" class="form-control" id="id" placeholder="ID" value="8023903">
+                    </div>
+                    <div class="form-group">
+                        <!--<label for="hash">Token</label>-->
+                        <input type="text" class="form-control" id="hash" placeholder="Token" value="7fb2f0dd7d608ea6b82eaa9b6e38aa80e1b266d8f8610a2c4c2671368df2b7bc">
+                    </div>
+                    <div class="form-group">
+                        <button type="button" class="form-control btn btn-default" id="to_loadCubes" onclick="alert('TODO')">Load Cubes</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="navbar-default navbar-collapse collapse sidebar" role="navigation">
+
+                <!-- CUBE -->
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Cube</h3>
+                    </div>
+                    <div class="panel-body">
+                        <!--<div class="form-group">-->
+                        <!--<label for="TODO">Cube</label>-->
+
+                        <div class="btn-group">
+                            <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" id="id_cubeButton">
+                                Select Cube <span class="caret"></span>
+                            </button>
+                            <ul class="dropdown-menu" role="menu" id="id_cubeList">
+                                <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Example Cube 1</a></li>
+                                <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Example Cube 2</a></li>
+                            </ul>
+                        </div>
+                        <!--</div>-->
+                    </div>
+                </div>
+
+
+                <!-- DIMENSIONS -->
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Dimensions</h3>
+                    </div>
+                    <div class="panel-body">
+
+                        <div class="form-group">
+                            <label>X&nbsp;</label>
+
+                            <!--Buttons-->
+                            <div class="btn-group">
+                                <button class="btn dropdown-toggle btn-default" type="button" data-toggle="dropdown">
+                                    Species <span class="badge" style="opacity: 0.5">12 / 42</span>
+                                </button>
+                                <ul class="dropdown-menu" role="menu" id="TODO">
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Filter Entities</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Remove</a></li>
+                                </ul>
+                            </div>
+
+                            <!--Plus Symbol-->
+                            <div class="btn-group">
+                                <button class="btn btn-default dropdown-toggle btn-xs" type="button" data-toggle="dropdown">
+                                    <span class="glyphicon-plus"></span>
+                                </button>
+                                <ul class="dropdown-menu" role="menu" id="id_dimensionList">
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Example Dimension 1</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Example Dimension 2</a></li>
+                                </ul>
+                            </div>
+
+
+                        </div>
+
+                        <div class="form-group">
+                            <label>Y&nbsp;</label>
+
+                            <!--Plus Symbol-->
+                            <div class="btn-group">
+                                <button class="btn btn-default dropdown-toggle btn-xs" type="button"  data-toggle="dropdown">
+                                    <span class="glyphicon-plus"></span>
+                                </button>
+                                <ul class="dropdown-menu" role="menu">
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Example Dimension 1</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Example Dimension 2</a></li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Z&nbsp;</label>
+
+                            <!--Plus Symbol-->
+                            <div class="btn-group">
+                                <button class="btn btn-default dropdown-toggle btn-xs" type="button"  data-toggle="dropdown">
+                                    <span class="glyphicon-plus"></span>
+                                </button>
+                                <ul class="dropdown-menu" role="menu">
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Example Dimension 1</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Example Dimension 2</a></li>
+                                </ul>
+                            </div>
+                        </div>
+
+
+                    </div>
+                </div>
+
+                <!-- MEASURES -->
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Measures</h3>
+                    </div>
+                    <div class="panel-body">
+                        <!--<div class="form-group">-->
+                        <!--<label>Measures</label>-->
+
+                        <div class="btn-group">
+                            <button class="btn dropdown-toggle btn-default" type="button" data-toggle="dropdown">
+                                Euro
+                            </button>
+                            <ul class="dropdown-menu" role="menu">
+                                <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Remove</a></li>
+                            </ul>
+                        </div>
+
+                        <div class="btn-group">
+                            <button class="btn btn-default dropdown-toggle btn-xs" type="button" data-toggle="dropdown">
+                                <span class="glyphicon-plus"></span>
+                            </button>
+
+                            <ul class="dropdown-menu" role="menu" id="id_measureList">
+                                <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Example Measure 1</a></li>
+                                <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Example Measure 2</a></li>
+                            </ul>
+                        </div>
+
+                        <!--</div>-->
+                    </div>
+                </div>
+
+                <!-- FILTERS -->
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Filters</h3>
+                    </div>
+                    <div class="panel-body">
+                        <!--<div class="form-group">-->
+                        <!--<label>Filters</label>-->
+
+                        <div class="btn-group">
+                            <button class="btn btn-default dropdown-toggle btn-xs" type="button" data-toggle="dropdown">
+                                <span class="glyphicon-plus"></span>
+                            </button>
+
+                            <ul class="dropdown-menu" role="menu">
+                                <li role="presentation"><a role="menuitem" tabindex="-1" href="#">TODO popup / formular</a></li>
+                            </ul>
+                        </div>
+                        <!--</div>-->
+                    </div>
+                </div>
+
+                <!-- ACCEPT / DRAW -->
+                <button type="button" class="btn btn-primary btn-block">Accept</button>
+
+            </div>
+        </nav>
+
+
+        <div class="viz-area panel panel-default">
+            <div class="panel-body">
+
+                <div class="row">
+                    <div class="col-lg-12">
+                        <h2 class="page-header">headlessMergedCube</h2>
+                    </div>
+                </div>
+
+                <div id="id_cube" class="cube"></div>
+
+                <strong>DEBUG:</strong>
+
+                <div id="OUTPUT"></div>
+
+            </div>
+            <div class="panel-footer">Some Footer links...</div>
+        </div>
+
+
+
+
+        <!--JavaScript-->
+
+        <!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>-->
+        <script src="js/jquery-1.11.1.min.js"></script>
+        <script src="js/bootstrap.min.js"></script>
+        <script src="js/three.min.js"></script>
+        <script src="js/main.js"></script>
+    </body>
+</html>

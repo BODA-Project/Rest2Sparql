@@ -1,0 +1,82 @@
+/* Custom CSS */
+
+body {
+    background-color: #f8f8f8;
+}
+
+/*Bootstrap overwrite*/
+
+.navbar {
+    margin-bottom: 0;
+    box-shadow: none;
+    border: none;
+
+}
+
+@media(min-width:768px) {
+    .navbar-static-top form.navbar-right {
+        margin-right: 0;
+    }
+}
+
+// button size in panels
+.panel-body button {
+    max-width: 100%;
+    overflow: scroll;
+}
+
+// X Y Z labels TODO...
+.panel-body > .form-group > label {
+    margin-right: 5px;
+}
+
+.panel-body > .form-group:last-child {
+    margin-bottom: 0;
+}
+
+.viz-area {
+}
+
+.viz-area > .panel-body {
+    padding-top: 0;
+}
+
+@media(max-width:767px) {
+    .viz-area {
+        border-left: none;
+        border-right: none;
+        border-radius: 0px;
+        margin-bottom: 0px;
+    }
+}
+
+@media(min-width:768px) {
+    .viz-area {
+        margin: 0 15px 15px 250px;
+    }
+
+    .viz-area > .panel-body,
+    .viz-area > .panel-footer {
+        padding-left: 30px;
+        padding-right: 30px;
+    }
+}
+
+/* Navigation sidebar and layout */
+
+.sidebar {
+    padding: 15px;
+    border-radius: 0px;
+}
+
+@media(min-width:768px) {
+    .sidebar {
+        box-shadow: none;
+        background: #f8f8f8;
+        z-index: 1;
+        position: absolute;
+        width: 250px;
+        margin-top: 0;
+        padding: 0 15px 15px 15px!important;
+    }
+}

@@ -5,10 +5,14 @@
 //
 // Const
 //
-var port = String("8888");
 var cubeURL = "./backend?func=<getCubes>&id=<__id__>&hash=<__hash__>";
-var host = "http://localhost:" + port + "/";
-var queryPrefix = host + "backend?func=<execute>&id=<__id__>&hash=<__hash__>&";
+var queryPrefix = "";
+
+// wait for jquery
+$(document).ready(function () {
+    queryPrefix = $(location).attr('href') + "/backend?func=<execute>&id=<__id__>&hash=<__hash__>&";
+});
+
 var aggMap = {};
 aggMap["<"] = "smaller";
 aggMap["<="] = "smaller_or_eq";
@@ -80,7 +84,7 @@ function loadCubes() {
     ajaxReq.setRequestHeader("accept", "application/sparql-results+json");
     ajaxReq.send();
 
-    addToQueryList(host + tmp.substr(2));
+    addToQueryList($(location).attr('href') + tmp.substr(2));
 
 }
 
@@ -105,7 +109,7 @@ function loadDimensions() {
     ajaxReq.setRequestHeader("accept", "application/sparql-results+json");
     ajaxReq.send();
 
-    addToQueryList(host + tmp.substr(2));
+    addToQueryList($(location).attr('href') + tmp.substr(2));
 
 }
 
@@ -129,7 +133,7 @@ function loadMeasures() {
     ajaxReq.setRequestHeader("accept", "application/sparql-results+json");
     ajaxReq.send();
 
-    addToQueryList(host + tmp.substr(2));
+    addToQueryList($(location).attr('href') + tmp.substr(2));
 
 }
 
