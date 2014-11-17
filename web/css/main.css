@@ -4,7 +4,7 @@ body {
     background-color: #f8f8f8;
 }
 
-/*Bootstrap overwrite*/
+/* Bootstrap overwrite */
 
 .navbar {
     margin-bottom: 0;
@@ -19,13 +19,27 @@ body {
     }
 }
 
-// button size in panels
-.panel-body button {
-    max-width: 100%;
-    overflow: scroll;
+/* badges in buttons */
+.btn .badge {
+    font-size: 10px;
 }
 
-// X Y Z labels TODO...
+.btn-default .badge {
+    background-color: #808080;
+}
+
+.badge.ms-1 {
+    background-color: #428bca;
+    /* TODO more colors? */
+}
+
+/* button size in panels */
+.panel-body button {
+    max-width: 100%;
+    overflow: hidden;
+}
+
+/* X Y Z labels */
 .panel-body > .form-group > label {
     margin-right: 5px;
 }
@@ -52,7 +66,7 @@ body {
 
 @media(min-width:768px) {
     .viz-area {
-        margin: 0 15px 15px 250px;
+        margin: 0 15px 15px 300px;
     }
 
     .viz-area > .panel-body,
@@ -75,8 +89,22 @@ body {
         background: #f8f8f8;
         z-index: 1;
         position: absolute;
-        width: 250px;
+        width: 300px;
         margin-top: 0;
         padding: 0 15px 15px 15px!important;
     }
+}
+
+
+/* Three.js Styling */
+
+.CSS3DTest {
+    width: 100px;
+    height: 30px;
+    background-color: rgba(20,50,180,0.75);
+    border: 1px solid black;
+    font-size: 14px;
+    text-align: center;
+    line-height: 25px;
+    color: white;
 }

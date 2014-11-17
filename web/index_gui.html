@@ -5,7 +5,6 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta name="description" content="RDF Datacube Visualization">
-        <meta name="author" content="Anton Weinast">
         <link rel="shortcut icon" href="img/favicon.png">
 
         <title>Rest2Sparql GUI (Example)</title>
@@ -34,7 +33,7 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a class="navbar-brand" href="index.html">Rest2Sparql</a>
+                <a class="navbar-brand" href="./">Rest2Sparql</a>
             </div>
 
             <div class="collapse navbar-collapse">
@@ -87,15 +86,16 @@
                     <div class="panel-body">
 
                         <div class="form-group">
-                            <label>X&nbsp;</label>
+                            <label>X</label>
 
                             <!--Buttons-->
                             <div class="btn-group">
                                 <button class="btn dropdown-toggle btn-default" type="button" data-toggle="dropdown">
-                                    Species <span class="badge" style="opacity: 0.5">12 / 42</span>
+                                    Species <span class="badge">1 / 1138</span>
                                 </button>
                                 <ul class="dropdown-menu" role="menu" id="TODO">
-                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Filter Entities</a></li>
+                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Filter Entities...</a></li>
+                                    <li role="presentation" class="divider"></li>
                                     <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Remove</a></li>
                                 </ul>
                             </div>
@@ -115,7 +115,7 @@
                         </div>
 
                         <div class="form-group">
-                            <label>Y&nbsp;</label>
+                            <label>Y</label>
 
                             <!--Plus Symbol-->
                             <div class="btn-group">
@@ -130,7 +130,7 @@
                         </div>
 
                         <div class="form-group">
-                            <label>Z&nbsp;</label>
+                            <label>Z</label>
 
                             <!--Plus Symbol-->
                             <div class="btn-group">
@@ -159,9 +159,12 @@
 
                         <div class="btn-group">
                             <button class="btn dropdown-toggle btn-default" type="button" data-toggle="dropdown">
-                                Euro
+                                Euro <span class="badge ms-1">SUM</span>
                             </button>
                             <ul class="dropdown-menu" role="menu">
+                                <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Change Aggregation...</a></li>
+                                <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Change Color...</a></li>
+                                <li role="presentation" class="divider"></li>
                                 <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Remove</a></li>
                             </ul>
                         </div>
@@ -219,9 +222,13 @@
                     </div>
                 </div>
 
-                <div id="id_cube" class="cube"></div>
+                <div id="id_cube" class="cube">
 
-                <strong>DEBUG:</strong>
+                    <!--<div style="position:relative;width:5px;height:5px;background-color:#ff0000" id="pointerID"></div>-->
+                </div>
+
+
+                <!--<strong>DEBUG:</strong>-->
 
                 <div id="OUTPUT"></div>
 
@@ -237,7 +244,18 @@
         <!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>-->
         <script src="js/jquery-1.11.1.min.js"></script>
         <script src="js/bootstrap.min.js"></script>
-        <script src="js/three.min.js"></script>
+
+        <!-- THREE.JS -->
+        <script src="js/threejs/three.min.js"></script>
+        <!--<script src="js/threejs/renderers/SVGRenderer.js"></script>-->
+        <!--<script src="js/threejs/renderers/Projector.js"></script>-->
+        <!--<script src="js/threejs/renderers/CSS2DRenderer.js"></script>-->
+        <!--<script src="js/threejs/renderers/CSS3DRenderer.js"></script>-->
+        <!--<script src="js/threejs/renderers/CSS3DStereoRenderer.js"></script>-->
+        <!--<script src="js/threejs/renderers/CanvasRenderer.js"></script>-->
+        <script src="js/threejs/controls/OrbitControls.js"></script>
+
+        <!-- Custom Scripts -->
         <script src="js/main.js"></script>
     </body>
 </html>
