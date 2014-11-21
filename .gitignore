@@ -7,3 +7,4 @@ out/*
 /web/WEB-INF/lib/javaee-endorsed-api-6.0/
 /web/WEB-INF/lib/CopyLibs/
 /web/WEB-INF/lib/nblibraries.properties
+/build.xml
