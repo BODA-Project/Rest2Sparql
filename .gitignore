@@ -1,8 +1,9 @@
 bin/*
 out/*
-.idea/workspace.xml
+.idea/
 /build/
-/nbproject/private/
+/nbproject/
 /dist/
-/lib/CopyLibs/
-/lib/javaee-endorsed-api-6.0/
+/web/WEB-INF/lib/javaee-endorsed-api-6.0/
+/web/WEB-INF/lib/CopyLibs/
+/web/WEB-INF/lib/nblibraries.properties
