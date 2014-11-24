@@ -1,20 +1,26 @@
 package de.uni_passau.fim.dimis.rest2sparql.util;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * A {@link Dimension} that is fixed to a specific entity.
  */
 public class FixedDimension extends Dimension {
 
-    private String entityName;
+    private List<String> entityNames = new ArrayList();
 
     public FixedDimension(String name, String entityName, Parameters p) {
         super(name, p);
-        this.entityName = entityName;
+        String[] entities = entityName.split(","); // TODO: komma als trennzeichen ok? könnte in URL vorkommen...
+        this.entityNames.addAll(Arrays.asList(entities));
     }
 
     public FixedDimension(String name, String entityName) {
         super(name);
-        this.entityName = entityName;
+        String[] entities = entityName.split(",");
+        this.entityNames.addAll(Arrays.asList(entities));
     }
 
     @Override
@@ -25,6 +31,23 @@ public class FixedDimension extends Dimension {
     }
 
     public String buildEntityFilterString() {
-        return "FILTER (?" + entityVarName + " = <" + entityName + ">). ";
+        StringBuilder ret = new StringBuilder("FILTER (");
+        ret.append("?");
+        ret.append(entityVarName);
+        ret.append(" = <");
+        ret.append(entityNames.get(0));
+        ret.append(">");
+
+        // Add additional entities
+        for (int i = 1; i < entityNames.size(); i++) {
+            String name = entityNames.get(i);
+            ret.append(" || ?");
+            ret.append(entityVarName);
+            ret.append(" = <");
+            ret.append(entityNames.get(i));
+            ret.append(">");
+        }
+        ret.append("). ");
+        return ret.toString();
     }
 }

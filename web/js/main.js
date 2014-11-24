@@ -9,22 +9,20 @@ var ID = "";
 var HASH = "";
 var currentCube = "";
 
-var xDimensions = [];   // type: Dimension class
+var xDimensions = [];   // type: Dimension class...
 var yDimensions = [];
 var zDimensions = [];
 
-// Three.js visualization
-var scene = new THREE.Scene();
-var camera = new THREE.PerspectiveCamera(45, 2 / 1, 0.1, 2000);
-var renderer = new THREE.WebGLRenderer();
-var controls = new THREE.OrbitControls(camera, renderer.domElement);
-//    var renderer = new THREE.CanvasRenderer();
-//    var renderer = new THREE.CSS2DRenderer();
-//    var renderer = new THREE.CSS3DRenderer();
-//    var renderer = new THREE.CSS3DStereoRenderer();
-//    var renderer = new THREE.SVGRenderer();
-var lighting = new THREE.PointLight(0x202020, 1, 0);
-scene.add(lighting);
+// Three.js variables
+var scene;
+var camera;
+var renderer;
+var controls;
+var lighting;
+
+// For interaction with objects
+var octree;
+var intersected;
 
 // Templates
 var CUBE_URL = "./backend?func=<getCubes>&id=<__id__>&hash=<__hash__>";
@@ -63,12 +61,62 @@ function Entity(dimensionName, entityName, label) {
 
 
 // AJAX TESTS Queries
-var testQuery1 = "http://localhost:8080/rest2sparql/backend?func=<getCubes>&id=<8023903>&hash=<7fb2f0dd7d608ea6b82eaa9b6e38aa80e1b266d8f8610a2c4c2671368df2b7bc>";
-var testQuery2 = "http://localhost:8080/rest2sparql/backend?func=<execute>&id=<8023903>&hash=<7fb2f0dd7d608ea6b82eaa9b6e38aa80e1b266d8f8610a2c4c2671368df2b7bc>&m=<http://code-research.eu/resource/Euro>,select=<true>,group=<false>,order=<-1>&d=<http://code-research.eu/resource/Country>,select=<true>,group=<false>,order=<-1>&d=<http://code-research.eu/resource/Species>,select=<false>,group=<false>,order=<-1>,fix=<http://code-research.eu/resource/Entity-279a95fa-ecb7-4ed3-9a1d-c250c6d1acd9>&d=<http://code-research.eu/resource/Year>,select=<true>,group=<false>,order=<-1>&c=<http://code-research.eu/resource/Dataset-173bbc55-68ca-4398-bd28-232415f7db4d>,select=<true>";
-var testQuery3 = "http://localhost:8080/rest2sparql/backend?func=%3CgetDimensions%3E&c=%3Chttp://code-research.eu/resource/Dataset-173bbc55-68ca-4398-bd28-232415f7db4d%3E&id=%3C8023903%3E&hash=%3C7fb2f0dd7d608ea6b82eaa9b6e38aa80e1b266d8f8610a2c4c2671368df2b7bc%3E";
-var testQuery4_agg = "http://localhost:8080/rest2sparql//backend?func=%3Cexecute%3E&id=%3C8023903%3E&hash=%3C7fb2f0dd7d608ea6b82eaa9b6e38aa80e1b266d8f8610a2c4c2671368df2b7bc%3E&d=%3Chttp://code-research.eu/resource/Country%3E,select=%3Ctrue%3E,group=%3Ctrue%3E,order=%3C-1%3E&d=%3Chttp://code-research.eu/resource/Species%3E,select=%3Ctrue%3E,group=%3Ctrue%3E,order=%3C-1%3E,fix=%3Chttp://code-research.eu/resource/Entity-02a8e8de-ad5c-4922-9775-5083e116a37f%3E&d=%3Chttp://code-research.eu/resource/Year%3E,select=%3Ctrue%3E,group=%3Ctrue%3E,order=%3C-1%3E&m=%3Chttp://code-research.eu/resource/Euro%3E,select=%3Ctrue%3E,group=%3Cfalse%3E,order=%3C-1%3E,agg=%3Csum%3E&c=%3Chttp://code-research.eu/resource/Dataset-173bbc55-68ca-4398-bd28-232415f7db4d%3E,select=%3Cfalse%3E";
-var testQuery5_fix = "http://localhost:8080/rest2sparql//backend?func=%3Cexecute%3E&id=%3C8023903%3E&hash=%3C7fb2f0dd7d608ea6b82eaa9b6e38aa80e1b266d8f8610a2c4c2671368df2b7bc%3E&m=%3Chttp://code-research.eu/resource/Euro%3E,select=%3Ctrue%3E,group=%3Cfalse%3E,order=%3C-1%3E&d=%3Chttp://code-research.eu/resource/Country%3E,select=%3Cfalse%3E,group=%3Cfalse%3E,order=%3C-1%3E,fix=%3Chttp://code-research.eu/resource/Entity-1b7500d2-6e12-42f0-a006-f38ae763418f%3E&d=%3Chttp://code-research.eu/resource/Species%3E,select=%3Cfalse%3E,group=%3Cfalse%3E,order=%3C-1%3E,fix=%3Chttp://code-research.eu/resource/Entity-02a8e8de-ad5c-4922-9775-5083e116a37f%3E&d=%3Chttp://code-research.eu/resource/Year%3E,select=%3Ctrue%3E,group=%3Cfalse%3E,order=%3C-1%3E&c=%3Chttp://code-research.eu/resource/Dataset-173bbc55-68ca-4398-bd28-232415f7db4d%3E,select=%3Cfalse%3E";
-var testQuery6_3d = "http://localhost:8080/rest2sparql//backend?func=%3Cexecute%3E&id=%3C8023903%3E&hash=%3C7fb2f0dd7d608ea6b82eaa9b6e38aa80e1b266d8f8610a2c4c2671368df2b7bc%3E&m=%3Chttp://code-research.eu/resource/Euro%3E,select=%3Ctrue%3E,group=%3Cfalse%3E,order=%3C-1%3E,agg=%3Csum%3E&d=%3Chttp://code-research.eu/resource/Country%3E,select=%3Ctrue%3E,group=%3Ctrue%3E,order=%3C-1%3E&d=%3Chttp://code-research.eu/resource/Species%3E,select=%3Ctrue%3E,group=%3Ctrue%3E,order=%3C-1%3E&d=%3Chttp://code-research.eu/resource/Year%3E,select=%3Ctrue%3E,group=%3Ctrue%3E,order=%3C-1%3E&c=%3Chttp://code-research.eu/resource/Dataset-173bbc55-68ca-4398-bd28-232415f7db4d%3E,select=%3Cfalse%3E";
+var testQuery1 = "./backend?func=<getCubes>&id=<8023903>&hash=<7fb2f0dd7d608ea6b82eaa9b6e38aa80e1b266d8f8610a2c4c2671368df2b7bc>";
+var testQuery2 = "./backend?func=<execute>&id=<8023903>&hash=<7fb2f0dd7d608ea6b82eaa9b6e38aa80e1b266d8f8610a2c4c2671368df2b7bc>&m=<http://code-research.eu/resource/Euro>,select=<true>,group=<false>,order=<-1>&d=<http://code-research.eu/resource/Country>,select=<true>,group=<false>,order=<-1>&d=<http://code-research.eu/resource/Species>,select=<false>,group=<false>,order=<-1>,fix=<http://code-research.eu/resource/Entity-279a95fa-ecb7-4ed3-9a1d-c250c6d1acd9>&d=<http://code-research.eu/resource/Year>,select=<true>,group=<false>,order=<-1>&c=<http://code-research.eu/resource/Dataset-173bbc55-68ca-4398-bd28-232415f7db4d>,select=<true>";
+var testQuery3 = "./backend?func=%3CgetDimensions%3E&c=%3Chttp://code-research.eu/resource/Dataset-173bbc55-68ca-4398-bd28-232415f7db4d%3E&id=%3C8023903%3E&hash=%3C7fb2f0dd7d608ea6b82eaa9b6e38aa80e1b266d8f8610a2c4c2671368df2b7bc%3E";
+var testQuery4_agg = "./backend?func=%3Cexecute%3E&id=%3C8023903%3E&hash=%3C7fb2f0dd7d608ea6b82eaa9b6e38aa80e1b266d8f8610a2c4c2671368df2b7bc%3E&d=%3Chttp://code-research.eu/resource/Country%3E,select=%3Ctrue%3E,group=%3Ctrue%3E,order=%3C-1%3E&d=%3Chttp://code-research.eu/resource/Species%3E,select=%3Ctrue%3E,group=%3Ctrue%3E,order=%3C-1%3E,fix=%3Chttp://code-research.eu/resource/Entity-23c3225d-ac7a-40a3-80de-a10ff10a7428,http://code-research.eu/resource/Entity-02de3c11-3f45-448d-b458-8db3534fedc6,http://code-research.eu/resource/Entity-02a8e8de-ad5c-4922-9775-5083e116a37f,http://code-research.eu/resource/Entity-dca07aa6-098e-4bb8-98f4-19d10335b9fa,http://code-research.eu/resource/Entity-25563186-cefe-45a8-a5ff-340c6e908124,http://code-research.eu/resource/Entity-246eacbc-86f1-414e-a0eb-3b80da81c917,http://code-research.eu/resource/Entity-2dcec751-567a-42d7-b0d1-9da463c5a7c2%3E&d=%3Chttp://code-research.eu/resource/Year%3E,select=%3Ctrue%3E,group=%3Ctrue%3E,order=%3C-1%3E&m=%3Chttp://code-research.eu/resource/Euro%3E,select=%3Ctrue%3E,group=%3Cfalse%3E,order=%3C-1%3E,agg=%3Csum%3E&c=%3Chttp://code-research.eu/resource/Dataset-173bbc55-68ca-4398-bd28-232415f7db4d%3E,select=%3Cfalse%3E";
+var testQuery5_agg_1d = "./backend?func=%3Cexecute%3E&id=%3C8023903%3E&hash=%3C7fb2f0dd7d608ea6b82eaa9b6e38aa80e1b266d8f8610a2c4c2671368df2b7bc%3E&d=%3Chttp://code-research.eu/resource/Country%3E,select=%3Ctrue%3E,group=%3Ctrue%3E,order=%3C-1%3E&d=%3Chttp://code-research.eu/resource/Species%3E,select=%3Cfalse%3E,group=%3Cfalse%3E,order=%3C-1%3E&d=%3Chttp://code-research.eu/resource/Year%3E,select=%3Cfalse%3E,group=%3Cfalse%3E,order=%3C-1%3E&m=%3Chttp://code-research.eu/resource/Euro%3E,select=%3Ctrue%3E,group=%3Cfalse%3E,order=%3C-1%3E,agg=%3Csum%3E&c=%3Chttp://code-research.eu/resource/Dataset-173bbc55-68ca-4398-bd28-232415f7db4d%3E,select=%3Cfalse%3E";
+var testQuery6_3d = "./backend?func=%3Cexecute%3E&id=%3C8023903%3E&hash=%3C7fb2f0dd7d608ea6b82eaa9b6e38aa80e1b266d8f8610a2c4c2671368df2b7bc%3E&m=%3Chttp://code-research.eu/resource/Euro%3E,select=%3Ctrue%3E,group=%3Cfalse%3E,order=%3C-1%3E,agg=%3Csum%3E&d=%3Chttp://code-research.eu/resource/Species%3E,select=%3Ctrue%3E,group=%3Ctrue%3E,order=%3C-1%3E&d=%3Chttp://code-research.eu/resource/Country%3E,select=%3Ctrue%3E,group=%3Ctrue%3E,order=%3C-1%3E&d=%3Chttp://code-research.eu/resource/Year%3E,select=%3Ctrue%3E,group=%3Ctrue%3E,order=%3C-1%3E&c=%3Chttp://code-research.eu/resource/Dataset-173bbc55-68ca-4398-bd28-232415f7db4d%3E,select=%3Cfalse%3E";
+
+
+
+// Initialization
+$(document).ready(function () {
+
+    // TEST
+    ID = "8023903";
+    HASH = "7fb2f0dd7d608ea6b82eaa9b6e38aa80e1b266d8f8610a2c4c2671368df2b7bc";
+
+    init();
+
+    // Start rendering TODO: für "loading-screen" ok -> rotierender cube
+    resizeVizualisation(); // initially
+    render();
+
+    //<--
+
+});
+
+// Inits the interface and adds listeners
+function init() {
+
+    // Disable navigation input initially and set conditions of usage
+    $("#id_cubePanel").css("opacity", 0.4);
+    $("#id_dimensionPanel").css("opacity", 0.4);
+    $("#id_measurePanel").css("opacity", 0.4);
+    $("#id_filterPanel").css("opacity", 0.4);
+    $("#id_filterPanel").css("opacity", 0.4);
+    $("#id_applyButton").css("opacity", 0.4);
+    $("#id_cubePanel button").attr("disabled", "disabled");
+    $("#id_dimensionPanel button").attr("disabled", "disabled");
+    $("#id_measurePanel button").attr("disabled", "disabled");
+    $("#id_filterPanel button").attr("disabled", "disabled");
+    $("#id_applyButton").attr("disabled", "disabled");
+
+    // Add listeners to all interface buttons
+    addInterfaceListeners();
+
+    // Setup THREE.JS components
+    initThreeJs();
+
+    // Resize visualization on browser resize
+    $(window).on('resize', resizeVizualisation);
+
+}
+
+
+
+// Test visualization, TODO: cleanup
 
 var request = $.ajax({
     url: testQuery4_agg,
@@ -76,7 +124,6 @@ var request = $.ajax({
         accept: "application/sparql-results+json"
     }
 });
-
 
 // TEMP sort result for coordinates in cube
 request.done(function (content) {
@@ -148,14 +195,12 @@ request.done(function (content) {
 
             var measure = parseFloat(result["V_NAME_AGG"].value);
 
-            lowestMeasure = (!lowestMeasure || lowestMeasure > measure) ? measure : lowestMeasure;
-            highestMeasure = (!highestMeasure || highestMeasure < measure) ? measure : highestMeasure;
+            lowestMeasure = (lowestMeasure === undefined || lowestMeasure > measure) ? measure : lowestMeasure;
+            highestMeasure = (highestMeasure === undefined || highestMeasure < measure) ? measure : highestMeasure;
 
         });
 
     });
-
-    var centerPoint = []; // TODO assumes there is just (xyz)
 
     // Sort those entities for the labels and coordinates in the visualization
     function compare(a, b) {
@@ -167,6 +212,9 @@ request.done(function (content) {
             return 0;
         }
     }
+
+    // Compute the center point for the camera too look at
+    var centerPoint = [0, 0, 0]; // TODO assumes there is just (xyz)
     $.each(dimensionNumbers, function (key, number) {
         entityMap[number].sort(compare);
 
@@ -176,12 +224,12 @@ request.done(function (content) {
             entityMap[number][entityName] = index;
         });
 
-        centerPoint[key] = entityMap[number].length / 2; // TODO for center view point; set camera there!
+        centerPoint[key] = entityMap[number].length / 2;
 
     });
 
 //    console.log("sorted: ", entityMap);
-    console.log("lowest measure: ", lowestMeasure, ", highest: " + highestMeasure);
+    console.log("lowest measure: ", lowestMeasure, ", highest: " + highestMeasure, ", #results: ", results.length);
 
 
     // TODO set labels coordinates (around the cube), problem for 2 dimension per axis -> multiple coordinates, must be calculated...
@@ -193,60 +241,95 @@ request.done(function (content) {
     $.each(results, function (index, result) {
 
         // DEBUG STOP AFTER 2000 entries, too much data :D
-//        if (index > 2000) {
+//        if (index > 5000) {
 //            return false;
 //        }
 
-        var coordinates = []; // e.g. (x,y,z) or (x,x,y,zz)
+        var coordinates = [0, 0, 0]; // e.g. (x,y,z) or (x,x,y,zz)
         var measureVals = []; // e.g. (123435, 42)
 
         // Iterate through given dimension numbers
         $.each(dimensionNumbers, function (key, number) {
             var entityName = result["E_NAME_" + number].value; // E_NAME_X
-            coordinates.push(entityMap[number][entityName]); // TODO assumes xyz order of results
+//            coordinates.push(entityMap[number][entityName]); // TODO assumes xyz order of results
+            coordinates[key] = entityMap[number][entityName]; // TODO assumes xyz order of results
         });
 
         // Iterate through given measure numbers TODO: fehlende zahlen bei AGG???
-        $.each(measureNumbers, function (key, value) {
+        $.each(measureNumbers, function (key, number) {
             measureVals.push(parseFloat(result["V_NAME_AGG"].value));
         });
 
         // TODO draw the given result with given coordinates and measures
 //        console.log("coordinates: ", coordinates, ", measures: ", measureVals);
 
-        var cubeSize = 0.95;
-        var geometry = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
-//        var geometry = new THREE.BoxGeometry(1,1,1);
-        var material = new THREE.MeshLambertMaterial();
-//        material.color = new THREE.Color(0xffffff);
-
-
 
         // TODO for each measure -> own cube part
 
-
         // TEST color from measure ratio
         var ratio = (measureVals[0] - lowestMeasure) / (highestMeasure - lowestMeasure);
-        var colorLowest = new THREE.Color(0x404040);
-        var colorHighest = new THREE.Color(0x90e040); // TODO custom color per measure
+
+//        // Logarithmic test
+
+        ratio = Math.log((ratio * 100) + 1) / Math.log(101);
+
+//        var ratio2 = Math.log(1.05 + measureVals[0] - lowestMeasure) / Math.log(1.05 + highestMeasure - lowestMeasure);
+//        ratio = ratio * 0.75 + ratio2 * 0.25;
+
+//        var cubeSize = 0.85 + 0.15 * ratio;
+        var cubeSize = 0.80 + 0.20 * ratio;
+//        var cubeSize = 0.95;
+
+        var geometry = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
+        var material = new THREE.MeshLambertMaterial();
+
+        material.shading = THREE.NoShading;
+        material.fog = false;
+
+//        var colorLowest = new THREE.Color(0x404040);
+//        var colorHighest = new THREE.Color(0x90e040); // TODO custom color per measure
 
 
-//        var colorLowest = new THREE.Color(0xd0d0d0);
-//        var colorHighest = new THREE.Color(0x2040a0); // TODO custom color per measure
+        var colorLowest = new THREE.Color(0xd8d8d8);
+        var colorHighest = new THREE.Color(0x1f76c0); // TODO custom color per measure -> ~ multiply effect RGB? "multiply(color);"
+//        var colorHighest = new THREE.Color(0x404040);
         var resultColor = colorLowest.multiplyScalar(1 - ratio).add(colorHighest.multiplyScalar(ratio));
 
-        // darken results that are exactley the lowest value
-        var gapColor = colorLowest.clone().multiplyScalar(0.8);
-//        var gapColor = colorLowest.clone().multiplyScalar(1.05);
-        resultColor = (ratio === 0) ? gapColor : resultColor;
+//        console.log(resultColor)
+
+//        var material = new THREE.SpriteMaterial({color: resultColor, fog: true});
+//        var sprite = new THREE.Sprite(material);
+//        scene.add(sprite);
 
         material.emissive = resultColor;
         var cube = new THREE.Mesh(geometry, material);
         cube.position.set(coordinates[0], coordinates[1], coordinates[2]); // TEST
+
+        // Add result to the scene and the octree
+        octree.add(cube, {useFaces: false});
         scene.add(cube);
 
+        // Add additional information to each result cube
+        cube.measureColor = resultColor; // save color to object
+        cube.popup = function () {
+            var str = "";
+            $.each(dimensionNumbers, function (key, number) {
+                str += "Dim #" + key + ": ";
+                str += result["L_NAME_" + number + "_AGG"].value;
+                str += "\n";
+            });
+            $.each(measureNumbers, function (key, number) {
+//                str += result["M_NAME_" + number + "_AGG"].value; // TODO: fehlt immer :C also von anfrage nehmen, oder in api ändern
+                str += "Euro"; // TODO: fehlt immer :C also von anfrage nehmen, oder in api ändern
+                str += ": ";
+                str += measureVals[key];
+                str += "\n";
+            });
+            alert(str); // TEMP
+        };
+
 //         Lines
-//        var cube2 = new THREE.BoxHelper(cube);
+//        var cube2 = new THREE.EdgesHelper(cube);
 //        cube2.material.color.set(resultColor);
 //        cube2.material.linewidth = 1;
 //        scene.add(cube2);
@@ -259,6 +342,14 @@ request.done(function (content) {
 //    sprite.position.set(-1, 0, 0);
 //    scene.add(sprite);
 
+    // DEBUG: grid <--
+    var size = 20;
+    var step = 1;
+    var gridHelper = new THREE.GridHelper(size, step);
+    gridHelper.setColors(new THREE.Color(0xd8d8d8), new THREE.Color(0xf0f0f0));
+    gridHelper.position.set(centerPoint[0], -0.5, centerPoint[2]);
+    scene.add(gridHelper);
+    // -->
 
 
 
@@ -266,110 +357,30 @@ request.done(function (content) {
     console.log("center: ", centerPoint);
     camera.position.x = centerPoint[0] * 2 + 1;
     camera.position.y = centerPoint[1] * 2 + 1;
-    camera.position.z = centerPoint[2] * 2 + 10; // TODO wie weit weg?
+    camera.position.z = centerPoint[2] * 2 + 20; // TODO wie weit weg?
     controls.target = new THREE.Vector3(centerPoint[0], centerPoint[1], centerPoint[2]);
     controls.update();
 
     // ...
 
+    // TEST: RAYCAST
+    $(renderer.domElement).on("mousemove", onCanvasMouseMove);
+    $(renderer.domElement).on("click", onCanvasMouseClick);
 });
 
 
-// Initialization
-$(document).ready(function () {
-    init();
+// Starts the rendering process of three.js, goes infinitly
+function render() {
+    requestAnimationFrame(render);
+    renderer.render(scene, camera);
+//    octree.update();
+}
 
-    // TODO disable input for unconfigured fields
-//    $("#test *").attr("disabled", "disabled").off('click');
-
-    // TODO for DEBUG
-    ID = "8023903";
-    HASH = "7fb2f0dd7d608ea6b82eaa9b6e38aa80e1b266d8f8610a2c4c2671368df2b7bc";
-    loadCubeList();
-
-    // TEST of three.js -->
-
-    // Orbit controls
-    controls.noKeys = true;
-//    controls.noPan = true;
-    controls.minDistance = 10;
-//    controls.maxDistance = 40;
-    controls.rotateSpeed = 0.75;
-//    controls.zoomSpeed = 0.5;
-//    controls.addEventListener( 'change', render );
-
-    // TODO: 2 renderer: 1. WebGL für Würfel, 2. CSS3D für text (falls einfacher als text as textur)
-
-    renderer.setClearColor(0xffffff, 1);
-
-    // TODO Rotating cUbe as loading screen
-//    var geometry = new THREE.BoxGeometry(4, 4, 4);
-//    var material = new THREE.MeshLambertMaterial();
-//    material.color = new THREE.Color(0xffffff);
-//    material.emissive = new THREE.Color(0xe8e8e8);
-//    var cube = new THREE.Mesh(geometry, material);
-//    scene.add(cube);
-//    // Lines
-//    var cube2 = new THREE.BoxHelper(cube);
-//    cube2.material.color.set(0xc0c0c0);
-//    cube2.material.linewidth = 2;
-//    scene.add(cube2);
-
-
-    // CSS3D Renderer Test
-//    var test = document.createElement("div");
-//    test.className = "CSS3DTest";
-//    test.innerHTML = "12.781.015"; // or "12M 781K"
-//    var object = new THREE.CSS3DObject(test);
-//    object.position.x = 0;
-//    object.position.y = 0;
-//    object.position.z = 0;
-//    object.rotation.x = 0.5;
-//    scene.add(object);
-
-//    console.log(camera.position);
-//    console.log(directionalLight.position);
-
-
-//  TODO : add events to onjects -> Raycaster -> webGL, sonst HTMLNodes
-//
-//    cube.on("click", function () {
-//        alert("you clicked the cube");
-//    });
-//    cube.addEventListener("onClick", function () {
-//        alert("you clicked the cube");
-//    });
-
-    var render = function () {
-        requestAnimationFrame(render);
-
-        // Update lighting position
-        lighting.position.set(camera.position.x, camera.position.y, camera.position.z);
-
-//        cube.rotation.x += 0.005;
-//        cube.rotation.y += 0.001;
-
-        // Test with css3d
-//        object.rotation.y += 0.01;
-
-        renderer.render(scene, camera);
-    };
-
-
-
-    $("#id_cube").append(renderer.domElement);
-    $("#id_cube").append("<br>");
-
-
-    // Start rendering
-    resizeVizualisation(); // initially
-    render();
-
-    //<--
-
-
-
-});
+// Update when the orbit control was moved
+function controlMoved() {
+    // Update lighting position
+    lighting.position.copy(camera.position);
+}
 
 // Resize the cube visualization
 function resizeVizualisation() {
@@ -380,20 +391,15 @@ function resizeVizualisation() {
     camera.updateProjectionMatrix();
     renderer.setSize(maxWidth, maxHeight);
 }
-window.addEventListener('resize', resizeVizualisation, false);
 
 
-
-
-
-// Inits the interface and adds listeners
-function init() {
-
-    // TODO add listener for ID/Hash or login...
-
-}
-
+// ...
 function loadCubeList() {
+
+    // Read ID and Hash input
+    ID = $("#id_id").val();
+    HASH = $("#id_hash").val();
+
     var url = CUBE_URL.replace("__id__", ID);
     url = url.replace("__hash__", HASH);
     var request = $.ajax({
@@ -409,11 +415,18 @@ function loadCubeList() {
         var obj = $.parseJSON(content);
         var results = obj.results.bindings; // array
 
-
         // Clear old cube list
         $("#id_cubeList").empty();
 
-        // Iterate through available cubes
+        if (results.length === 0) {
+            return;
+        }
+
+        // enable cube selection
+        $("#id_cubePanel").css("opacity", "");
+        $("#id_cubePanel button").removeAttr("disabled");
+
+        // Iterate through available cubes and fill the list
         $.each(results, function (index, element) {
             var cubeName = element.CUBE_NAME.value;
             var comment = element.COMMENT.value; // TODO as tooltip? / "information area"
@@ -569,7 +582,7 @@ if (typeof String.prototype.contains === 'undefined') {
 }
 if (typeof String.prototype.startsWith === 'undefined') {
     String.prototype.startsWith = function (str) {
-        return this.lastIndexOf(str, 0) === 0
+        return this.lastIndexOf(str, 0) === 0;
     };
 }
 if (typeof String.prototype.endsWith === 'undefined') {
@@ -609,7 +622,6 @@ function createTextSprite(text) {
 }
 
 
-
 // TODO: NON RATATING LABEL
 function createLabel(text) {
     var size = 20;
@@ -642,6 +654,163 @@ function createLabel(text) {
 
 
     return mesh;
+}
+
+// ...
+function initThreeJs() {
+    scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(30, 2 / 1, 0.1, 2000);
+    renderer = new THREE.WebGLRenderer({antialias: true}); // TODO AA as option
+//    renderer = new THREE.CanvasRenderer();
+//    renderer = new THREE.CSS2DRenderer();
+//    renderer = new THREE.CSS3DRenderer();
+//    renderer = new THREE.SVGRenderer();
+    controls = new THREE.OrbitControls(camera, renderer.domElement);
+    lighting = new THREE.PointLight(0x202020, 1, 0);
+    scene.add(lighting);
+
+    // Orbit controls
+    controls.noKeys = true;
+//    controls.noPan = true;
+    controls.minDistance = 20;
+//    controls.maxDistance = 40;
+    controls.rotateSpeed = 0.75;
+//    controls.zoomSpeed = 0.5;
+    controls.addEventListener('change', controlMoved, false);
+
+    renderer.setClearColor(0xffffff, 1);
+    // TODO: 2 renderer: 1. WebGL für Würfel, 2. CSS3D für text (falls einfacher als text as textur)
+
+    // Octree for performant event handling (raycast...)
+    octree = new THREE.Octree({
+        //scene: scene,
+        undeferred: false,
+        depthMax: Infinity,
+        objectsThreshold: 8,
+        overlapPct: 0.15
+    });
+
+    // CSS3D Renderer Test
+//    var test = document.createElement("div");
+//    test.className = "CSS3DTest";
+//    test.innerHTML = "12.781.015"; // or "12M 781K"
+//    var object = new THREE.CSS3DObject(test);
+//    object.position.x = 0;
+//    object.position.y = 0;
+//    object.position.z = 0;
+//    object.rotation.x = 0.5;
+//    scene.add(object);
+
+    // Add the canvas to the page
+    $("#id_cube").append(renderer.domElement);
+
+}
+
+function addInterfaceListeners() {
+    $("#id_loadCubesButton").on('click', loadCubeList);
+
+}
+
+function applyOLAP() {
+
+}
+
+// Undo all selected labels and disable Accept button
+function deselectAll() {
+    // TODO
+}
+
+function testPopup() {
+
+}
+
+
+// Raycast TODO: nur für cubes, für mobile geräte: auch/nur bei click-event
+function onCanvasMouseMove(event) {
+    console.log("MOVE", event.buttons, event.which, event.button);
+    event.preventDefault();
+
+    // only highlight results if no mouse buttons pressed
+    var button = event.buttons === undefined ? event.which || event.button : event.buttons; // TODO check IE10+
+    if (button !== 0) {
+        return;
+    }
+
+    var node = $(renderer.domElement);
+    var x = event.pageX - node.position().left;
+    var y = event.pageY - node.position().top;
+    var mousePosition = new THREE.Vector3();
+    mousePosition.x = (x / node.width()) * 2 - 1;
+    mousePosition.y = -(y / node.height()) * 2 + 1;
+    mousePosition.z = 0.5;
+
+    // project mouse to 3d scene
+    var vect = mousePosition.unproject(camera);
+    var direction = vect.sub(camera.position).normalize();
+    var rayCaster = new THREE.Raycaster(camera.position, direction);
+//    var octreeObjects = octree.search(rayCaster.ray.origin, rayCaster.ray.far, true, rayCaster.ray.direction);
+//    var intersections = rayCaster.intersectOctreeObjects(octreeObjects);
+    var intersections = rayCaster.intersectObjects(scene.children); // TODO erstmal so, inperformant aber geht
+    if (intersections.length > 0) {
+        if (intersected !== intersections[0].object) { // TODO: not always front cube!!!
+//            console.log(intersections[0])
+            if (intersected) {
+                intersected.material.emissive = intersected.measureColor;
+                scene.remove(intersected.outline);
+            }
+
+//             $.each(octreeObjects, function (index, element) {
+//                 element.object.material.emissive.setHex(0x20a000);
+//             });
+
+            intersected = intersections[0].object;
+            intersected.material.emissive = intersected.measureColor.clone().multiplyScalar(0.9);
+
+            // Show lines around the cube
+            intersected.outline = new THREE.EdgesHelper(intersected);
+            intersected.outline.material.color.set(intersected.material.emissive);
+            intersected.outline.material.linewidth = 3;
+            scene.add(intersected.outline);
+        }
+        renderer.domElement.style.cursor = 'pointer';
+    } else if (intersected) {
+        intersected.material.emissive = intersected.measureColor;
+        scene.remove(intersected.outline);
+
+        intersected = null;
+        renderer.domElement.style.cursor = 'auto';
+    }
+
+    // update tracker
+//    console.log("#objects: ", octreeObjects.length, " intersection: ", intersections.length);
+}
+
+// Raycast TODO: onmouseup und onmousedown stattdessen und distanz muss < xpixel sein
+function onCanvasMouseClick(event) {
+    event.preventDefault();
+
+    // only highlight results if no mouse buttons pressed
+
+    var node = $(renderer.domElement);
+    var x = event.pageX - node.position().left;
+    var y = event.pageY - node.position().top;
+    var mousePosition = new THREE.Vector3();
+    mousePosition.x = (x / node.width()) * 2 - 1;
+    mousePosition.y = -(y / node.height()) * 2 + 1;
+    mousePosition.z = 0.5;
+
+    // project mouse to 3d scene
+    var vect = mousePosition.unproject(camera);
+    var direction = vect.sub(camera.position).normalize();
+    var rayCaster = new THREE.Raycaster(camera.position, direction);
+//    var octreeObjects = octree.search(rayCaster.ray.origin, rayCaster.ray.far, true, rayCaster.ray.direction);
+//    var intersections = rayCaster.intersectOctreeObjects(octreeObjects);
+    var intersections = rayCaster.intersectObjects(scene.children); // TODO erstmal so, inperformant aber geht
+    if (intersections.length > 0) {
+        if (intersections[0].object.popup) {
+            intersections[0].object.popup();
+        }
+    }
 }
 
 // (>'.')>

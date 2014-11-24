@@ -40,14 +40,14 @@
                 <form class="navbar-form navbar-right">
                     <div class="form-group">
                         <!--<label for="id">ID</label>-->
-                        <input type="text" class="form-control" id="id" placeholder="ID" value="8023903">
+                        <input type="text" class="form-control" id="id_id" placeholder="ID" value="8023903">
                     </div>
                     <div class="form-group">
                         <!--<label for="hash">Token</label>-->
-                        <input type="text" class="form-control" id="hash" placeholder="Token" value="7fb2f0dd7d608ea6b82eaa9b6e38aa80e1b266d8f8610a2c4c2671368df2b7bc">
+                        <input type="text" class="form-control" id="id_hash" placeholder="Token" value="7fb2f0dd7d608ea6b82eaa9b6e38aa80e1b266d8f8610a2c4c2671368df2b7bc">
                     </div>
                     <div class="form-group">
-                        <button type="button" class="form-control btn btn-default" id="to_loadCubes" onclick="alert('TODO')">Load Cubes</button>
+                        <button type="button" class="form-control btn btn-default" id="id_loadCubesButton">Load Cubes</button>
                     </div>
                 </form>
             </div>
@@ -56,7 +56,7 @@
             <div class="navbar-default navbar-collapse collapse sidebar" role="navigation">
 
                 <!-- CUBE -->
-                <div class="panel panel-default">
+                <div class="panel panel-default" id="id_cubePanel">
                     <div class="panel-heading">
                         <h3 class="panel-title">Cube</h3>
                     </div>
@@ -79,7 +79,7 @@
 
 
                 <!-- DIMENSIONS -->
-                <div class="panel panel-default">
+                <div class="panel panel-default" id="id_dimensionPanel">
                     <div class="panel-heading">
                         <h3 class="panel-title">Dimensions</h3>
                     </div>
@@ -149,7 +149,7 @@
                 </div>
 
                 <!-- MEASURES -->
-                <div class="panel panel-default">
+                <div class="panel panel-default" id="id_measurePanel">
                     <div class="panel-heading">
                         <h3 class="panel-title">Measures</h3>
                     </div>
@@ -185,7 +185,7 @@
                 </div>
 
                 <!-- FILTERS -->
-                <div class="panel panel-default">
+                <div class="panel panel-default" id="id_filterPanel">
                     <div class="panel-heading">
                         <h3 class="panel-title">Filters</h3>
                     </div>
@@ -207,7 +207,7 @@
                 </div>
 
                 <!-- ACCEPT / DRAW -->
-                <button type="button" class="btn btn-primary btn-block">Accept</button>
+                <button type="button" class="btn btn-primary btn-block" id="id_applyButton">Apply</button>
 
             </div>
         </nav>
@@ -218,25 +218,42 @@
 
                 <div class="row">
                     <div class="col-lg-12">
-                        <h2 class="page-header">headlessMergedCube</h2>
+                        <h2 class="page-header">headlessMergedCube </h2>
                     </div>
+                    <!--<button type="button" class="btn btn-primary btn-block">Apply</button> TODO: button top right-->
                 </div>
 
-                <div id="id_cube" class="cube">
-
+                <div id="id_cube">
                     <!--<div style="position:relative;width:5px;height:5px;background-color:#ff0000" id="pointerID"></div>-->
                 </div>
 
 
-                <!--<strong>DEBUG:</strong>-->
-
-                <div id="OUTPUT"></div>
-
             </div>
-            <div class="panel-footer">Some Footer links...</div>
+            <div class="panel-footer">Some Footer links... <div id="OUTPUT"></div></div>
         </div>
 
 
+        <!-- Modal TEST  -->
+        <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">
+                            <span aria-hidden="true">&times;</span>
+                            <span class="sr-only">Close</span>
+                        </button>
+                        <h4 class="modal-title" id="myModalLabel">Modal title</h4>
+                    </div>
+                    <div class="modal-body">
+                        Not yet implemented...
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary">Save changes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
 
         <!--JavaScript-->
@@ -251,9 +268,9 @@
         <!--<script src="js/threejs/renderers/Projector.js"></script>-->
         <!--<script src="js/threejs/renderers/CSS2DRenderer.js"></script>-->
         <!--<script src="js/threejs/renderers/CSS3DRenderer.js"></script>-->
-        <!--<script src="js/threejs/renderers/CSS3DStereoRenderer.js"></script>-->
         <!--<script src="js/threejs/renderers/CanvasRenderer.js"></script>-->
         <script src="js/threejs/controls/OrbitControls.js"></script>
+        <script src="js/threejs/Octree.js"></script>
 
         <!-- Custom Scripts -->
         <script src="js/main.js"></script>
