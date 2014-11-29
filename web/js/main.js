@@ -1,17 +1,20 @@
 // Custom script for the Rest2Sparql GUI
 
-var cubeList = {};
-var dimensionList = {};
-var measureList = {};
+//var cubeList = {};
+//var dimensionList = {};
+//var measureList = {};
 
 // Globas vars
 var ID = "";
 var HASH = "";
 var currentCube = "";
 
-var xDimensions = [];   // type: Dimension class...
+// Selected objects
+var xDimensions = [];
 var yDimensions = [];
 var zDimensions = [];
+var measures = [];
+var filters = []; // TODO: filter cass?
 
 // Three.js variables
 var scene;
@@ -64,9 +67,10 @@ function Entity(dimensionName, entityName, label) {
 var testQuery1 = "./backend?func=<getCubes>&id=<8023903>&hash=<7fb2f0dd7d608ea6b82eaa9b6e38aa80e1b266d8f8610a2c4c2671368df2b7bc>";
 var testQuery2 = "./backend?func=<execute>&id=<8023903>&hash=<7fb2f0dd7d608ea6b82eaa9b6e38aa80e1b266d8f8610a2c4c2671368df2b7bc>&m=<http://code-research.eu/resource/Euro>,select=<true>,group=<false>,order=<-1>&d=<http://code-research.eu/resource/Country>,select=<true>,group=<false>,order=<-1>&d=<http://code-research.eu/resource/Species>,select=<false>,group=<false>,order=<-1>,fix=<http://code-research.eu/resource/Entity-279a95fa-ecb7-4ed3-9a1d-c250c6d1acd9>&d=<http://code-research.eu/resource/Year>,select=<true>,group=<false>,order=<-1>&c=<http://code-research.eu/resource/Dataset-173bbc55-68ca-4398-bd28-232415f7db4d>,select=<true>";
 var testQuery3 = "./backend?func=%3CgetDimensions%3E&c=%3Chttp://code-research.eu/resource/Dataset-173bbc55-68ca-4398-bd28-232415f7db4d%3E&id=%3C8023903%3E&hash=%3C7fb2f0dd7d608ea6b82eaa9b6e38aa80e1b266d8f8610a2c4c2671368df2b7bc%3E";
-var testQuery4_agg = "./backend?func=%3Cexecute%3E&id=%3C8023903%3E&hash=%3C7fb2f0dd7d608ea6b82eaa9b6e38aa80e1b266d8f8610a2c4c2671368df2b7bc%3E&d=%3Chttp://code-research.eu/resource/Country%3E,select=%3Ctrue%3E,group=%3Ctrue%3E,order=%3C-1%3E&d=%3Chttp://code-research.eu/resource/Species%3E,select=%3Ctrue%3E,group=%3Ctrue%3E,order=%3C-1%3E,fix=%3Chttp://code-research.eu/resource/Entity-23c3225d-ac7a-40a3-80de-a10ff10a7428,http://code-research.eu/resource/Entity-02de3c11-3f45-448d-b458-8db3534fedc6,http://code-research.eu/resource/Entity-02a8e8de-ad5c-4922-9775-5083e116a37f,http://code-research.eu/resource/Entity-dca07aa6-098e-4bb8-98f4-19d10335b9fa,http://code-research.eu/resource/Entity-25563186-cefe-45a8-a5ff-340c6e908124,http://code-research.eu/resource/Entity-246eacbc-86f1-414e-a0eb-3b80da81c917,http://code-research.eu/resource/Entity-2dcec751-567a-42d7-b0d1-9da463c5a7c2%3E&d=%3Chttp://code-research.eu/resource/Year%3E,select=%3Ctrue%3E,group=%3Ctrue%3E,order=%3C-1%3E&m=%3Chttp://code-research.eu/resource/Euro%3E,select=%3Ctrue%3E,group=%3Cfalse%3E,order=%3C-1%3E,agg=%3Csum%3E&c=%3Chttp://code-research.eu/resource/Dataset-173bbc55-68ca-4398-bd28-232415f7db4d%3E,select=%3Cfalse%3E";
-var testQuery5_agg_1d = "./backend?func=%3Cexecute%3E&id=%3C8023903%3E&hash=%3C7fb2f0dd7d608ea6b82eaa9b6e38aa80e1b266d8f8610a2c4c2671368df2b7bc%3E&d=%3Chttp://code-research.eu/resource/Country%3E,select=%3Ctrue%3E,group=%3Ctrue%3E,order=%3C-1%3E&d=%3Chttp://code-research.eu/resource/Species%3E,select=%3Cfalse%3E,group=%3Cfalse%3E,order=%3C-1%3E&d=%3Chttp://code-research.eu/resource/Year%3E,select=%3Cfalse%3E,group=%3Cfalse%3E,order=%3C-1%3E&m=%3Chttp://code-research.eu/resource/Euro%3E,select=%3Ctrue%3E,group=%3Cfalse%3E,order=%3C-1%3E,agg=%3Csum%3E&c=%3Chttp://code-research.eu/resource/Dataset-173bbc55-68ca-4398-bd28-232415f7db4d%3E,select=%3Cfalse%3E";
-var testQuery6_3d = "./backend?func=%3Cexecute%3E&id=%3C8023903%3E&hash=%3C7fb2f0dd7d608ea6b82eaa9b6e38aa80e1b266d8f8610a2c4c2671368df2b7bc%3E&m=%3Chttp://code-research.eu/resource/Euro%3E,select=%3Ctrue%3E,group=%3Cfalse%3E,order=%3C-1%3E,agg=%3Csum%3E&d=%3Chttp://code-research.eu/resource/Species%3E,select=%3Ctrue%3E,group=%3Ctrue%3E,order=%3C-1%3E&d=%3Chttp://code-research.eu/resource/Country%3E,select=%3Ctrue%3E,group=%3Ctrue%3E,order=%3C-1%3E&d=%3Chttp://code-research.eu/resource/Year%3E,select=%3Ctrue%3E,group=%3Ctrue%3E,order=%3C-1%3E&c=%3Chttp://code-research.eu/resource/Dataset-173bbc55-68ca-4398-bd28-232415f7db4d%3E,select=%3Cfalse%3E";
+var testQuery4_agg_1d = "./backend?func=%3Cexecute%3E&id=%3C8023903%3E&hash=%3C7fb2f0dd7d608ea6b82eaa9b6e38aa80e1b266d8f8610a2c4c2671368df2b7bc%3E&d=%3Chttp://code-research.eu/resource/Country%3E,select=%3Ctrue%3E,group=%3Ctrue%3E,order=%3C-1%3E&d=%3Chttp://code-research.eu/resource/Species%3E,select=%3Cfalse%3E,group=%3Cfalse%3E,order=%3C-1%3E&d=%3Chttp://code-research.eu/resource/Year%3E,select=%3Cfalse%3E,group=%3Cfalse%3E,order=%3C-1%3E&m=%3Chttp://code-research.eu/resource/Euro%3E,select=%3Ctrue%3E,group=%3Cfalse%3E,order=%3C-1%3E,agg=%3Csum%3E&c=%3Chttp://code-research.eu/resource/Dataset-173bbc55-68ca-4398-bd28-232415f7db4d%3E,select=%3Cfalse%3E";
+var testQuery5_agg_2d = "./backend?func=%3Cexecute%3E&id=%3C8023903%3E&hash=%3C7fb2f0dd7d608ea6b82eaa9b6e38aa80e1b266d8f8610a2c4c2671368df2b7bc%3E&d=%3Chttp://code-research.eu/resource/Country%3E,select=%3Ctrue%3E,group=%3Ctrue%3E,order=%3C-1%3E&d=%3Chttp://code-research.eu/resource/Species%3E,select=%3Cfalse%3E,group=%3Cfalse%3E,order=%3C-1%3E&d=%3Chttp://code-research.eu/resource/Year%3E,select=%3Ctrue%3E,group=%3Ctrue%3E,order=%3C-1%3E&m=%3Chttp://code-research.eu/resource/Euro%3E,select=%3Ctrue%3E,group=%3Cfalse%3E,order=%3C-1%3E,agg=%3Csum%3E&c=%3Chttp://code-research.eu/resource/Dataset-173bbc55-68ca-4398-bd28-232415f7db4d%3E,select=%3Cfalse%3E";
+var testQuery6_agg_3d = "./backend?func=%3Cexecute%3E&id=%3C8023903%3E&hash=%3C7fb2f0dd7d608ea6b82eaa9b6e38aa80e1b266d8f8610a2c4c2671368df2b7bc%3E&d=%3Chttp://code-research.eu/resource/Country%3E,select=%3Ctrue%3E,group=%3Ctrue%3E,order=%3C-1%3E&d=%3Chttp://code-research.eu/resource/Species%3E,select=%3Ctrue%3E,group=%3Ctrue%3E,order=%3C-1%3E,fix=%3Chttp://code-research.eu/resource/Entity-23c3225d-ac7a-40a3-80de-a10ff10a7428,http://code-research.eu/resource/Entity-02de3c11-3f45-448d-b458-8db3534fedc6,http://code-research.eu/resource/Entity-02a8e8de-ad5c-4922-9775-5083e116a37f,http://code-research.eu/resource/Entity-dca07aa6-098e-4bb8-98f4-19d10335b9fa,http://code-research.eu/resource/Entity-25563186-cefe-45a8-a5ff-340c6e908124,http://code-research.eu/resource/Entity-246eacbc-86f1-414e-a0eb-3b80da81c917,http://code-research.eu/resource/Entity-2dcec751-567a-42d7-b0d1-9da463c5a7c2%3E&d=%3Chttp://code-research.eu/resource/Year%3E,select=%3Ctrue%3E,group=%3Ctrue%3E,order=%3C-1%3E&m=%3Chttp://code-research.eu/resource/Euro%3E,select=%3Ctrue%3E,group=%3Cfalse%3E,order=%3C-1%3E,agg=%3Csum%3E&c=%3Chttp://code-research.eu/resource/Dataset-173bbc55-68ca-4398-bd28-232415f7db4d%3E,select=%3Cfalse%3E";
+var testQuery7_all_facts = "./backend?func=%3Cexecute%3E&id=%3C8023903%3E&hash=%3C7fb2f0dd7d608ea6b82eaa9b6e38aa80e1b266d8f8610a2c4c2671368df2b7bc%3E&m=%3Chttp://code-research.eu/resource/Euro%3E,select=%3Ctrue%3E,group=%3Cfalse%3E,order=%3C-1%3E,agg=%3Csum%3E&d=%3Chttp://code-research.eu/resource/Species%3E,select=%3Ctrue%3E,group=%3Ctrue%3E,order=%3C-1%3E&d=%3Chttp://code-research.eu/resource/Country%3E,select=%3Ctrue%3E,group=%3Ctrue%3E,order=%3C-1%3E&d=%3Chttp://code-research.eu/resource/Year%3E,select=%3Ctrue%3E,group=%3Ctrue%3E,order=%3C-1%3E&c=%3Chttp://code-research.eu/resource/Dataset-173bbc55-68ca-4398-bd28-232415f7db4d%3E,select=%3Cfalse%3E";
 
 
 
@@ -91,17 +95,29 @@ $(document).ready(function () {
 function init() {
 
     // Disable navigation input initially and set conditions of usage
-    $("#id_cubePanel").css("opacity", 0.4);
-    $("#id_dimensionPanel").css("opacity", 0.4);
-    $("#id_measurePanel").css("opacity", 0.4);
-    $("#id_filterPanel").css("opacity", 0.4);
-    $("#id_filterPanel").css("opacity", 0.4);
-    $("#id_applyButton").css("opacity", 0.4);
+    var opacity = 0.35;
+    $("#id_cubePanel").css("opacity", opacity);
+    $("#id_dimensionPanel").css("opacity", opacity);
+    $("#id_measurePanel").css("opacity", opacity);
+    $("#id_filterPanel").css("opacity", opacity);
+    $("#id_filterPanel").css("opacity", opacity);
+    $("#id_applyButton").css("opacity", opacity);
+
+//    $("#id_cubePanel").css("display", "none");
+//    $("#id_dimensionPanel").css("display", "none");
+//    $("#id_measurePanel").css("display", "none");
+//    $("#id_filterPanel").css("display", "none");
+//    $("#id_filterPanel").css("display", "none");
+//    $("#id_applyButton").css("display", "none");
+
     $("#id_cubePanel button").attr("disabled", "disabled");
     $("#id_dimensionPanel button").attr("disabled", "disabled");
     $("#id_measurePanel button").attr("disabled", "disabled");
     $("#id_filterPanel button").attr("disabled", "disabled");
     $("#id_applyButton").attr("disabled", "disabled");
+
+    // add tooltips
+//    $('[data-toggle="tooltip"]').tooltip();
 
     // Add listeners to all interface buttons
     addInterfaceListeners();
@@ -119,7 +135,7 @@ function init() {
 // Test visualization, TODO: cleanup
 
 var request = $.ajax({
-    url: testQuery4_agg,
+    url: testQuery6_agg_3d,
     headers: {
         accept: "application/sparql-results+json"
     }
@@ -251,7 +267,7 @@ request.done(function (content) {
         // Iterate through given dimension numbers
         $.each(dimensionNumbers, function (key, number) {
             var entityName = result["E_NAME_" + number].value; // E_NAME_X
-//            coordinates.push(entityMap[number][entityName]); // TODO assumes xyz order of results
+//            coordinates.push(entityMap[number][entityName]);
             coordinates[key] = entityMap[number][entityName]; // TODO assumes xyz order of results
         });
 
@@ -266,17 +282,12 @@ request.done(function (content) {
 
         // TODO for each measure -> own cube part
 
-        // TEST color from measure ratio
+        // Compute the ratio of the results measure
         var ratio = (measureVals[0] - lowestMeasure) / (highestMeasure - lowestMeasure);
 
-//        // Logarithmic test
+//        // Logarithmic test TEMP
+        ratio = Math.log((ratio * 10) + 1) / Math.log(11);
 
-        ratio = Math.log((ratio * 100) + 1) / Math.log(101);
-
-//        var ratio2 = Math.log(1.05 + measureVals[0] - lowestMeasure) / Math.log(1.05 + highestMeasure - lowestMeasure);
-//        ratio = ratio * 0.75 + ratio2 * 0.25;
-
-//        var cubeSize = 0.85 + 0.15 * ratio;
         var cubeSize = 0.80 + 0.20 * ratio;
 //        var cubeSize = 0.95;
 
@@ -286,16 +297,11 @@ request.done(function (content) {
         material.shading = THREE.NoShading;
         material.fog = false;
 
-//        var colorLowest = new THREE.Color(0x404040);
-//        var colorHighest = new THREE.Color(0x90e040); // TODO custom color per measure
-
-
         var colorLowest = new THREE.Color(0xd8d8d8);
-        var colorHighest = new THREE.Color(0x1f76c0); // TODO custom color per measure -> ~ multiply effect RGB? "multiply(color);"
-//        var colorHighest = new THREE.Color(0x404040);
+        var colorHighest = new THREE.Color(0x1f76c0); // TODO custom color per measure -> ~ multiply/overlay/opacity effect RGB? "multiply(color);"
+//        var colorHighest = new THREE.Color(0x389000); // test: green
+//        var colorHighest = new THREE.Color(0x404040); // test: red
         var resultColor = colorLowest.multiplyScalar(1 - ratio).add(colorHighest.multiplyScalar(ratio));
-
-//        console.log(resultColor)
 
 //        var material = new THREE.SpriteMaterial({color: resultColor, fog: true});
 //        var sprite = new THREE.Sprite(material);
@@ -409,14 +415,12 @@ function loadCubeList() {
         }
     });
 
-    // Recreate dropdown list for cubes
+    $("#id_cubeList").empty(); // Clear old cube list
 
+    // Recreate dropdown list for cubes
     request.done(function (content) {
         var obj = $.parseJSON(content);
         var results = obj.results.bindings; // array
-
-        // Clear old cube list
-        $("#id_cubeList").empty();
 
         if (results.length === 0) {
             return;
@@ -454,6 +458,17 @@ function loadCubeList() {
                 loadDimensionList(cubeName);
                 loadMeasureList(cubeName);
 
+                // Enable dimension, measure and filter input
+                $("#id_dimensionPanel").css("opacity", "");
+                $("#id_dimensionPanel button").removeAttr("disabled");
+                $("#id_measurePanel").css("opacity", "");
+                $("#id_measurePanel button").removeAttr("disabled");
+                $("#id_filterPanel").css("opacity", "");
+                $("#id_filterPanel button").removeAttr("disabled");
+
+                $("#id_applyButton").css("opacity", "");
+                $("#id_applyButton").removeAttr("disabled");
+
                 // TODO: disable selected element from list
 
             });
@@ -488,30 +503,88 @@ function loadDimensionList(cubeName) {
         var obj = $.parseJSON(content);
         var results = obj.results.bindings;
 
-        // Clear old dimension list
-        $("#id_dimensionList").empty(); // TODO: dimension list 1,2,3
+        // Clear old dimension lists
+        $("#id_xDimensionList").empty();
+        $("#id_yDimensionList").empty();
+        $("#id_zDimensionList").empty();
 
-        // Iterate through available dimensions
-        $.each(results, function (index, element) {
-            var dimensionName = element.DIMENSION_NAME.value;
-            var label = element.LABEL.value;
+        // Add list for X, Y, Z axis
 
-            // Create Dropdown entries
-            var itemLink = $("<a href='#'></a>");
-            itemLink.text(label);
-            var item = $("<li></li>");
-            item.append(itemLink);
-            $("#id_dimensionList").append(item); // TODO: dimension list 1,2,3
+        function fillList(axis, dimensionList) { // TODO function ausserhalb, results als parameter
 
-            // Add on-click handler for chosen dimension
-            itemLink.on("click", function (e) {
-                e.preventDefault();
+            // Iterate through available dimensions
+            $.each(results, function (index1, element) {
 
-                // TODO: Add the dimension to the chosen list
-                // ...
+                var dimList = $("#id_" + axis + "DimensionList");
+                var plusButton = $("#id_" + axis + "Plus");
+                var buttonArea = $("#id_" + axis + "ButtonArea");
 
+
+                var dimensionName = element.DIMENSION_NAME.value;
+                var label = element.LABEL.value;
+
+                // Create Dropdown entries
+                var itemLink = $("<a href='#'></a>");
+                itemLink.text(label);
+                var item = $("<li></li>");
+                item.append(itemLink);
+
+                dimList.append(item);
+
+                // Add on-click handler for chosen dimension
+                itemLink.on("click", function (e) {
+                    e.preventDefault();
+
+                    dimensionList.push(dimensionName);
+
+                    // TODO: add html button and its menu + listeners...
+                    // TODO: count entities to be displayed as selected in badge
+
+                    // TODO nachbilden:
+
+                    var btnGroup = $('<div class="btn-group"></div>');
+                    var button = $('<button class="btn dropdown-toggle btn-default" type="button" data-toggle="dropdown"></button>');
+                    var badge = $('<span class="badge"></span>');
+                    var menu = $('<ul class="dropdown-menu" role="menu"></ul>');
+                    var filterItem = $('<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Filter Entities...</a></li>');
+                    var deviderItem = $('<li role="presentation" class="divider"></li>');
+                    var removeItem = $('<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Remove</a></li>');
+
+                    // Combine button and list
+                    btnGroup.append(button);
+                    button.text(label + " ");
+                    button.append(badge);
+                    badge.text("123 / 456"); // TODO number of entities? -> getEntities() entweder zu start oder jetzt!
+                    menu.append(filterItem);
+                    menu.append(deviderItem);
+                    menu.append(removeItem);
+                    btnGroup.append(menu);
+
+                    buttonArea.append(btnGroup);
+                    buttonArea.append(" ");
+                    buttonArea.append(plusButton); // Move plus to end
+
+                    filterItem.on("click", function (e) {
+//                        TODO
+                    });
+
+                    removeItem.on("click", function (e) {
+//                        TODO
+                    });
+
+
+                });
             });
-        });
+        }
+
+        fillList("x", xDimensions);
+        fillList("y", yDimensions);
+        fillList("z", zDimensions);
+
+
+
+
+
     });
 
 
@@ -555,6 +628,8 @@ function loadMeasureList(cubeName) {
                 e.preventDefault();
 
                 // TODO Add the measure to the chosen list
+                //
+                // TODO: if only 1 measure -> autoselect it!
                 // ...
 
             });
@@ -708,6 +783,11 @@ function initThreeJs() {
 
 function addInterfaceListeners() {
     $("#id_loadCubesButton").on('click', loadCubeList);
+
+}
+
+// enables / disables the Apply button according to selected items
+function refreshApplyButton() {
 
 }
 

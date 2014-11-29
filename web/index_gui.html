@@ -89,59 +89,69 @@
                             <label>X</label>
 
                             <!--Buttons-->
-                            <div class="btn-group">
-                                <button class="btn dropdown-toggle btn-default" type="button" data-toggle="dropdown">
-                                    Species <span class="badge">1 / 1138</span>
-                                </button>
-                                <ul class="dropdown-menu" role="menu" id="TODO">
-                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Filter Entities...</a></li>
-                                    <li role="presentation" class="divider"></li>
-                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Remove</a></li>
-                                </ul>
-                            </div>
+                            <div id="id_xButtonArea">
 
-                            <!--Plus Symbol-->
-                            <div class="btn-group">
-                                <button class="btn btn-default dropdown-toggle btn-xs" type="button" data-toggle="dropdown">
-                                    <span class="glyphicon-plus"></span>
-                                </button>
-                                <ul class="dropdown-menu" role="menu" id="id_dimensionList">
-                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Example Dimension 1</a></li>
-                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Example Dimension 2</a></li>
-                                </ul>
-                            </div>
+<!--                                <div class="btn-group">
+                                    <button class="btn dropdown-toggle btn-default" type="button" data-toggle="dropdown">
+                                        Species <span class="badge">1 / 1138</span>
+                                    </button>
+                                    <ul class="dropdown-menu" role="menu">
+                                        <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Filter Entities...</a></li>
+                                        <li role="presentation" class="divider"></li>
+                                        <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Remove</a></li>
+                                    </ul>
+                                </div>-->
 
+                                <!--Plus Symbol-->
+                                <div class="btn-group" id="id_xPlus">
+                                    <button class="btn btn-default dropdown-toggle btn-xs" type="button" data-toggle="dropdown">
+                                        <span class="glyphicon-plus"></span>
+                                    </button>
+                                    <ul class="dropdown-menu" role="menu" id="id_xDimensionList">
+                                        <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Example Dimension 1</a></li>
+                                        <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Example Dimension 2</a></li>
+                                    </ul>
+                                </div>
+                            </div>
 
                         </div>
 
                         <div class="form-group">
                             <label>Y</label>
 
-                            <!--Plus Symbol-->
-                            <div class="btn-group">
-                                <button class="btn btn-default dropdown-toggle btn-xs" type="button"  data-toggle="dropdown">
-                                    <span class="glyphicon-plus"></span>
-                                </button>
-                                <ul class="dropdown-menu" role="menu">
-                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Example Dimension 1</a></li>
-                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Example Dimension 2</a></li>
-                                </ul>
+                            <div id="id_yButtonArea">
+
+                                <!--Plus Symbol-->
+                                <div class="btn-group" id="id_yPlus">
+                                    <button class="btn btn-default dropdown-toggle btn-xs" type="button"  data-toggle="dropdown">
+                                        <span class="glyphicon-plus"></span>
+                                    </button>
+                                    <ul class="dropdown-menu" role="menu" id="id_yDimensionList">
+                                        <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Example Dimension 1</a></li>
+                                        <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Example Dimension 2</a></li>
+                                    </ul>
+                                </div>
                             </div>
+
                         </div>
 
                         <div class="form-group">
                             <label>Z</label>
 
-                            <!--Plus Symbol-->
-                            <div class="btn-group">
-                                <button class="btn btn-default dropdown-toggle btn-xs" type="button"  data-toggle="dropdown">
-                                    <span class="glyphicon-plus"></span>
-                                </button>
-                                <ul class="dropdown-menu" role="menu">
-                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Example Dimension 1</a></li>
-                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Example Dimension 2</a></li>
-                                </ul>
+                            <div id="id_zButtonArea">
+
+                                <!--Plus Symbol-->
+                                <div class="btn-group" id="id_zPlus">
+                                    <button class="btn btn-default dropdown-toggle btn-xs" type="button"  data-toggle="dropdown">
+                                        <span class="glyphicon-plus"></span>
+                                    </button>
+                                    <ul class="dropdown-menu" role="menu" id="id_zDimensionList">
+                                        <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Example Dimension 1</a></li>
+                                        <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Example Dimension 2</a></li>
+                                    </ul>
+                                </div>
                             </div>
+
                         </div>
 
 
@@ -164,6 +174,7 @@
                             <ul class="dropdown-menu" role="menu">
                                 <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Change Aggregation...</a></li>
                                 <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Change Color...</a></li>
+                                <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Hide</a></li>
                                 <li role="presentation" class="divider"></li>
                                 <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Remove</a></li>
                             </ul>
@@ -194,6 +205,17 @@
                         <!--<label>Filters</label>-->
 
                         <div class="btn-group">
+                            <button class="btn dropdown-toggle btn-default" type="button" data-toggle="dropdown">
+                                Euro <span class="badge">&gt;= 1.234.000</span>
+                            </button>
+                            <ul class="dropdown-menu" role="menu">
+                                <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Change Filter...</a></li>
+                                <li role="presentation" class="divider"></li>
+                                <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Remove</a></li>
+                            </ul>
+                        </div>
+
+                        <div class="btn-group">
                             <button class="btn btn-default dropdown-toggle btn-xs" type="button" data-toggle="dropdown">
                                 <span class="glyphicon-plus"></span>
                             </button>
@@ -207,8 +229,7 @@
                 </div>
 
                 <!-- ACCEPT / DRAW -->
-                <button type="button" class="btn btn-primary btn-block" id="id_applyButton">Apply</button>
-
+                <button type="button" class="btn btn-primary btn-block" id="id_applyButton" data-toggle="tooltip" data-placement="right" title="Please select at least one dimension and one measure first.">Apply</button>
             </div>
         </nav>
 
@@ -218,7 +239,7 @@
 
                 <div class="row">
                     <div class="col-lg-12">
-                        <h2 class="page-header">headlessMergedCube </h2>
+                        <h2 class="page-header">headlessMergedCube </h2> <!-- TODO: Title of cube -->
                     </div>
                     <!--<button type="button" class="btn btn-primary btn-block">Apply</button> TODO: button top right-->
                 </div>
