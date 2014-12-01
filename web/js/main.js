@@ -9,12 +9,14 @@ var ID = "";
 var HASH = "";
 var currentCube = "";
 
+// TODO complete global cube class -> all dimensions -> all entities and measures -> ...
+
 // Selected objects
-var xDimensions = [];
-var yDimensions = [];
-var zDimensions = [];
-var measures = [];
-var filters = []; // TODO: filter cass?
+var xDimensions = [];   // Type: Dimension
+var yDimensions = [];   // -
+var zDimensions = [];   // -
+var measures = [];      // Type: Measure
+var filters = [];       // Type: Filter
 
 // Three.js variables
 var scene;
@@ -22,35 +24,47 @@ var camera;
 var renderer;
 var controls;
 var lighting;
+var animationRequest;
 
-// For interaction with objects
+// For interaction with 3D objects
 var octree;
 var intersected;
 
-// Templates
+// URL Templates
 var CUBE_URL = "./backend?func=<getCubes>&id=<__id__>&hash=<__hash__>";
 var DIMENSION_URL = "./backend?func=<getDimensions>&c=<__cube__>&id=<__id__>&hash=<__hash__>";
 var MEASURE_URL = "./backend?func=<getMeasures>&c=<__cube__>&id=<__id__>&hash=<__hash__>";
 var ENTITY_URL = "./backend?func=<getEntities>&c=<__cube__>&d=<__dimension__>&id=<__id__>&hash=<__hash__>";
 
+var EXECUTE_URL = "./backend?func=<execute>&c=<__cube__>,select=<false>&id=<__id__>&hash=<__hash__>";
+
+var DIMENSION_PART_URL = "&d=<__dimension__>,select=<true>,group=<true>";
+var DIMENSION_FIX_PART_URL = ",fix=<__fix__>";
+var MEASURE_PART_URL = "&m=<__measure__>,select=<true>,group=<false>,agg=<__agg__>";
+
+var FILTER_DIMENSION_PART_URL = "&d=<__dimension__>,select=<false>,group=<false>,fix=<__fix__>";
+var FILTER_MEASURE_PART_URL = "&m=<__measure__>,select=<false>,group=<false>,filterR=<__filterR__>,filterV=<__filterV__>";
+
+
 // Cube class (getCubes)
-function Cube(name, comment, label) {
-    this.name = name;                   // e.g. http://code-research.eu/resource/Dataset-173bbc55-68ca-4398-bd28-232415f7db4d
+function Cube(cubeName, comment, label) {
+    this.cubeName = cubeName;           // e.g. http://code-research.eu/resource/Dataset-173bbc55-68ca-4398-bd28-232415f7db4d
     this.comment = comment;             // e.g. fish_ld_be.xlsx  +  fish_ld_bg.xlsx  +  ...
     this.label = label;                 // e.g. headlessMergedCube
 }
 
 // Dimension class (getDimensions)
-function Dimension(cubeName, dimensionName, label, entities) {
+function Dimension(dimensionName, label, entities) {
     this.dimensionName = dimensionName; // e.g. http://code-research.eu/resource/Country
     this.label = label;                 // e.g. Country
-    this.entities = entities;           // list of entities belonging to the dimension
+    this.entities = entities;           // list of entities selected
 }
 
 // Measure class (getMeasures)
-function Measure(cubeName, measureName, label) {
+function Measure(measureName, label, agg) {
     this.measureName = measureName;     // e.g. http://code-research.eu/resource/Euro
     this.label = label;                 // e.g. Euro
+    this.agg = agg;                     // e.g. sum
 }
 
 // Entity class (getEntities)
@@ -60,13 +74,19 @@ function Entity(dimensionName, entityName, label) {
     this.label = label;                 // e.g. Netherlands
 }
 
+// Filter class, either for dimension or measures
+function Filter(dimension, measure) {
+
+}
+
+
 
 
 
 // AJAX TESTS Queries
-var testQuery1 = "./backend?func=<getCubes>&id=<8023903>&hash=<7fb2f0dd7d608ea6b82eaa9b6e38aa80e1b266d8f8610a2c4c2671368df2b7bc>";
-var testQuery2 = "./backend?func=<execute>&id=<8023903>&hash=<7fb2f0dd7d608ea6b82eaa9b6e38aa80e1b266d8f8610a2c4c2671368df2b7bc>&m=<http://code-research.eu/resource/Euro>,select=<true>,group=<false>,order=<-1>&d=<http://code-research.eu/resource/Country>,select=<true>,group=<false>,order=<-1>&d=<http://code-research.eu/resource/Species>,select=<false>,group=<false>,order=<-1>,fix=<http://code-research.eu/resource/Entity-279a95fa-ecb7-4ed3-9a1d-c250c6d1acd9>&d=<http://code-research.eu/resource/Year>,select=<true>,group=<false>,order=<-1>&c=<http://code-research.eu/resource/Dataset-173bbc55-68ca-4398-bd28-232415f7db4d>,select=<true>";
-var testQuery3 = "./backend?func=%3CgetDimensions%3E&c=%3Chttp://code-research.eu/resource/Dataset-173bbc55-68ca-4398-bd28-232415f7db4d%3E&id=%3C8023903%3E&hash=%3C7fb2f0dd7d608ea6b82eaa9b6e38aa80e1b266d8f8610a2c4c2671368df2b7bc%3E";
+var testQuery1_getCubes = "./backend?func=<getCubes>&id=<8023903>&hash=<7fb2f0dd7d608ea6b82eaa9b6e38aa80e1b266d8f8610a2c4c2671368df2b7bc>";
+var testQuery2_old = "./backend?func=<execute>&id=<8023903>&hash=<7fb2f0dd7d608ea6b82eaa9b6e38aa80e1b266d8f8610a2c4c2671368df2b7bc>&m=<http://code-research.eu/resource/Euro>,select=<true>,group=<false>,order=<-1>&d=<http://code-research.eu/resource/Country>,select=<true>,group=<false>,order=<-1>&d=<http://code-research.eu/resource/Species>,select=<false>,group=<false>,order=<-1>,fix=<http://code-research.eu/resource/Entity-279a95fa-ecb7-4ed3-9a1d-c250c6d1acd9>&d=<http://code-research.eu/resource/Year>,select=<true>,group=<false>,order=<-1>&c=<http://code-research.eu/resource/Dataset-173bbc55-68ca-4398-bd28-232415f7db4d>,select=<true>";
+var testQuery3_getDimensions = "./backend?func=%3CgetDimensions%3E&c=%3Chttp://code-research.eu/resource/Dataset-173bbc55-68ca-4398-bd28-232415f7db4d%3E&id=%3C8023903%3E&hash=%3C7fb2f0dd7d608ea6b82eaa9b6e38aa80e1b266d8f8610a2c4c2671368df2b7bc%3E";
 var testQuery4_agg_1d = "./backend?func=%3Cexecute%3E&id=%3C8023903%3E&hash=%3C7fb2f0dd7d608ea6b82eaa9b6e38aa80e1b266d8f8610a2c4c2671368df2b7bc%3E&d=%3Chttp://code-research.eu/resource/Country%3E,select=%3Ctrue%3E,group=%3Ctrue%3E,order=%3C-1%3E&d=%3Chttp://code-research.eu/resource/Species%3E,select=%3Cfalse%3E,group=%3Cfalse%3E,order=%3C-1%3E&d=%3Chttp://code-research.eu/resource/Year%3E,select=%3Cfalse%3E,group=%3Cfalse%3E,order=%3C-1%3E&m=%3Chttp://code-research.eu/resource/Euro%3E,select=%3Ctrue%3E,group=%3Cfalse%3E,order=%3C-1%3E,agg=%3Csum%3E&c=%3Chttp://code-research.eu/resource/Dataset-173bbc55-68ca-4398-bd28-232415f7db4d%3E,select=%3Cfalse%3E";
 var testQuery5_agg_2d = "./backend?func=%3Cexecute%3E&id=%3C8023903%3E&hash=%3C7fb2f0dd7d608ea6b82eaa9b6e38aa80e1b266d8f8610a2c4c2671368df2b7bc%3E&d=%3Chttp://code-research.eu/resource/Country%3E,select=%3Ctrue%3E,group=%3Ctrue%3E,order=%3C-1%3E&d=%3Chttp://code-research.eu/resource/Species%3E,select=%3Cfalse%3E,group=%3Cfalse%3E,order=%3C-1%3E&d=%3Chttp://code-research.eu/resource/Year%3E,select=%3Ctrue%3E,group=%3Ctrue%3E,order=%3C-1%3E&m=%3Chttp://code-research.eu/resource/Euro%3E,select=%3Ctrue%3E,group=%3Cfalse%3E,order=%3C-1%3E,agg=%3Csum%3E&c=%3Chttp://code-research.eu/resource/Dataset-173bbc55-68ca-4398-bd28-232415f7db4d%3E,select=%3Cfalse%3E";
 var testQuery6_agg_3d = "./backend?func=%3Cexecute%3E&id=%3C8023903%3E&hash=%3C7fb2f0dd7d608ea6b82eaa9b6e38aa80e1b266d8f8610a2c4c2671368df2b7bc%3E&d=%3Chttp://code-research.eu/resource/Country%3E,select=%3Ctrue%3E,group=%3Ctrue%3E,order=%3C-1%3E&d=%3Chttp://code-research.eu/resource/Species%3E,select=%3Ctrue%3E,group=%3Ctrue%3E,order=%3C-1%3E,fix=%3Chttp://code-research.eu/resource/Entity-23c3225d-ac7a-40a3-80de-a10ff10a7428,http://code-research.eu/resource/Entity-02de3c11-3f45-448d-b458-8db3534fedc6,http://code-research.eu/resource/Entity-02a8e8de-ad5c-4922-9775-5083e116a37f,http://code-research.eu/resource/Entity-dca07aa6-098e-4bb8-98f4-19d10335b9fa,http://code-research.eu/resource/Entity-25563186-cefe-45a8-a5ff-340c6e908124,http://code-research.eu/resource/Entity-246eacbc-86f1-414e-a0eb-3b80da81c917,http://code-research.eu/resource/Entity-2dcec751-567a-42d7-b0d1-9da463c5a7c2%3E&d=%3Chttp://code-research.eu/resource/Year%3E,select=%3Ctrue%3E,group=%3Ctrue%3E,order=%3C-1%3E&m=%3Chttp://code-research.eu/resource/Euro%3E,select=%3Ctrue%3E,group=%3Cfalse%3E,order=%3C-1%3E,agg=%3Csum%3E&c=%3Chttp://code-research.eu/resource/Dataset-173bbc55-68ca-4398-bd28-232415f7db4d%3E,select=%3Cfalse%3E";
@@ -78,14 +98,18 @@ var testQuery7_all_facts = "./backend?func=%3Cexecute%3E&id=%3C8023903%3E&hash=%
 $(document).ready(function () {
 
     // TEST
-    ID = "8023903";
-    HASH = "7fb2f0dd7d608ea6b82eaa9b6e38aa80e1b266d8f8610a2c4c2671368df2b7bc";
+//    ID = "8023903";
+//    HASH = "7fb2f0dd7d608ea6b82eaa9b6e38aa80e1b266d8f8610a2c4c2671368df2b7bc";
 
     init();
 
     // Start rendering TODO: für "loading-screen" ok -> rotierender cube
     resizeVizualisation(); // initially
-    render();
+    animationRequest = requestAnimationFrame(render);
+
+    // TEST
+
+    visualize(testQuery6_agg_3d);
 
     //<--
 
@@ -130,209 +154,209 @@ function init() {
 
 }
 
+// sends the given url and visualizes the results.
+// TODO: table vs 3D mode, loading screen, error messages
+function visualize(url) {
 
-
-// Test visualization, TODO: cleanup
-
-var request = $.ajax({
-    url: testQuery6_agg_3d,
-    headers: {
-        accept: "application/sparql-results+json"
-    }
-});
+    var request = $.ajax({
+        url: url,
+        headers: {
+            accept: "application/sparql-results+json"
+        }
+    });
 
 // TEMP sort result for coordinates in cube
-request.done(function (content) {
+    request.done(function (content) {
 //    $("#OUTPUT").append(content);
 
-    var obj = $.parseJSON(content);
-    var results = obj.results.bindings; // array
-    var head = obj.head; // array TODO reihenfolge, anzahl an measures / dimensions und achsenzuweisung ist bekannt
+        var obj = $.parseJSON(content);
+        var results = obj.results.bindings; // array
+        var head = obj.head; // array TODO reihenfolge, anzahl an measures / dimensions und achsenzuweisung ist bekannt
 
 
-    // TODO bei rollup keine information über die summierten entities -> aus anfrage schließen -> benennen z.b. "2011, 2012, 2014", (pseudo Entity in die liste)
+        // TODO bei rollup keine information über die summierten entities -> aus anfrage schließen -> benennen z.b. "2011, 2012, 2014", (pseudo Entity in die liste)
 
-    // List of used entities
-    var entityMap = [];
+        // List of used entities
+        var entityMap = [];
 
-    // Other vars TODO
-    var highestMeasure;
-    var lowestMeasure;
-
-
-    // TODO: erster schritt (1 durchlauf) variablen identifizieren, danach nurnoch "result[x].E_NAME_1_AGG" ...
-    var dimensionNumbers = [];
-    var measureNumbers = [];
-    if (results.length > 0) {
-        $.each(results[0], function (key, value) {
-            var val = value.value;
-            var number;
-            if (key.split("_").length > 2) {
-                number = key.split("_")[2];
-            }
-            if (key.startsWith("V_NAME_")) {
-                // Measure value
-                measureNumbers.push(number); // TODO no numbers, only 'AGG' !?
-            } else if (key.startsWith("E_NAME_") && key.endsWith("AGG")) {
-                // Entity name (uri)
-                dimensionNumbers.push(number);
-                entityMap[number] = []; // entry for the dimension
-            }
-        });
-    } else {
-        return; // TODO display: "no results"
-    }
+        // Other vars TODO
+        var highestMeasure;
+        var lowestMeasure;
 
 
-    // Iterate through results to collect required entities...
-    $.each(results, function (index, result) {
+        // TODO: erster schritt (1 durchlauf) variablen identifizieren, danach nurnoch "result[x].E_NAME_1_AGG" ...
+        var dimensionNumbers = [];
+        var measureNumbers = [];
+        if (results.length > 0) {
+            $.each(results[0], function (key, value) {
+                var val = value.value;
+                var number;
+                if (key.split("_").length > 2) {
+                    number = key.split("_")[2];
+                }
+                if (key.startsWith("V_NAME_")) {
+                    // Measure value
+                    measureNumbers.push(number); // TODO no numbers, only 'AGG' !?
+                } else if (key.startsWith("E_NAME_") && key.endsWith("AGG")) {
+                    // Entity name (uri)
+                    dimensionNumbers.push(number);
+                    entityMap[number] = []; // entry for the dimension
+                }
+            });
+        } else {
+            return; // TODO display: "no results"
+        }
 
-        // Iterate through given dimension numbers
-        $.each(dimensionNumbers, function (key, number) {
-            var entityName = result["E_NAME_" + number].value;              // E_NAME_X
-            if (entityMap[number][entityName]) {
-                return true; // continue if already in list
-            }
-            var label = result["L_NAME_" + number + "_AGG"].value;              // L_NAME_X_AGG
-            var dimensionName = result["E_NAME_" + number + "_AGG"].value;      // E_NAME_x_AGG
-            var entity = new Entity(dimensionName, entityName, label);
-            var index = entityMap[number].length; // next index
 
-            entityMap[number][index] = entity; // add to list
-            entityMap[number][entityName] = true; // as flag and to get index easily
+        // Iterate through results to collect required entities...
+        $.each(results, function (index, result) {
+
+            // Iterate through given dimension numbers
+            $.each(dimensionNumbers, function (key, number) {
+                var entityName = result["E_NAME_" + number].value;              // E_NAME_X
+                if (entityMap[number][entityName]) {
+                    return true; // continue if already in list
+                }
+                var label = result["L_NAME_" + number + "_AGG"].value;              // L_NAME_X_AGG
+                var dimensionName = result["E_NAME_" + number + "_AGG"].value;      // E_NAME_x_AGG
+                var entity = new Entity(dimensionName, entityName, label);
+                var index = entityMap[number].length; // next index
+
+                entityMap[number][index] = entity; // add to list
+                entityMap[number][entityName] = true; // as flag and to get index easily
 //            entityMap[number][entityName] = index.toString(); // as flag and to get index easily
 //            return false;
-        });
+            });
 
-        // Iterate through given measure numbers TODO: fehlende zahlen bei AGG???
-        $.each(measureNumbers, function (key, value) {
+            // Iterate through given measure numbers TODO: fehlende zahlen bei AGG???
+            $.each(measureNumbers, function (key, value) {
 //            var measure = result["V_NAME_AGG"].value;
 //            var measure = result["V_NAME_" + value + "_AGG"].value;   // TODO numbers
 
-            var measure = parseFloat(result["V_NAME_AGG"].value);
+                var measure = parseFloat(result["V_NAME_AGG"].value);
 
-            lowestMeasure = (lowestMeasure === undefined || lowestMeasure > measure) ? measure : lowestMeasure;
-            highestMeasure = (highestMeasure === undefined || highestMeasure < measure) ? measure : highestMeasure;
+                lowestMeasure = (lowestMeasure === undefined || lowestMeasure > measure) ? measure : lowestMeasure;
+                highestMeasure = (highestMeasure === undefined || highestMeasure < measure) ? measure : highestMeasure;
+
+            });
 
         });
 
-    });
-
-    // Sort those entities for the labels and coordinates in the visualization
-    function compare(a, b) {
-        if (a.label > b.label) {
-            return 1;
-        } else if (a.label < b.label) {
-            return -1;
-        } else {
-            return 0;
+        // Sort those entities for the labels and coordinates in the visualization
+        function compare(a, b) {
+            if (a.label > b.label) {
+                return 1;
+            } else if (a.label < b.label) {
+                return -1;
+            } else {
+                return 0;
+            }
         }
-    }
 
-    // Compute the center point for the camera too look at
-    var centerPoint = [0, 0, 0]; // TODO assumes there is just (xyz)
-    $.each(dimensionNumbers, function (key, number) {
-        entityMap[number].sort(compare);
+        // Compute the center point for the camera too look at
+        var centerPoint = [0, 0, 0]; // TODO assumes there is just (xyz)
+        $.each(dimensionNumbers, function (key, number) {
+            entityMap[number].sort(compare);
 
-        // Map name -> index
-        $.each(entityMap[number], function (index, entity) {
-            var entityName = entity.entityName;
-            entityMap[number][entityName] = index;
+            // Map name -> index
+            $.each(entityMap[number], function (index, entity) {
+                var entityName = entity.entityName;
+                entityMap[number][entityName] = index;
+            });
+
+            centerPoint[key] = entityMap[number].length / 2;
+
         });
-
-        centerPoint[key] = entityMap[number].length / 2;
-
-    });
 
 //    console.log("sorted: ", entityMap);
-    console.log("lowest measure: ", lowestMeasure, ", highest: " + highestMeasure, ", #results: ", results.length);
+        console.log("lowest measure: ", lowestMeasure, ", highest: " + highestMeasure, ", #results: ", results.length);
 
 
-    // TODO set labels coordinates (around the cube), problem for 2 dimension per axis -> multiple coordinates, must be calculated...
+        // TODO set labels coordinates (around the cube), problem for 2 dimension per axis -> multiple coordinates, must be calculated...
 
 
 
 
-    // Set coordinates for each result
-    $.each(results, function (index, result) {
+        // Set coordinates for each result
+        $.each(results, function (index, result) {
 
-        // DEBUG STOP AFTER 2000 entries, too much data :D
+            // DEBUG STOP AFTER 2000 entries, too much data :D
 //        if (index > 5000) {
 //            return false;
 //        }
 
-        var coordinates = [0, 0, 0]; // e.g. (x,y,z) or (x,x,y,zz)
-        var measureVals = []; // e.g. (123435, 42)
+            var coordinates = [0, 0, 0]; // e.g. (x,y,z) or (x,x,y,zz)
+            var measureVals = []; // e.g. (123435, 42)
 
-        // Iterate through given dimension numbers
-        $.each(dimensionNumbers, function (key, number) {
-            var entityName = result["E_NAME_" + number].value; // E_NAME_X
+            // Iterate through given dimension numbers
+            $.each(dimensionNumbers, function (key, number) {
+                var entityName = result["E_NAME_" + number].value; // E_NAME_X
 //            coordinates.push(entityMap[number][entityName]);
-            coordinates[key] = entityMap[number][entityName]; // TODO assumes xyz order of results
-        });
+                coordinates[key] = entityMap[number][entityName]; // TODO assumes xyz order of results
+            });
 
-        // Iterate through given measure numbers TODO: fehlende zahlen bei AGG???
-        $.each(measureNumbers, function (key, number) {
-            measureVals.push(parseFloat(result["V_NAME_AGG"].value));
-        });
+            // Iterate through given measure numbers TODO: fehlende zahlen bei AGG???
+            $.each(measureNumbers, function (key, number) {
+                measureVals.push(parseFloat(result["V_NAME_AGG"].value));
+            });
 
-        // TODO draw the given result with given coordinates and measures
+            // TODO draw the given result with given coordinates and measures
 //        console.log("coordinates: ", coordinates, ", measures: ", measureVals);
 
 
-        // TODO for each measure -> own cube part
+            // TODO for each measure -> own cube part
 
-        // Compute the ratio of the results measure
-        var ratio = (measureVals[0] - lowestMeasure) / (highestMeasure - lowestMeasure);
+            // Compute the ratio of the results measure
+            var ratio = (measureVals[0] - lowestMeasure) / (highestMeasure - lowestMeasure);
 
 //        // Logarithmic test TEMP
-        ratio = Math.log((ratio * 10) + 1) / Math.log(11);
+            ratio = Math.log((ratio * 10) + 1) / Math.log(11);
 
-        var cubeSize = 0.80 + 0.20 * ratio;
+            var cubeSize = 0.80 + 0.20 * ratio;
 //        var cubeSize = 0.95;
 
-        var geometry = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
-        var material = new THREE.MeshLambertMaterial();
+            var geometry = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
+            var material = new THREE.MeshLambertMaterial();
 
-        material.shading = THREE.NoShading;
-        material.fog = false;
+            material.shading = THREE.NoShading;
+            material.fog = false;
 
-        var colorLowest = new THREE.Color(0xd8d8d8);
-        var colorHighest = new THREE.Color(0x1f76c0); // TODO custom color per measure -> ~ multiply/overlay/opacity effect RGB? "multiply(color);"
+            var colorLowest = new THREE.Color(0xd8d8d8);
+            var colorHighest = new THREE.Color(0x1f76c0); // TODO custom color per measure -> ~ multiply/overlay/opacity effect RGB? "multiply(color);"
 //        var colorHighest = new THREE.Color(0x389000); // test: green
 //        var colorHighest = new THREE.Color(0x404040); // test: red
-        var resultColor = colorLowest.multiplyScalar(1 - ratio).add(colorHighest.multiplyScalar(ratio));
+            var resultColor = colorLowest.multiplyScalar(1 - ratio).add(colorHighest.multiplyScalar(ratio));
 
 //        var material = new THREE.SpriteMaterial({color: resultColor, fog: true});
 //        var sprite = new THREE.Sprite(material);
 //        scene.add(sprite);
 
-        material.emissive = resultColor;
-        var cube = new THREE.Mesh(geometry, material);
-        cube.position.set(coordinates[0], coordinates[1], coordinates[2]); // TEST
+            material.emissive = resultColor;
+            var cube = new THREE.Mesh(geometry, material);
+            cube.position.set(coordinates[0], coordinates[1], coordinates[2]); // TEST
 
-        // Add result to the scene and the octree
-        octree.add(cube, {useFaces: false});
-        scene.add(cube);
+            // Add result to the scene and the octree
+            octree.add(cube, {useFaces: false});
+            scene.add(cube);
 
-        // Add additional information to each result cube
-        cube.measureColor = resultColor; // save color to object
-        cube.popup = function () {
-            var str = "";
-            $.each(dimensionNumbers, function (key, number) {
-                str += "Dim #" + key + ": ";
-                str += result["L_NAME_" + number + "_AGG"].value;
-                str += "\n";
-            });
-            $.each(measureNumbers, function (key, number) {
+            // Add additional information to each result cube
+            cube.measureColor = resultColor; // save color to object
+            cube.popup = function () {
+                var str = "";
+                $.each(dimensionNumbers, function (key, number) {
+                    str += "Dim #" + key + ": ";
+                    str += result["L_NAME_" + number + "_AGG"].value;
+                    str += "\n";
+                });
+                $.each(measureNumbers, function (key, number) {
 //                str += result["M_NAME_" + number + "_AGG"].value; // TODO: fehlt immer :C also von anfrage nehmen, oder in api ändern
-                str += "Euro"; // TODO: fehlt immer :C also von anfrage nehmen, oder in api ändern
-                str += ": ";
-                str += measureVals[key];
-                str += "\n";
-            });
-            alert(str); // TEMP
-        };
+                    str += "Euro"; // TODO: fehlt immer :C also von anfrage nehmen, oder in api ändern
+                    str += ": ";
+                    str += measureVals[key];
+                    str += "\n";
+                });
+                alert(str); // TEMP
+            };
 
 //         Lines
 //        var cube2 = new THREE.EdgesHelper(cube);
@@ -340,7 +364,7 @@ request.done(function (content) {
 //        cube2.material.linewidth = 1;
 //        scene.add(cube2);
 
-    });
+        });
 
 //     TODO Test sprite
 //    var sprite = createTextSprite("Germany");
@@ -348,38 +372,36 @@ request.done(function (content) {
 //    sprite.position.set(-1, 0, 0);
 //    scene.add(sprite);
 
-    // DEBUG: grid <--
-    var size = 20;
-    var step = 1;
-    var gridHelper = new THREE.GridHelper(size, step);
-    gridHelper.setColors(new THREE.Color(0xd8d8d8), new THREE.Color(0xf0f0f0));
-    gridHelper.position.set(centerPoint[0], -0.5, centerPoint[2]);
-    scene.add(gridHelper);
-    // -->
+        // DEBUG: grid <--
+//        var size = 20;
+//        var step = 1;
+//        var gridHelper = new THREE.GridHelper(size, step);
+//        gridHelper.setColors(new THREE.Color(0xd8d8d8), new THREE.Color(0xf0f0f0));
+//        gridHelper.position.set(centerPoint[0], -0.5, centerPoint[2]);
+//        scene.add(gridHelper);
+        // -->
 
 
 
-    // Set camera to the center point of the cube
-    console.log("center: ", centerPoint);
-    camera.position.x = centerPoint[0] * 2 + 1;
-    camera.position.y = centerPoint[1] * 2 + 1;
-    camera.position.z = centerPoint[2] * 2 + 20; // TODO wie weit weg?
-    controls.target = new THREE.Vector3(centerPoint[0], centerPoint[1], centerPoint[2]);
-    controls.update();
+        // Set camera to the center point of the cube
+        console.log("center: ", centerPoint);
+        camera.position.x = centerPoint[0] * 2 + 1;
+        camera.position.y = centerPoint[1] * 2 + 1;
+        camera.position.z = centerPoint[2] * 2 + 20; // TODO wie weit weg?
+        controls.target = new THREE.Vector3(centerPoint[0], centerPoint[1], centerPoint[2]);
+        controls.update();
 
-    // ...
+        // ...
 
-    // TEST: RAYCAST
-    $(renderer.domElement).on("mousemove", onCanvasMouseMove);
-    $(renderer.domElement).on("click", onCanvasMouseClick);
-});
+    });
+}
 
 
 // Starts the rendering process of three.js, goes infinitly
 function render() {
-    requestAnimationFrame(render);
     renderer.render(scene, camera);
 //    octree.update();
+    requestAnimationFrame(render);
 }
 
 // Update when the orbit control was moved
@@ -401,11 +423,19 @@ function resizeVizualisation() {
 
 // ...
 function loadCubeList() {
+    var oldID = ID;
+    var oldHASH = HASH;
 
-    // Read ID and Hash input
+    // Read new ID and Hash input
     ID = $("#id_id").val();
     HASH = $("#id_hash").val();
 
+    // Do nothing if ID and hash have not changed
+    if (oldID === ID && oldHASH === HASH) {
+        return;
+    }
+
+    // Make the request
     var url = CUBE_URL.replace("__id__", ID);
     url = url.replace("__hash__", HASH);
     var request = $.ajax({
@@ -419,6 +449,14 @@ function loadCubeList() {
 
     // Recreate dropdown list for cubes
     request.done(function (content) {
+        var obj;
+        try {
+            obj = $.parseJSON(content);
+        } catch (e) {
+            alert(content);
+            return;
+        }
+
         var obj = $.parseJSON(content);
         var results = obj.results.bindings; // array
 
@@ -511,22 +549,19 @@ function loadDimensionList(cubeName) {
         // Add list for X, Y, Z axis
 
         function fillList(axis, dimensionList) { // TODO function ausserhalb, results als parameter
+            var dimList = $("#id_" + axis + "DimensionList");
+            var plusButton = $("#id_" + axis + "Plus");
+            var buttonArea = $("#id_" + axis + "ButtonArea");
 
             // Iterate through available dimensions
             $.each(results, function (index1, element) {
-
-                var dimList = $("#id_" + axis + "DimensionList");
-                var plusButton = $("#id_" + axis + "Plus");
-                var buttonArea = $("#id_" + axis + "ButtonArea");
-
-
                 var dimensionName = element.DIMENSION_NAME.value;
                 var label = element.LABEL.value;
 
                 // Create Dropdown entries
-                var itemLink = $("<a href='#'></a>");
+                var itemLink = $("<a role='menuitem' tabindex='-1' href='#'></a>");
                 itemLink.text(label);
-                var item = $("<li></li>");
+                var item = $("<li role='presentation'></li>");
                 item.append(itemLink);
 
                 dimList.append(item);
@@ -535,28 +570,28 @@ function loadDimensionList(cubeName) {
                 itemLink.on("click", function (e) {
                     e.preventDefault();
 
-                    dimensionList.push(dimensionName);
+                    var entities = []; // empty list means: all / no fix
+                    dimensionList.push(new Dimension(dimensionName, label, entities));
 
-                    // TODO: add html button and its menu + listeners...
+
                     // TODO: count entities to be displayed as selected in badge
 
-                    // TODO nachbilden:
-
+                    // Rebuild a dimension button and its menu
                     var btnGroup = $('<div class="btn-group"></div>');
                     var button = $('<button class="btn dropdown-toggle btn-default" type="button" data-toggle="dropdown"></button>');
                     var badge = $('<span class="badge"></span>');
                     var menu = $('<ul class="dropdown-menu" role="menu"></ul>');
                     var filterItem = $('<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Filter Entities...</a></li>');
-                    var deviderItem = $('<li role="presentation" class="divider"></li>');
+                    var dividerItem = $('<li role="presentation" class="divider"></li>');
                     var removeItem = $('<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Remove</a></li>');
 
                     // Combine button and list
                     btnGroup.append(button);
                     button.text(label + " ");
                     button.append(badge);
-                    badge.text("123 / 456"); // TODO number of entities? -> getEntities() entweder zu start oder jetzt!
+                    badge.text("123 / 456"); // TODO number of entities? -> getEntities() entweder zu start oder jetzt! + badgeID
                     menu.append(filterItem);
-                    menu.append(deviderItem);
+                    menu.append(dividerItem);
                     menu.append(removeItem);
                     btnGroup.append(menu);
 
@@ -604,6 +639,7 @@ function loadMeasureList(cubeName) {
         }
     });
 
+
     request.done(function (content) {
         var obj = $.parseJSON(content);
         var results = obj.results.bindings;
@@ -611,17 +647,21 @@ function loadMeasureList(cubeName) {
         // Clear old dimension list
         $("#id_measureList").empty();
 
+        var measureList = $("#id_measureList");
+        var plusButton = $("#measurePlus");
+        var buttonArea = $("#id_measureButtonArea");
+
         // Iterate through available dimensions
         $.each(results, function (index, element) {
             var measureName = element.MEASURE_NAME.value;
             var label = element.LABEL.value;
 
             // Create Dropdown entries
-            var itemLink = $("<a href='#'></a>");
+            var itemLink = $("<a role='menuitem' tabindex='-1' href='#'></a>");
             itemLink.text(label);
-            var item = $("<li></li>");
+            var item = $("<li role='presentation'></li>");
             item.append(itemLink);
-            $("#id_measureList").append(item);
+            measureList.append(item);
 
             // Add on-click handler for chosen measure
             itemLink.on("click", function (e) {
@@ -631,6 +671,52 @@ function loadMeasureList(cubeName) {
                 //
                 // TODO: if only 1 measure -> autoselect it!
                 // ...
+
+                measures.push(new Measure(measureName, label, "sum"));
+
+                // Rebuild a measure button and its menu
+                var btnGroup = $('<div class="btn-group"></div>');
+                var button = $('<button class="btn dropdown-toggle btn-default" type="button" data-toggle="dropdown"></button>');
+                var badge = $('<span class="badge"></span>');
+                var menu = $('<ul class="dropdown-menu" role="menu"></ul>');
+                var aggItem = $('<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Change Aggregation...</a></li>');
+                var colorItem = $('<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Change Color...</a></li>');
+                var hideItem = $('<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Hide</a></li>');
+                var dividerItem = $('<li role="presentation" class="divider"></li>');
+                var removeItem = $('<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Remove</a></li>');
+
+                // Combine button and list
+                btnGroup.append(button);
+                button.text(label + " ");
+                button.append(badge);
+                badge.addClass("ms-1"); // TODO different badge colors
+                badge.text("SUM"); // TODO badge ID -> später agg ändern + toUppercase
+                menu.append(aggItem);
+                menu.append(colorItem);
+                menu.append(hideItem);
+                menu.append(dividerItem);
+                menu.append(removeItem);
+                btnGroup.append(menu);
+
+                buttonArea.append(btnGroup);
+                buttonArea.append(" ");
+                buttonArea.append(plusButton); // Move plus to end
+
+                aggItem.on("click", function (e) {
+//                        TODO
+                });
+
+                colorItem.on("click", function (e) {
+//                        TODO
+                });
+
+                hideItem.on("click", function (e) {
+//                        TODO
+                });
+
+                removeItem.on("click", function (e) {
+//                        TODO
+                });
 
             });
         });
@@ -648,23 +734,6 @@ function loadEntityList(cubeName, dimensionName) {
 
 }
 
-
-// String extension
-if (typeof String.prototype.contains === 'undefined') {
-    String.prototype.contains = function (str) {
-        return this.indexOf(str) > -1;
-    };
-}
-if (typeof String.prototype.startsWith === 'undefined') {
-    String.prototype.startsWith = function (str) {
-        return this.lastIndexOf(str, 0) === 0;
-    };
-}
-if (typeof String.prototype.endsWith === 'undefined') {
-    String.prototype.endsWith = function (str) {
-        return this.indexOf(str, this.length - str.length) !== -1;
-    };
-}
 
 // TODO
 // Creates sprites for labels
@@ -697,7 +766,7 @@ function createTextSprite(text) {
 }
 
 
-// TODO: NON RATATING LABEL
+// TODO: NON ROTATING LABEL
 function createLabel(text) {
     var size = 20;
     var backgroundMargin = 10;
@@ -779,10 +848,24 @@ function initThreeJs() {
     // Add the canvas to the page
     $("#id_cube").append(renderer.domElement);
 
+    // TEST: RAYCAST
+    $(renderer.domElement).on("mousemove", onCanvasMouseMove);
+    $(renderer.domElement).on("click", onCanvasMouseClick);
+
 }
 
 function addInterfaceListeners() {
+
+    // Top bar
     $("#id_loadCubesButton").on('click', loadCubeList);
+
+    // Side bar
+
+    $("#id_applyButton").on('click', applyOLAP);
+
+
+
+
 
 }
 
@@ -791,8 +874,84 @@ function refreshApplyButton() {
 
 }
 
+// ...
+function selectEntity(entity) {
+    // TODO: zur FIX liste hinzufügen, sidebar -> badge updaten (x / y), entsprechende threejs-objecte highlighten!
+
+}
+
+// ...
 function applyOLAP() {
 
+    var url = createRequestURL();
+
+    console.log("REQUEST:", url);
+
+    unloadVisualization();
+
+//    showLoadingScreen();
+
+    visualize(url);
+}
+
+function unloadVisualization() {
+    // TODO: hide/empty current scene, and show loading screen
+
+    cancelAnimationFrame(animationRequest);
+
+    scene.children = []; // Clear old scene
+    scene.add(lighting); // Add light again
+
+    // Replace old octree
+    octree = new THREE.Octree({
+        //scene: scene,
+        undeferred: false,
+        depthMax: Infinity,
+        objectsThreshold: 8,
+        overlapPct: 0.15
+    });
+}
+
+function createRequestURL() {
+
+    var url = EXECUTE_URL;
+    url = url.replace("__id__", ID);
+    url = url.replace("__hash__", HASH);
+    url = url.replace("__cube__", currentCube);
+
+    // Add dimensions
+    function addDim(index, dimension) {
+        var tmp = DIMENSION_PART_URL.replace("__dimension__", dimension.dimensionName);
+
+        // Add fix option if entities were selected
+        if (dimension.entities.length > 0) {
+            var tmp2 = "";
+            $.each(dimension.entities, function (index, entity) {
+                tmp2 += entity + ",";
+            });
+            tmp2 = tmp2.substring(0, tmp2.length - 1); // remove last comma
+            tmp += DIMENSION_FIX_PART_URL.replace("__fix__", tmp2);
+        }
+        url += tmp;
+    }
+    $.each(xDimensions, addDim);
+    $.each(yDimensions, addDim);
+    $.each(zDimensions, addDim);
+
+    // Add measures
+    $.each(measures, function (index, measure) {
+        var tmp = MEASURE_PART_URL.replace("__measure__", measure.measureName);
+        tmp = tmp.replace("__agg__", measure.agg);
+        url += tmp;
+//        url += ",filterR=<bigger>,filterV=<999999999>"; // TEST
+    });
+
+    // Add filters
+    $.each(filters, function (index, filter) {
+        //TODO: unterscheiden: dimension / measure!
+    });
+
+    return url;
 }
 
 // Undo all selected labels and disable Accept button
@@ -807,7 +966,7 @@ function testPopup() {
 
 // Raycast TODO: nur für cubes, für mobile geräte: auch/nur bei click-event
 function onCanvasMouseMove(event) {
-    console.log("MOVE", event.buttons, event.which, event.button);
+//    console.log("MOVE", event.buttons, event.which, event.button);
     event.preventDefault();
 
     // only highlight results if no mouse buttons pressed
@@ -832,7 +991,7 @@ function onCanvasMouseMove(event) {
 //    var intersections = rayCaster.intersectOctreeObjects(octreeObjects);
     var intersections = rayCaster.intersectObjects(scene.children); // TODO erstmal so, inperformant aber geht
     if (intersections.length > 0) {
-        if (intersected !== intersections[0].object) { // TODO: not always front cube!!!
+        if (intersected !== intersections[0].object) { // TODO: not always front cube in octree!!!
 //            console.log(intersections[0])
             if (intersected) {
                 intersected.material.emissive = intersected.measureColor;
@@ -891,6 +1050,23 @@ function onCanvasMouseClick(event) {
             intersections[0].object.popup();
         }
     }
+}
+
+// String extension
+if (typeof String.prototype.contains === 'undefined') {
+    String.prototype.contains = function (str) {
+        return this.indexOf(str) > -1;
+    };
+}
+if (typeof String.prototype.startsWith === 'undefined') {
+    String.prototype.startsWith = function (str) {
+        return this.lastIndexOf(str, 0) === 0;
+    };
+}
+if (typeof String.prototype.endsWith === 'undefined') {
+    String.prototype.endsWith = function (str) {
+        return this.indexOf(str, this.length - str.length) !== -1;
+    };
 }
 
 // (>'.')>
