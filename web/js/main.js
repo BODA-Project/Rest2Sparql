@@ -8,6 +8,7 @@
 var ID = "";
 var HASH = "";
 var currentCube = "";
+var entitiyList = {};
 
 // TODO complete global cube class -> all dimensions -> all entities and measures -> ...
 
@@ -45,6 +46,8 @@ var MEASURE_PART_URL = "&m=<__measure__>,select=<true>,group=<false>,agg=<__agg_
 var FILTER_DIMENSION_PART_URL = "&d=<__dimension__>,select=<false>,group=<false>,fix=<__fix__>";
 var FILTER_MEASURE_PART_URL = "&m=<__measure__>,select=<false>,group=<false>,filterR=<__filterR__>,filterV=<__filterV__>";
 
+var MODAL_DIMENSION_TEMPLATE = '<div class="modal fade" id="id_modal"> <div class="modal-dialog"> <div class="modal-content"> <div class="modal-header"> <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button> <h4 class="modal-title">Choose Entities for Dimension: &lt;__label__&gt;<br>select all | select none (todo)</h4> </div> <div class="modal-body" id="id_modalBody"></div><div class="modal-footer"><button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button><button type="button" class="btn btn-primary" data-dismiss="modal" id="id_modalOkay">Okay</button></div></div></div></div>';
+//var MODAL_DIMENSION_TEMPLATE = '<div class="modal fade" id="id_modal"> <div class="modal-dialog"> <div class="modal-content"> <div class="modal-header"> <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button> <h4 class="modal-title">Choose Entities for Dimension: &lt;__label__&gt;</h4> </div> <div class="modal-body" id="id_modalBody"></div><div class="modal-footer"><button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button><button type="button" class="btn btn-primary" data-dismiss="modal" id="id_modalOkay">Okay</button></div></div></div></div>';
 
 // Cube class (getCubes)
 function Cube(cubeName, comment, label) {
@@ -123,7 +126,6 @@ function init() {
     $("#id_cubePanel").css("opacity", opacity);
     $("#id_dimensionPanel").css("opacity", opacity);
     $("#id_measurePanel").css("opacity", opacity);
-    $("#id_filterPanel").css("opacity", opacity);
     $("#id_filterPanel").css("opacity", opacity);
     $("#id_applyButton").css("opacity", opacity);
 
@@ -242,21 +244,12 @@ function visualize(url) {
 
         });
 
-        // Sort those entities for the labels and coordinates in the visualization
-        function compare(a, b) {
-            if (a.label > b.label) {
-                return 1;
-            } else if (a.label < b.label) {
-                return -1;
-            } else {
-                return 0;
-            }
-        }
-
         // Compute the center point for the camera too look at
         var centerPoint = [0, 0, 0]; // TODO assumes there is just (xyz)
         $.each(dimensionNumbers, function (key, number) {
-            entityMap[number].sort(compare);
+
+            // Sort those entities for the labels and coordinates in the visualization
+            entityMap[number].sort(labelCompare);
 
             // Map name -> index
             $.each(entityMap[number], function (index, entity) {
@@ -405,7 +398,7 @@ function render() {
 }
 
 // Update when the orbit control was moved
-function controlMoved() {
+function onControlMoved() {
     // Update lighting position
     lighting.position.copy(camera.position);
 }
@@ -468,6 +461,18 @@ function loadCubeList() {
         $("#id_cubePanel").css("opacity", "");
         $("#id_cubePanel button").removeAttr("disabled");
 
+        // but disable the rest
+        var opacity = 0.35;
+        $("#id_dimensionPanel").css("opacity", opacity);
+        $("#id_measurePanel").css("opacity", opacity);
+        $("#id_filterPanel").css("opacity", opacity);
+        $("#id_applyButton").css("opacity", opacity);
+        $("#id_dimensionPanel button").attr("disabled", "disabled");
+        $("#id_measurePanel button").attr("disabled", "disabled");
+        $("#id_filterPanel button").attr("disabled", "disabled");
+        $("#id_applyButton").attr("disabled", "disabled");
+
+
         // Iterate through available cubes and fill the list
         $.each(results, function (index, element) {
             var cubeName = element.CUBE_NAME.value;
@@ -493,8 +498,8 @@ function loadCubeList() {
                 currentCube = cubeName;
 
                 // Query available dimensions and measures and fill the lists
-                loadDimensionList(cubeName);
-                loadMeasureList(cubeName);
+                loadDimensionList();
+                loadMeasureList();
 
                 // Enable dimension, measure and filter input
                 $("#id_dimensionPanel").css("opacity", "");
@@ -525,8 +530,8 @@ function loadCubeList() {
 
 }
 
-function loadDimensionList(cubeName) {
-    var url = DIMENSION_URL.replace("__cube__", cubeName);
+function loadDimensionList() {
+    var url = DIMENSION_URL.replace("__cube__", currentCube);
     url = url.replace("__id__", ID);
     url = url.replace("__hash__", HASH);
 
@@ -546,15 +551,21 @@ function loadDimensionList(cubeName) {
         $("#id_yDimensionList").empty();
         $("#id_zDimensionList").empty();
 
-        // Add list for X, Y, Z axis
+        // Load the list of available entities for each dimension
+        $.each(results, function (index, dimension) {
+            var dimensionName = dimension.DIMENSION_NAME.value;
+            entitiyList[dimensionName] = getEntityList(dimensionName);
+        });
+//        console.log(entitiyList);
 
-        function fillList(axis, dimensionList) { // TODO function ausserhalb, results als parameter
-            var dimList = $("#id_" + axis + "DimensionList");
+        // Add list for X, Y, Z axis
+        function fillList(axis, dimensions) { // TODO function ausserhalb, results als parameter
+            var dimensionList = $("#id_" + axis + "DimensionList");
             var plusButton = $("#id_" + axis + "Plus");
             var buttonArea = $("#id_" + axis + "ButtonArea");
 
             // Iterate through available dimensions
-            $.each(results, function (index1, element) {
+            $.each(results, function (index, element) {
                 var dimensionName = element.DIMENSION_NAME.value;
                 var label = element.LABEL.value;
 
@@ -563,23 +574,36 @@ function loadDimensionList(cubeName) {
                 itemLink.text(label);
                 var item = $("<li role='presentation'></li>");
                 item.append(itemLink);
-
-                dimList.append(item);
+                dimensionList.append(item);
 
                 // Add on-click handler for chosen dimension
                 itemLink.on("click", function (e) {
                     e.preventDefault();
 
-                    var entities = []; // empty list means: all / no fix
-                    dimensionList.push(new Dimension(dimensionName, label, entities));
+                    // TEMP only add once, (better disable list item)
+                    if (isSelectedDimension(dimensionName)) {
+                        return;
+                    }
 
+
+                    var num = 20; // TODO: variable? constant?
+
+                    // TODO mark in entitiyList[dimensionName][entityName] as checked
+
+                    var entities = getFirstEntities(entitiyList, dimensionName, num); // ...
+                    var dimension = new Dimension(dimensionName, label, entities);
+                    dimensions.push(dimension);
+
+                    // IDs for the HTML elements
+                    var buttonID = createUniqueID(10);
+                    var badgeID = createUniqueID(10);
 
                     // TODO: count entities to be displayed as selected in badge
 
                     // Rebuild a dimension button and its menu
-                    var btnGroup = $('<div class="btn-group"></div>');
+                    var btnGroup = $('<div class="btn-group" id="' + buttonID + '"></div>');
                     var button = $('<button class="btn dropdown-toggle btn-default" type="button" data-toggle="dropdown"></button>');
-                    var badge = $('<span class="badge"></span>');
+                    var badge = $('<span class="badge" id="' + badgeID + '"></span>');
                     var menu = $('<ul class="dropdown-menu" role="menu"></ul>');
                     var filterItem = $('<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Filter Entities...</a></li>');
                     var dividerItem = $('<li role="presentation" class="divider"></li>');
@@ -589,7 +613,11 @@ function loadDimensionList(cubeName) {
                     btnGroup.append(button);
                     button.text(label + " ");
                     button.append(badge);
-                    badge.text("123 / 456"); // TODO number of entities? -> getEntities() entweder zu start oder jetzt! + badgeID
+
+                    var numEntities = entitiyList[dimensionName].length;
+                    var badgeNum = Math.min(num, numEntities);
+                    badge.text(badgeNum + " / " + numEntities); // TODO wieviele zu beginn ? TODO: ajax evtl noch nicht fertig geladen
+
                     menu.append(filterItem);
                     menu.append(dividerItem);
                     menu.append(removeItem);
@@ -600,11 +628,77 @@ function loadDimensionList(cubeName) {
                     buttonArea.append(plusButton); // Move plus to end
 
                     filterItem.on("click", function (e) {
-//                        TODO
+//                        TODO show popup
+
+                        // Add popup to the body
+                        var modal = $(MODAL_DIMENSION_TEMPLATE.replace("__label__", label));
+                        $("body").append(modal);
+
+//                        console.log(dimensionName, entitiyList[dimensionName])
+
+                        // Add all entities to the popup body
+                        $.each(entitiyList[dimensionName], function (index, entity) {
+
+                            var btnGroup = $('<div class="btn-group" data-toggle="buttons"></div>');
+                            var label = $('<label class="btn btn-default ' + (entitiyList[dimensionName][entity.entityName] ? 'active' : '') + '"></label>');
+                            var button = $('<input type="checkbox" autocomplete="off"' + (entitiyList[dimensionName][entity.entityName] ? 'checked' : '') + ' data-entity-name="' + entity.entityName + '" data-entity-label="' + entity.label + '">');
+
+
+                            // Combine the checkbox and add
+                            label.append(button);
+                            label.append(document.createTextNode(entity.label));
+                            btnGroup.append(label);
+                            $("#id_modalBody").append(btnGroup);
+                            $("#id_modalBody").append(" ");
+
+                            $("#id_modalBody").css("max-height", $(window).height() - 200 + "px");
+                            $("#id_modalBody").css("overflow-y", "scroll");
+
+                        });
+
+                        // Accept action of popup
+                        $("#id_modalOkay").on("click", function (e) {
+
+                            // TODO apply selected entities
+                            var newEntities = [];
+
+                            $("input[data-entity-name]").each(function () {
+                                var entityName = $(this).data('entity-name');
+                                var label = $(this).data('entity-label');
+                                if ($(this).prop("checked")) {
+                                    entitiyList[dimensionName][entityName] = true;
+                                    newEntities.push(new Entity(dimensionName, entityName, label));
+                                } else {
+                                    entitiyList[dimensionName][entityName] = false;
+                                }
+                            });
+
+                            // Update the badge and set request entity list
+                            dimension.entities = newEntities; // TEST unschön aber geht
+                            $("#" + badgeID).text(newEntities.length + " / " + entitiyList[dimensionName].length);
+                        });
+
+                        // Show the popup
+                        $("#id_modal").modal();
+
+                        // Remove when finished
+                        modal.on('hidden.bs.modal', function (e) {
+                            modal.remove();
+                        });
+
                     });
 
                     removeItem.on("click", function (e) {
-//                        TODO
+                        // Delete from selected list
+                        $.each(dimensions, function (index2, dimension) {
+                            if (dimension.dimensionName === dimensionName) {
+                                dimensions.splice(index2, 1);
+                                return false;
+                            }
+                        });
+
+                        // Remove HTML button and list
+                        $("#" + buttonID).remove();
                     });
 
 
@@ -617,9 +711,6 @@ function loadDimensionList(cubeName) {
         fillList("z", zDimensions);
 
 
-
-
-
     });
 
 
@@ -627,8 +718,43 @@ function loadDimensionList(cubeName) {
 
 }
 
-function loadMeasureList(cubeName) {
-    var url = MEASURE_URL.replace("__cube__", cubeName);
+/**
+ * Compare function for sorting by an objects label property.
+ */
+function labelCompare(a, b) {
+    if (a.label > b.label) {
+        return 1;
+    } else if (a.label < b.label) {
+        return -1;
+    } else {
+        return 0;
+    }
+}
+
+// ...
+function isSelectedDimension(dimensionName) {
+    var result = false;
+    function checkDimension(index, dimension) {
+        result = dimension.dimensionName === dimensionName ? true : result;
+    }
+    $.each(xDimensions, checkDimension);
+    $.each(yDimensions, checkDimension);
+    $.each(zDimensions, checkDimension);
+    return result;
+}
+
+// ...
+function isSelectedMeasure(measureName) {
+    var result = false;
+    function checkMeasure(index, measure) {
+        result = measure.measureName === measureName ? true : result;
+    }
+    $.each(measures, checkMeasure);
+    return result;
+}
+
+function loadMeasureList() {
+    var url = MEASURE_URL.replace("__cube__", currentCube);
     url = url.replace("__id__", ID);
     url = url.replace("__hash__", HASH);
 
@@ -648,7 +774,7 @@ function loadMeasureList(cubeName) {
         $("#id_measureList").empty();
 
         var measureList = $("#id_measureList");
-        var plusButton = $("#measurePlus");
+        var plusButton = $("#id_measurePlus");
         var buttonArea = $("#id_measureButtonArea");
 
         // Iterate through available dimensions
@@ -667,15 +793,22 @@ function loadMeasureList(cubeName) {
             itemLink.on("click", function (e) {
                 e.preventDefault();
 
+
+                // TEMP only add once, (better disable list item)
+                if (isSelectedMeasure(measureName)) {
+                    return;
+                }
+
                 // TODO Add the measure to the chosen list
                 //
                 // TODO: if only 1 measure -> autoselect it!
                 // ...
 
                 measures.push(new Measure(measureName, label, "sum"));
+                var randomID = createUniqueID(10); // ID for the HTML element
 
                 // Rebuild a measure button and its menu
-                var btnGroup = $('<div class="btn-group"></div>');
+                var btnGroup = $('<div class="btn-group" id="' + randomID + '"></div>');
                 var button = $('<button class="btn dropdown-toggle btn-default" type="button" data-toggle="dropdown"></button>');
                 var badge = $('<span class="badge"></span>');
                 var menu = $('<ul class="dropdown-menu" role="menu"></ul>');
@@ -715,7 +848,16 @@ function loadMeasureList(cubeName) {
                 });
 
                 removeItem.on("click", function (e) {
-//                        TODO
+                    // Delete from selected list
+                    $.each(measures, function (index2, measure) {
+                        if (measure.measureName === measureName) {
+                            measures.splice(index2, 1);
+                            return false;
+                        }
+                    });
+
+                    // Remove HTML button and list
+                    $("#" + randomID).remove();
                 });
 
             });
@@ -727,11 +869,44 @@ function loadMeasureList(cubeName) {
 
 }
 
-// ...for filtering in advance...
-function loadEntityList(cubeName, dimensionName) {
+// ...for filtering in advance... returns a list of possible entities
+function getEntityList(dimensionName) {
+    var url = ENTITY_URL.replace("__cube__", currentCube);
+    url = url.replace("__id__", ID);
+    url = url.replace("__hash__", HASH);
+    url = url.replace("__dimension__", dimensionName);
+    var list = [];
+    var request = $.ajax({
+        url: url,
+        headers: {
+            accept: "application/sparql-results+json"
+        }
+    });
+    request.done(function (content) {
+        var obj = $.parseJSON(content);
+        var results = obj.results.bindings;
+        $.each(results, function (index, result) {
+            var entityName = result.ENTITY_NAME.value;
+            var label = result.LABEL.value;
+            list.push(new Entity(dimensionName, entityName, label));
+        });
+        list.sort(labelCompare);
+    });
+    return list;
+}
 
-    // TODO...
-
+// for initial fix...
+function getFirstEntities(entitiyList, dimensionName, number) {
+    var list = [];
+    for (var i = 0; i < number; i++) {
+        var entity = entitiyList[dimensionName][i];
+        if (entity === undefined) {
+            break;
+        }
+        list.push(entity);
+        entitiyList[dimensionName][entity.entityName] = true; // TODO: boolean to see if checked
+    }
+    return list;
 }
 
 
@@ -820,7 +995,7 @@ function initThreeJs() {
 //    controls.maxDistance = 40;
     controls.rotateSpeed = 0.75;
 //    controls.zoomSpeed = 0.5;
-    controls.addEventListener('change', controlMoved, false);
+    controls.addEventListener('change', onControlMoved, false);
 
     renderer.setClearColor(0xffffff, 1);
     // TODO: 2 renderer: 1. WebGL für Würfel, 2. CSS3D für text (falls einfacher als text as textur)
@@ -924,10 +1099,11 @@ function createRequestURL() {
         var tmp = DIMENSION_PART_URL.replace("__dimension__", dimension.dimensionName);
 
         // Add fix option if entities were selected
+//        console.log("DIMENSION: ", dimension)
         if (dimension.entities.length > 0) {
             var tmp2 = "";
             $.each(dimension.entities, function (index, entity) {
-                tmp2 += entity + ",";
+                tmp2 += entity.entityName + ",";
             });
             tmp2 = tmp2.substring(0, tmp2.length - 1); // remove last comma
             tmp += DIMENSION_FIX_PART_URL.replace("__fix__", tmp2);
@@ -1067,6 +1243,16 @@ if (typeof String.prototype.endsWith === 'undefined') {
     String.prototype.endsWith = function (str) {
         return this.indexOf(str, this.length - str.length) !== -1;
     };
+}
+
+// Creates a pseudo random unique ID for HTML elements
+function createUniqueID(length) {
+    var chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    var result = '';
+    for (var i = length; i > 0; --i) {
+        result += chars[Math.round(Math.random() * (chars.length - 1))];
+    }
+    return "id_" + result;
 }
 
 // (>'.')>

@@ -108,10 +108,10 @@ body {
 
 #id_xButtonArea > .btn-group,
 #id_yButtonArea > .btn-group,
-#id_zButtonArea > .btn-group {
+#id_zButtonArea > .btn-group,
+#id_modalBody > .btn-group {
     margin-bottom: 5px;
 }
-
 
 /* Three.js Styling */
 
