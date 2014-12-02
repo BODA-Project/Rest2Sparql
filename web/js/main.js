@@ -30,6 +30,7 @@ var animationRequest;
 // For interaction with 3D objects
 var octree;
 var intersected;
+var mouseDown = {};
 
 // URL Templates
 var CUBE_URL = "./backend?func=<getCubes>&id=<__id__>&hash=<__hash__>";
@@ -46,7 +47,7 @@ var MEASURE_PART_URL = "&m=<__measure__>,select=<true>,group=<false>,agg=<__agg_
 var FILTER_DIMENSION_PART_URL = "&d=<__dimension__>,select=<false>,group=<false>,fix=<__fix__>";
 var FILTER_MEASURE_PART_URL = "&m=<__measure__>,select=<false>,group=<false>,filterR=<__filterR__>,filterV=<__filterV__>";
 
-var MODAL_DIMENSION_TEMPLATE = '<div class="modal fade" id="id_modal"> <div class="modal-dialog"> <div class="modal-content"> <div class="modal-header"> <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button> <h4 class="modal-title">Choose Entities for Dimension: &lt;__label__&gt;<br>select all | select none (todo)</h4> </div> <div class="modal-body" id="id_modalBody"></div><div class="modal-footer"><button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button><button type="button" class="btn btn-primary" data-dismiss="modal" id="id_modalOkay">Okay</button></div></div></div></div>';
+var MODAL_DIMENSION_TEMPLATE = '<div class="modal fade" id="id_modal"> <div class="modal-dialog modal-lg"> <div class="modal-content"> <div class="modal-header"> <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button> <h4 class="modal-title">Choose Entities for Dimension: &lt;__label__&gt;<br>select all | select none (todo)</h4> </div> <div class="modal-body" id="id_modalBody"></div><div class="modal-footer"><button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button><button type="button" class="btn btn-primary" data-dismiss="modal" id="id_modalOkay">Okay</button></div></div></div></div>';
 //var MODAL_DIMENSION_TEMPLATE = '<div class="modal fade" id="id_modal"> <div class="modal-dialog"> <div class="modal-content"> <div class="modal-header"> <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button> <h4 class="modal-title">Choose Entities for Dimension: &lt;__label__&gt;</h4> </div> <div class="modal-body" id="id_modalBody"></div><div class="modal-footer"><button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button><button type="button" class="btn btn-primary" data-dismiss="modal" id="id_modalOkay">Okay</button></div></div></div></div>';
 
 // Cube class (getCubes)
@@ -84,8 +85,6 @@ function Filter(dimension, measure) {
 
 
 
-
-
 // AJAX TESTS Queries
 var testQuery1_getCubes = "./backend?func=<getCubes>&id=<8023903>&hash=<7fb2f0dd7d608ea6b82eaa9b6e38aa80e1b266d8f8610a2c4c2671368df2b7bc>";
 var testQuery2_old = "./backend?func=<execute>&id=<8023903>&hash=<7fb2f0dd7d608ea6b82eaa9b6e38aa80e1b266d8f8610a2c4c2671368df2b7bc>&m=<http://code-research.eu/resource/Euro>,select=<true>,group=<false>,order=<-1>&d=<http://code-research.eu/resource/Country>,select=<true>,group=<false>,order=<-1>&d=<http://code-research.eu/resource/Species>,select=<false>,group=<false>,order=<-1>,fix=<http://code-research.eu/resource/Entity-279a95fa-ecb7-4ed3-9a1d-c250c6d1acd9>&d=<http://code-research.eu/resource/Year>,select=<true>,group=<false>,order=<-1>&c=<http://code-research.eu/resource/Dataset-173bbc55-68ca-4398-bd28-232415f7db4d>,select=<true>";
@@ -94,7 +93,7 @@ var testQuery4_agg_1d = "./backend?func=%3Cexecute%3E&id=%3C8023903%3E&hash=%3C7
 var testQuery5_agg_2d = "./backend?func=%3Cexecute%3E&id=%3C8023903%3E&hash=%3C7fb2f0dd7d608ea6b82eaa9b6e38aa80e1b266d8f8610a2c4c2671368df2b7bc%3E&d=%3Chttp://code-research.eu/resource/Country%3E,select=%3Ctrue%3E,group=%3Ctrue%3E,order=%3C-1%3E&d=%3Chttp://code-research.eu/resource/Species%3E,select=%3Cfalse%3E,group=%3Cfalse%3E,order=%3C-1%3E&d=%3Chttp://code-research.eu/resource/Year%3E,select=%3Ctrue%3E,group=%3Ctrue%3E,order=%3C-1%3E&m=%3Chttp://code-research.eu/resource/Euro%3E,select=%3Ctrue%3E,group=%3Cfalse%3E,order=%3C-1%3E,agg=%3Csum%3E&c=%3Chttp://code-research.eu/resource/Dataset-173bbc55-68ca-4398-bd28-232415f7db4d%3E,select=%3Cfalse%3E";
 var testQuery6_agg_3d = "./backend?func=%3Cexecute%3E&id=%3C8023903%3E&hash=%3C7fb2f0dd7d608ea6b82eaa9b6e38aa80e1b266d8f8610a2c4c2671368df2b7bc%3E&d=%3Chttp://code-research.eu/resource/Country%3E,select=%3Ctrue%3E,group=%3Ctrue%3E,order=%3C-1%3E&d=%3Chttp://code-research.eu/resource/Species%3E,select=%3Ctrue%3E,group=%3Ctrue%3E,order=%3C-1%3E,fix=%3Chttp://code-research.eu/resource/Entity-23c3225d-ac7a-40a3-80de-a10ff10a7428,http://code-research.eu/resource/Entity-02de3c11-3f45-448d-b458-8db3534fedc6,http://code-research.eu/resource/Entity-02a8e8de-ad5c-4922-9775-5083e116a37f,http://code-research.eu/resource/Entity-dca07aa6-098e-4bb8-98f4-19d10335b9fa,http://code-research.eu/resource/Entity-25563186-cefe-45a8-a5ff-340c6e908124,http://code-research.eu/resource/Entity-246eacbc-86f1-414e-a0eb-3b80da81c917,http://code-research.eu/resource/Entity-2dcec751-567a-42d7-b0d1-9da463c5a7c2%3E&d=%3Chttp://code-research.eu/resource/Year%3E,select=%3Ctrue%3E,group=%3Ctrue%3E,order=%3C-1%3E&m=%3Chttp://code-research.eu/resource/Euro%3E,select=%3Ctrue%3E,group=%3Cfalse%3E,order=%3C-1%3E,agg=%3Csum%3E&c=%3Chttp://code-research.eu/resource/Dataset-173bbc55-68ca-4398-bd28-232415f7db4d%3E,select=%3Cfalse%3E";
 var testQuery7_all_facts = "./backend?func=%3Cexecute%3E&id=%3C8023903%3E&hash=%3C7fb2f0dd7d608ea6b82eaa9b6e38aa80e1b266d8f8610a2c4c2671368df2b7bc%3E&m=%3Chttp://code-research.eu/resource/Euro%3E,select=%3Ctrue%3E,group=%3Cfalse%3E,order=%3C-1%3E,agg=%3Csum%3E&d=%3Chttp://code-research.eu/resource/Species%3E,select=%3Ctrue%3E,group=%3Ctrue%3E,order=%3C-1%3E&d=%3Chttp://code-research.eu/resource/Country%3E,select=%3Ctrue%3E,group=%3Ctrue%3E,order=%3C-1%3E&d=%3Chttp://code-research.eu/resource/Year%3E,select=%3Ctrue%3E,group=%3Ctrue%3E,order=%3C-1%3E&c=%3Chttp://code-research.eu/resource/Dataset-173bbc55-68ca-4398-bd28-232415f7db4d%3E,select=%3Cfalse%3E";
-
+var testQuery8_test = "./backend?func=<execute>&c=<http://code-research.eu/resource/Dataset-173bbc55-68ca-4398-bd28-232415f7db4d>,select=<false>&id=<8023903>&hash=<7fb2f0dd7d608ea6b82eaa9b6e38aa80e1b266d8f8610a2c4c2671368df2b7bc>&d=<http://code-research.eu/resource/Country>,select=<true>,group=<true>,fix=<http://code-research.eu/resource/Entity-f36ea72d-9c8b-4c2e-81c8-675d2d613b29,http://code-research.eu/resource/Entity-806e4b72-f41f-48f5-83d3-349e3f20410e,http://code-research.eu/resource/Entity-58724794-f291-4ee3-80ff-32b46948d95b,http://code-research.eu/resource/Entity-0f0335de-1f58-46f4-bae2-bdb413b33410,http://code-research.eu/resource/Entity-6490cd2f-a883-4c66-8312-7cca78218a0f,http://code-research.eu/resource/Entity-a247a5f2-68e8-44da-a704-63fddea89c56,http://code-research.eu/resource/Entity-d970556f-b493-4b98-846d-06e76a321b62,http://code-research.eu/resource/Entity-cd924575-5e31-43e9-a23b-e6df99300e4f,http://code-research.eu/resource/Entity-28509081-1d0e-4b65-b74d-4233be5758e9,http://code-research.eu/resource/Entity-2d2719ec-ee4b-4608-a9dd-5ab3558076ab,http://code-research.eu/resource/Entity-a15344d6-68b0-43c4-b520-d8f4fb4e1719,http://code-research.eu/resource/Entity-7a19c463-b7a5-457b-a532-e1b973b6df00,http://code-research.eu/resource/Entity-c753cd28-967d-400f-a26b-f97a9f62bd0d,http://code-research.eu/resource/Entity-96e4ff5c-095e-4845-a5dc-4d67630e099c,http://code-research.eu/resource/Entity-6bae61ba-200d-4883-b990-0eb8d2009ed5,http://code-research.eu/resource/Entity-80869b46-9704-4b45-9a65-d104b07b5856,http://code-research.eu/resource/Entity-1b7500d2-6e12-42f0-a006-f38ae763418f,http://code-research.eu/resource/Entity-6485f973-7fa2-4696-b132-b1b97e4fb9ee,http://code-research.eu/resource/Entity-b5e33c93-74ff-418a-8c70-0f6024aa38ce,http://code-research.eu/resource/Entity-a2b52514-1fda-4fdd-9a36-413343787622>&d=<http://code-research.eu/resource/Species>,select=<true>,group=<true>,fix=<http://code-research.eu/resource/Entity-876d5090-1d1e-4c35-8e4c-8df5c6a1e8bc,http://code-research.eu/resource/Entity-f8765b24-fdbe-453d-95d5-0c8dd5682204,http://code-research.eu/resource/Entity-488082c9-390c-4c1d-81df-f90d52e30ae5,http://code-research.eu/resource/Entity-b7c6572e-3ba0-4c32-b668-326c4ab5d284,http://code-research.eu/resource/Entity-ecb8502e-1d92-44b3-b595-a918668cf750,http://code-research.eu/resource/Entity-41ae2883-f0a1-4aa2-b93d-facb72fcc4c1,http://code-research.eu/resource/Entity-458b0ae6-706e-4fab-b38b-065f13a498a5,http://code-research.eu/resource/Entity-25563186-cefe-45a8-a5ff-340c6e908124,http://code-research.eu/resource/Entity-825b1100-c375-434e-a2e1-dd3cb3e274c2,http://code-research.eu/resource/Entity-e1ab2fab-93dd-48f1-9b4e-4f567938241f,http://code-research.eu/resource/Entity-4a26dc02-6a66-4426-a9cd-3ef7d14a0927,http://code-research.eu/resource/Entity-069b5fa7-566b-474d-a109-ed1ab59491af,http://code-research.eu/resource/Entity-61d336ef-7f23-4ab4-883d-13020b57c259,http://code-research.eu/resource/Entity-96a1bfb6-0525-40a4-9cd9-2d53ccfa6c63,http://code-research.eu/resource/Entity-3d7d9fdb-aa32-4ebd-b373-305311594bb2,http://code-research.eu/resource/Entity-cd4955cc-ebba-4c17-a281-de7b4ad7c3bf,http://code-research.eu/resource/Entity-f4c70b83-668b-4650-bb3f-8e65d7a90311,http://code-research.eu/resource/Entity-a236243e-3920-421f-92d1-e7e3f530c459,http://code-research.eu/resource/Entity-c4db0260-56b8-49d6-ac52-c57a9adc922a,http://code-research.eu/resource/Entity-f089d4b5-413c-4321-a5ce-6b3bdef8e144>&d=<http://code-research.eu/resource/Year>,select=<true>,group=<true>,fix=<http://code-research.eu/resource/Entity-ba6add0e-2326-4570-9e9b-6a34a69f1a0b,http://code-research.eu/resource/Entity-70333490-1557-4c74-9215-3dedfa1ceb36,http://code-research.eu/resource/Entity-d62ce835-3f59-467e-8bf2-1ab6839d46c2,http://code-research.eu/resource/Entity-ac13007b-7a4c-4787-82cd-907e7219e3db,http://code-research.eu/resource/Entity-2e97ec57-bbe4-403a-a829-f06cd0b9e217,http://code-research.eu/resource/Entity-23ba2426-d022-463d-a7c5-c98979860e24,http://code-research.eu/resource/Entity-3ff13789-6290-4a4b-95c4-0bd27a01bed4,http://code-research.eu/resource/Entity-38e07069-c6ce-4561-8c89-13d523bed01c,http://code-research.eu/resource/Entity-2d641851-cd7d-4639-9fac-0e969039a886,http://code-research.eu/resource/Entity-57c8ffd6-9093-4a22-9a4b-1bda4f52155a,http://code-research.eu/resource/Entity-15c5abb9-14e0-44e7-b03e-f0173f35fe42>&m=<http://code-research.eu/resource/Euro>,select=<true>,group=<false>,agg=<sum>";
 
 
 // Initialization
@@ -111,8 +110,9 @@ $(document).ready(function () {
     animationRequest = requestAnimationFrame(render);
 
     // TEST
-
-    visualize(testQuery6_agg_3d);
+    if (window.location.hash === "#test") {
+        visualize(testQuery8_test);
+    }
 
     //<--
 
@@ -120,6 +120,26 @@ $(document).ready(function () {
 
 // Inits the interface and adds listeners
 function init() {
+
+    disableInputInitially();
+
+    // add tooltips
+//    $('[data-toggle="tooltip"]').tooltip();
+
+    // Add listeners to all interface buttons
+    addInterfaceListeners();
+
+    // Setup THREE.JS components
+    initThreeJs();
+
+    showLoadingScreen("TEST123...");
+
+    // Resize visualization on browser resize
+    $(window).on('resize', resizeVizualisation);
+
+}
+
+function disableInputInitially() {
 
     // Disable navigation input initially and set conditions of usage
     var opacity = 0.35;
@@ -142,23 +162,18 @@ function init() {
     $("#id_filterPanel button").attr("disabled", "disabled");
     $("#id_applyButton").attr("disabled", "disabled");
 
-    // add tooltips
-//    $('[data-toggle="tooltip"]').tooltip();
-
-    // Add listeners to all interface buttons
-    addInterfaceListeners();
-
-    // Setup THREE.JS components
-    initThreeJs();
-
-    // Resize visualization on browser resize
-    $(window).on('resize', resizeVizualisation);
-
+    $("#id_undoButton").css("opacity", opacity);
+    $("#id_redoButton").css("opacity", opacity);
+    $("#id_undoButton").attr("disabled", "disabled");
+    $("#id_redoButton").attr("disabled", "disabled");
 }
 
 // sends the given url and visualizes the results.
 // TODO: table vs 3D mode, loading screen, error messages
 function visualize(url) {
+
+    // Show a loading screen while waiting
+    showLoadingScreen("Loading...");
 
     var request = $.ajax({
         url: url,
@@ -268,7 +283,8 @@ function visualize(url) {
         // TODO set labels coordinates (around the cube), problem for 2 dimension per axis -> multiple coordinates, must be calculated...
 
 
-
+        // Remove the loading screen and draw the result
+        unloadVisualization();
 
         // Set coordinates for each result
         $.each(results, function (index, result) {
@@ -342,10 +358,10 @@ function visualize(url) {
                     str += "\n";
                 });
                 $.each(measureNumbers, function (key, number) {
-//                str += result["M_NAME_" + number + "_AGG"].value; // TODO: fehlt immer :C also von anfrage nehmen, oder in api ändern
-                    str += "Euro"; // TODO: fehlt immer :C also von anfrage nehmen, oder in api ändern
+//                str += result["M_NAME_" + number + "_AGG"].value; // TODO
+                    str += "Euro"; // TODO: measure label fehlt immer :C also von anfrage nehmen, oder in api ändern
                     str += ": ";
-                    str += measureVals[key];
+                    str += measureVals[key]; // TODO format nicely
                     str += "\n";
                 });
                 alert(str); // TEMP
@@ -359,11 +375,51 @@ function visualize(url) {
 
         });
 
-//     TODO Test sprite
-//    var sprite = createTextSprite("Germany");
-////    var sprite = createLabel("TEST 123");
-//    sprite.position.set(-1, 0, 0);
-//    scene.add(sprite);
+        // Add the labels on the side TODO: where exacltey? here: always up to 3 dimensions?! (0 = cube, 1 = dim1, ...)
+        if (entityMap[1]) { // x
+            $.each(entityMap[1], function (i, entity) {
+                // Dimension name TODO
+                var label = createLabel(entity.label);
+                var offset = entityMap[3] ? entityMap[3].length - 1 : 0;
+                label.rotation.x = -degToRad(90);
+                label.rotation.z = degToRad(90);
+//                label.rotation.z += degToRad(90);
+//                label.position.z -= (0.5 + label.labelWidth / 2);
+                label.position.x = i;
+                label.position.y = -0.5;
+                label.position.z = (offset + 0.5 + label.labelWidth / 2);
+                scene.add(label);
+            });
+        }
+
+        if (entityMap[2]) { // y
+            // Dimension name TODO
+            $.each(entityMap[2], function (i, entity) {
+                var label = createLabel(entity.label);
+                var offset = entityMap[1] ? entityMap[1].length - 1 : 0;
+                label.position.x = (offset + 0.5 + label.labelWidth / 2);
+                label.position.y = i;
+                label.position.z = -0.5;
+                scene.add(label);
+            });
+        }
+
+        if (entityMap[3]) { // z
+            // Dimension name TODO
+            $.each(entityMap[3], function (i, entity) {
+                var label = createLabel(entity.label);
+                var offset = entityMap[1] ? entityMap[1].length - 1 : 0;
+                label.rotation.x = -degToRad(90);
+                label.position.x = (offset + 0.5 + label.labelWidth / 2);
+                label.position.y = -0.5;
+                label.position.z = i;
+//                label.scale.set(0.75,0.75,0.75)
+                scene.add(label);
+            });
+        }
+
+
+        // TODO: more than 3 dimensions -> labels?
 
         // DEBUG: grid <--
 //        var size = 20;
@@ -372,15 +428,17 @@ function visualize(url) {
 //        gridHelper.setColors(new THREE.Color(0xd8d8d8), new THREE.Color(0xf0f0f0));
 //        gridHelper.position.set(centerPoint[0], -0.5, centerPoint[2]);
 //        scene.add(gridHelper);
-        // -->
+//         -->
 
 
 
         // Set camera to the center point of the cube
         console.log("center: ", centerPoint);
-        camera.position.x = centerPoint[0] * 2 + 1;
-        camera.position.y = centerPoint[1] * 2 + 1;
-        camera.position.z = centerPoint[2] * 2 + 20; // TODO wie weit weg?
+
+        var distance = Math.max(centerPoint[0], centerPoint[1], centerPoint[2]);
+        camera.position.x = centerPoint[0] * 2 + 5;
+        camera.position.y = centerPoint[1] * 2 + 5;
+        camera.position.z = centerPoint[2] * 2 + distance * 5; // TODO wie weit weg?
         controls.target = new THREE.Vector3(centerPoint[0], centerPoint[1], centerPoint[2]);
         controls.update();
 
@@ -393,6 +451,7 @@ function visualize(url) {
 // Starts the rendering process of three.js, goes infinitly
 function render() {
     renderer.render(scene, camera);
+    controls.update();
 //    octree.update();
     requestAnimationFrame(render);
 }
@@ -412,7 +471,6 @@ function resizeVizualisation() {
     camera.updateProjectionMatrix();
     renderer.setSize(maxWidth, maxHeight);
 }
-
 
 // ...
 function loadCubeList() {
@@ -467,10 +525,17 @@ function loadCubeList() {
         $("#id_measurePanel").css("opacity", opacity);
         $("#id_filterPanel").css("opacity", opacity);
         $("#id_applyButton").css("opacity", opacity);
+
+        $("#id_undoButton").css("opacity", opacity);
+        $("#id_redoButton").css("opacity", opacity);
+
         $("#id_dimensionPanel button").attr("disabled", "disabled");
         $("#id_measurePanel button").attr("disabled", "disabled");
         $("#id_filterPanel button").attr("disabled", "disabled");
         $("#id_applyButton").attr("disabled", "disabled");
+
+        $("#id_undoButton").attr("disabled", "disabled");
+        $("#id_redoButton").attr("disabled", "disabled");
 
 
         // Iterate through available cubes and fill the list
@@ -493,6 +558,7 @@ function loadCubeList() {
 
                 // Set button title and current cube URI
                 $("#id_cubeButton").text(label);
+                $("#id_pageTitle").text("Cube: " + label); // set page title
                 $("#id_cubeButton").attr("title", label + ":\n\n" + comment); // tooltip
                 $("#id_cubeButton").append(" <span class='caret'></span>");
                 currentCube = cubeName;
@@ -512,6 +578,11 @@ function loadCubeList() {
                 $("#id_applyButton").css("opacity", "");
                 $("#id_applyButton").removeAttr("disabled");
 
+                $("#id_undoButton").css("opacity", "");
+                $("#id_redoButton").css("opacity", "");
+                $("#id_undoButton").removeAttr("disabled");
+                $("#id_redoButton").removeAttr("disabled");
+
                 // TODO: disable selected element from list
 
             });
@@ -530,6 +601,7 @@ function loadCubeList() {
 
 }
 
+// ...
 function loadDimensionList() {
     var url = DIMENSION_URL.replace("__cube__", currentCube);
     url = url.replace("__id__", ID);
@@ -554,7 +626,7 @@ function loadDimensionList() {
         // Load the list of available entities for each dimension
         $.each(results, function (index, dimension) {
             var dimensionName = dimension.DIMENSION_NAME.value;
-            entitiyList[dimensionName] = getEntityList(dimensionName);
+            entitiyList[dimensionName] = queryEntityList(dimensionName); // TODO hier ajax problem
         });
 //        console.log(entitiyList);
 
@@ -628,7 +700,6 @@ function loadDimensionList() {
                     buttonArea.append(plusButton); // Move plus to end
 
                     filterItem.on("click", function (e) {
-//                        TODO show popup
 
                         // Add popup to the body
                         var modal = $(MODAL_DIMENSION_TEMPLATE.replace("__label__", label));
@@ -651,7 +722,7 @@ function loadDimensionList() {
                             $("#id_modalBody").append(btnGroup);
                             $("#id_modalBody").append(" ");
 
-                            $("#id_modalBody").css("max-height", $(window).height() - 200 + "px");
+                            $("#id_modalBody").css("max-height", $(window).height() - 210 + "px");
                             $("#id_modalBody").css("overflow-y", "scroll");
 
                         });
@@ -674,7 +745,11 @@ function loadDimensionList() {
                             });
 
                             // Update the badge and set request entity list
-                            dimension.entities = newEntities; // TEST unschön aber geht
+                            if (newEntities.length === entitiyList[dimensionName].length) {
+                                dimension.entities = []; // causes no fix at all, all entities are included
+                            } else {
+                                dimension.entities = newEntities; // TEST unschön aber geht
+                            }
                             $("#" + badgeID).text(newEntities.length + " / " + entitiyList[dimensionName].length);
                         });
 
@@ -753,6 +828,7 @@ function isSelectedMeasure(measureName) {
     return result;
 }
 
+// ...
 function loadMeasureList() {
     var url = MEASURE_URL.replace("__cube__", currentCube);
     url = url.replace("__id__", ID);
@@ -870,7 +946,7 @@ function loadMeasureList() {
 }
 
 // ...for filtering in advance... returns a list of possible entities
-function getEntityList(dimensionName) {
+function queryEntityList(dimensionName) {
     var url = ENTITY_URL.replace("__cube__", currentCube);
     url = url.replace("__id__", ID);
     url = url.replace("__hash__", HASH);
@@ -909,47 +985,13 @@ function getFirstEntities(entitiyList, dimensionName, number) {
     return list;
 }
 
-
-// TODO
-// Creates sprites for labels
-function createTextSprite(text) {
-    var canvas = document.createElement('canvas');
-    var context = canvas.getContext('2d');
-
-    context.font = "bold 20px Helvetica";
-    context.textAlign = "center";
-    context.textBaseline = "middle";
-    context.fillStyle = "#000000";
-
-//    context.fillStyle = "#404040";
-
-    var metrics = context.measureText(text);
-    var textWidth = metrics.width;
-
-    canvas.width = textWidth;
-    canvas.height = 20 + 10;
-
-    context.fillText(text, textWidth / 2, canvas.height / 2);
-
-    var texture = new THREE.Texture(canvas);
-    texture.needsUpdate = true;
-    var material = new THREE.SpriteMaterial({map: texture, useScreenCoordinates: false});
-    var sprite = new THREE.Sprite(material);
-//    sprite.scale.set(2, 2, 2);
-    sprite.scale.normalize().multiplyScalar(4);
-    return sprite;
-}
-
-
-// TODO: NON ROTATING LABEL
+// TODO: NON ROTATING LABEL, immer selbe schriftgröße BUG!
 function createLabel(text) {
-    var size = 20;
-    var backgroundMargin = 10;
-
+    var size = 10;
+    var backgroundMargin = 5;
     var canvas = document.createElement("canvas");
     var context = canvas.getContext("2d");
-    context.font = size + "px Arial";
-
+    context.font = size + "px sans-serif";
     var textWidth = context.measureText(text).width;
 
     canvas.width = textWidth + backgroundMargin;
@@ -957,6 +999,13 @@ function createLabel(text) {
 
     context.textAlign = "center";
     context.textBaseline = "middle";
+    context.fillStyle = "white";
+
+    // for debugging:
+//    canvas.style.zIndex = "9999";
+//    canvas.style.position = "absolute";
+//    document.body.appendChild(canvas)
+
     context.fillStyle = "#404040";
     context.fillText(text, canvas.width / 2, canvas.height / 2);
 
@@ -965,10 +1014,13 @@ function createLabel(text) {
 
     var material = new THREE.MeshBasicMaterial({
         map: texture,
+        transparent: true,
         useScreenCoordinates: false
     });
 
-    var mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(canvas.width, canvas.height), material);
+    var finalWidth = canvas.width / canvas.height;
+    var mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(finalWidth, 1), material);
+    mesh.labelWidth = finalWidth;
     mesh.doubleSided = true;
 
 
@@ -1009,38 +1061,26 @@ function initThreeJs() {
         overlapPct: 0.15
     });
 
-    // CSS3D Renderer Test
-//    var test = document.createElement("div");
-//    test.className = "CSS3DTest";
-//    test.innerHTML = "12.781.015"; // or "12M 781K"
-//    var object = new THREE.CSS3DObject(test);
-//    object.position.x = 0;
-//    object.position.y = 0;
-//    object.position.z = 0;
-//    object.rotation.x = 0.5;
-//    scene.add(object);
-
     // Add the canvas to the page
     $("#id_cube").append(renderer.domElement);
 
     // TEST: RAYCAST
     $(renderer.domElement).on("mousemove", onCanvasMouseMove);
     $(renderer.domElement).on("click", onCanvasMouseClick);
+    $(renderer.domElement).on("mousedown", onCanvasMouseDown);
 
 }
 
+// ...
 function addInterfaceListeners() {
 
     // Top bar
     $("#id_loadCubesButton").on('click', loadCubeList);
 
     // Side bar
-
     $("#id_applyButton").on('click', applyOLAP);
 
-
-
-
+    // ...
 
 }
 
@@ -1055,16 +1095,56 @@ function selectEntity(entity) {
 
 }
 
+function showLoadingScreen(loadingMessage) {
+
+    // Remove old vislualization first
+    unloadVisualization();
+
+    var cubeSize = 20;
+
+    // Show loading sign as texture
+    if (loadingMessage !== undefined) {
+//        $("#id_cube").append($("<div id='id_loadingSign'>" + loadingMessage + "</div>"));
+
+        // TODO ...
+
+    }
+
+    var geometry = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
+    var material = new THREE.MeshLambertMaterial();
+    material.shading = THREE.NoShading;
+    material.fog = false;
+    material.emissive = new THREE.Color(0xe8e8e8);
+    var cube = new THREE.Mesh(geometry, material);
+    var lines = new THREE.BoxHelper(cube);
+    lines.material.color.set(material.emissive);
+    lines.material.linewidth = 3;
+    cube.rotation.y = 0.5 * (Math.PI / 180);
+
+    // Add the cube to the scene
+    scene.add(cube);
+    scene.add(lines);
+
+    // Set up camera
+    camera.position.x = 50;
+    camera.position.y = 30;
+    camera.position.z = 50;
+
+    controls.target = new THREE.Vector3(0, 0, 0);
+    controls.autoRotate = true;
+    controls.autoRotateSpeed = 5;
+    controls.update();
+
+}
+
 // ...
 function applyOLAP() {
+
+    // TODO apply button enabled only on change -> listener for all buttons...
 
     var url = createRequestURL();
 
     console.log("REQUEST:", url);
-
-    unloadVisualization();
-
-//    showLoadingScreen();
 
     visualize(url);
 }
@@ -1072,7 +1152,7 @@ function applyOLAP() {
 function unloadVisualization() {
     // TODO: hide/empty current scene, and show loading screen
 
-    cancelAnimationFrame(animationRequest);
+//    cancelAnimationFrame(animationRequest);
 
     scene.children = []; // Clear old scene
     scene.add(lighting); // Add light again
@@ -1085,6 +1165,13 @@ function unloadVisualization() {
         objectsThreshold: 8,
         overlapPct: 0.15
     });
+
+    // Reset controls
+    controls.autoRotate = false;
+
+    // Remove loading sign if present
+//    $("#id_loadingSign").remove();
+
 }
 
 function createRequestURL() {
@@ -1167,8 +1254,17 @@ function onCanvasMouseMove(event) {
 //    var intersections = rayCaster.intersectOctreeObjects(octreeObjects);
     var intersections = rayCaster.intersectObjects(scene.children); // TODO erstmal so, inperformant aber geht
     if (intersections.length > 0) {
+
+        // TODO for schleife, nicht alle haben measureColor!
+
         if (intersected !== intersections[0].object) { // TODO: not always front cube in octree!!!
 //            console.log(intersections[0])
+
+            // TEMP no measure color? break
+            if (intersections[0].object.measureColor === undefined) {
+                return;
+            }
+
             if (intersected) {
                 intersected.material.emissive = intersected.measureColor;
                 scene.remove(intersected.outline);
@@ -1209,6 +1305,13 @@ function onCanvasMouseClick(event) {
     var node = $(renderer.domElement);
     var x = event.pageX - node.position().left;
     var y = event.pageY - node.position().top;
+
+    // cancel if dragged a certain min distance
+    var distance = 6;
+    if (Math.abs(x - mouseDown.x) > distance || Math.abs(y - mouseDown.y) > distance) {
+        return;
+    }
+
     var mousePosition = new THREE.Vector3();
     mousePosition.x = (x / node.width()) * 2 - 1;
     mousePosition.y = -(y / node.height()) * 2 + 1;
@@ -1226,6 +1329,13 @@ function onCanvasMouseClick(event) {
             intersections[0].object.popup();
         }
     }
+}
+
+// For distance limit of clicking
+function onCanvasMouseDown(event) {
+    var node = $(renderer.domElement);
+    mouseDown.x = event.pageX - node.position().left;
+    mouseDown.y = event.pageY - node.position().top;
 }
 
 // String extension
@@ -1253,6 +1363,15 @@ function createUniqueID(length) {
         result += chars[Math.round(Math.random() * (chars.length - 1))];
     }
     return "id_" + result;
+}
+
+function degToRad(deg) {
+    return deg * Math.PI / 180;
+}
+
+// Returns a string like 71.003.345 (adds points)
+function formatNumber(num) {
+    // TODO
 }
 
 // (>'.')>

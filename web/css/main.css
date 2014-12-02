@@ -113,6 +113,26 @@ body {
     margin-bottom: 5px;
 }
 
+.overlay-menu {
+    z-index: 10;
+    position: absolute;
+}
+
+/*
+#id_loadingSign {
+    width: 100px;
+    overflow: hidden;
+    text-align: center;
+    background-color: rgba(255,255,255,0.5);
+    border-radius: 4px;
+    border: 1px solid rgba(0,0,0,0.15);
+    box-shadow: 1px 1px 4px rgba(0,0,0,0.10);
+    padding: 5px;
+    margin: 50px auto;
+    position: absolute;
+    z-index: 50;
+}*/
+
 /* Three.js Styling */
 
 .CSS3DTest {
