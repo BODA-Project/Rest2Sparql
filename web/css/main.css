@@ -13,6 +13,10 @@ body {
 
 }
 
+.navbar-right {
+    margin-right: 15px;
+}
+
 @media(min-width:768px) {
     .navbar-static-top form.navbar-right {
         margin-right: 0;
@@ -79,6 +83,16 @@ body {
         padding-left: 30px;
         padding-right: 30px;
     }
+}
+
+.entity-button {
+    padding-left: 0;
+    padding-right: 5px;
+}
+
+.entity-button > label {
+    width: 100%;
+    overflow: hidden;
 }
 
 /* Navigation sidebar and layout */

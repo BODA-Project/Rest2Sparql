@@ -37,19 +37,12 @@
             </div>
 
             <div class="collapse navbar-collapse">
-                <form class="navbar-form navbar-right">
-                    <div class="form-group">
-                        <!--<label for="id">ID</label>-->
-                        <input type="text" class="form-control" id="id_id" placeholder="ID" value="8023903">
-                    </div>
-                    <div class="form-group">
-                        <!--<label for="hash">Token</label>-->
-                        <input type="text" class="form-control" id="id_hash" placeholder="Token" value="7fb2f0dd7d608ea6b82eaa9b6e38aa80e1b266d8f8610a2c4c2671368df2b7bc">
-                    </div>
-                    <div class="form-group">
-                        <button type="button" class="form-control btn btn-default" id="id_loadCubesButton">Load Cubes</button>
-                    </div>
-                </form>
+                <div class="navbar-right">
+                    <button type="button" class="btn btn-default navbar-btn" id="id_undoButton">Undo</button>
+                    <button type="button" class="btn btn-default navbar-btn" id="id_redoButton">Redo</button>
+                    <button type="button" class="btn btn-default navbar-btn" id="id_mergeButton">Merge...</button>
+                    <button type="button" class="btn btn-default navbar-btn" id="id_changeUserButton">Change User ID...</button>
+                </div>
             </div>
 
             <!-- Sidebar -->
@@ -245,11 +238,11 @@
                 </div>
 
                 <div id="id_cube">
-                    <div class="overlay-menu">
-                        <button class="btn btn-default btn-xs" type="button" id="id_undoButton"> Undo </button>
-                        <button class="btn btn-default btn-xs" type="button" id="id_redoButton"> Redo </button>
-                        <!--<button class="btn btn-default btn-xs" type="button" id="id_mergeButton"> Merge... </button>-->
-                    </div>
+                    <!--                    <div class="overlay-menu">
+                                            <button class="btn btn-default btn-xs" type="button" id="id_undoButton"> Undo </button>
+                                            <button class="btn btn-default btn-xs" type="button" id="id_redoButton"> Redo </button>
+                                            <button class="btn btn-default btn-xs" type="button" id="id_mergeButton"> Merge... </button>
+                                        </div>-->
                     <!--<div style="position:relative;width:5px;height:5px;background-color:#ff0000" id="pointerID"></div>-->
                 </div>
 
@@ -260,32 +253,33 @@
 
 
         <!-- Modal TEST  -->
-        <!--        <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <!--        <div class="modal fade" id="id_loginModal">
                     <div class="modal-dialog">
                         <div class="modal-content">
                             <div class="modal-header">
-                                <button type="button" class="close" data-dismiss="modal">
-                                    <span aria-hidden="true">&times;</span>
-                                    <span class="sr-only">Close</span>
-                                </button>
-                                <h4 class="modal-title" id="myModalLabel">Modal title</h4>
+                                <h4 class="modal-title">Authentication</h4>
                             </div>
-                            <div class="modal-body">
-                                Not yet implemented...
+                            <div class="modal-body" id="id_loginModalBody">
+                                <form>
+                                    <div class="form-group">
+                                        <label for="id_loginID" class="control-label">Please enter your user ID:</label>
+                                        <input type="text" class="form-control" id="id_loginID">
+                                    </div>
+                                </form>
                             </div>
                             <div class="modal-footer">
-                                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                                <button type="button" class="btn btn-primary">Save changes</button>
+                                <button type="button" class="btn btn-primary" data-dismiss="modal" id="id_loginModalOkay">Okay</button>
                             </div>
                         </div>
                     </div>
-                </div>-->
+                </div>
 
 
         <!--JavaScript-->
 
         <!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>-->
         <script src="js/jquery-1.11.1.min.js"></script>
+        <script src="js/jquery.cookie.js"></script>
         <script src="js/bootstrap.min.js"></script>
 
         <!-- THREE.JS -->
