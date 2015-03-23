@@ -5,14 +5,14 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta name="description" content="RDF Datacube Visualization">
-        <link rel="shortcut icon" href="img/favicon.png">
+        <link rel="shortcut icon" href="img/favicon2.png">
 
         <title>Rest2Sparql GUI (Example)</title>
 
         <!-- Bootstrap -->
-        <link href="css/bootstrap.min.css" rel="stylesheet">
-        <link href="css/bootstrap-theme.min.css" rel="stylesheet">
-        <link href="css/main.css" rel="stylesheet">
+        <link href="css/bootstrap/bootstrap.min.css" rel="stylesheet">
+        <link href="css/bootstrap/bootstrap-theme.min.css" rel="stylesheet">
+        <link href="css/gui/main.css" rel="stylesheet">
 
         <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
         <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -72,9 +72,10 @@
 
 
                 <!-- DIMENSIONS -->
-                <div class="panel panel-default" id="id_dimensionPanel">
+                <div class="panel panel-default" id="id_dimensionPanel" data-toggle="popover" data-trigger="manual" data-content="Please choose one or more dimensions." data-placement="bottom">
                     <div class="panel-heading">
                         <h3 class="panel-title">Dimensions</h3>
+                        <!--<span class="glyphicon glyphicon-info-sign"></span>-->
                     </div>
                     <div class="panel-body">
 
@@ -148,7 +149,7 @@
                 </div>
 
                 <!-- MEASURES -->
-                <div class="panel panel-default" id="id_measurePanel">
+                <div class="panel panel-default" id="id_measurePanel" data-toggle="popover" data-trigger="manual" data-content="Please choose one or more measures (1-2?)." data-placement="bottom">
                     <div class="panel-heading">
                         <h3 class="panel-title">Measures</h3>
                     </div>
@@ -188,6 +189,8 @@
                     </div>
                 </div>
 
+                <!--TODO: Filter weg?-->
+
                 <!-- FILTERS -->
                 <div class="panel panel-default" id="id_filterPanel">
                     <div class="panel-heading">
@@ -221,8 +224,20 @@
                     </div>
                 </div>
 
-                <!-- ACCEPT / DRAW -->
-                <button type="button" class="btn btn-primary btn-block" id="id_applyButton" data-toggle="tooltip" data-placement="right" title="Please select at least one dimension and one measure first.">Apply</button>
+                <!-- CANCEL and ACCEPT / DRAW -->
+
+                <div class="btn-group btn-group-justified" role="group" aria-label="...">
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-default" id="id_cancelButton">Cancel</button>
+                    </div>
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-primary btn" id="id_applyButton" data-toggle="tooltip" data-placement="right" title="Please select at least one dimension and one measure first.">Apply</button>
+                    </div>
+                </div>
+
+
+
+
             </div>
         </nav>
 
@@ -272,17 +287,19 @@
                             </div>
                         </div>
                     </div>
-                </div>
+                </div>-->
 
 
-        <!--JavaScript-->
+        <!-- JavaScript -->
 
-        <!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>-->
-        <script src="js/jquery-1.11.1.min.js"></script>
-        <script src="js/jquery.cookie.js"></script>
-        <script src="js/bootstrap.min.js"></script>
+        <!-- jQuery -->
+        <script src="js/jquery/jquery-2.1.3.min.js"></script>
+        <script src="js/jquery/jquery.cookie.js"></script>
 
-        <!-- THREE.JS -->
+        <!-- Bootstrap -->
+        <script src="js/bootstrap/bootstrap.min.js"></script>
+
+        <!-- THREE.js -->
         <script src="js/threejs/three.min.js"></script>
         <!--<script src="js/threejs/renderers/SVGRenderer.js"></script>-->
         <!--<script src="js/threejs/renderers/Projector.js"></script>-->
@@ -293,6 +310,9 @@
         <script src="js/threejs/Octree.js"></script>
 
         <!-- Custom Scripts -->
-        <script src="js/main.js"></script>
+        <script src="js/gui/main.js"></script>
+        <script src="js/gui/templates.js"></script>
+        <script src="js/gui/webgl.js"></script>
+        <script src="js/gui/interface.js"></script>
     </body>
 </html>
