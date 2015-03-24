@@ -43,6 +43,22 @@ body {
     overflow: hidden;
 }
 
+/* entity selection buttons (labels) */
+#id_modalBody label.active {
+    background-color: #CAF2AB;
+    border-color: #82AD5F;
+}
+
+#id_modalBody label.active:hover {
+    background-color: #c1e5a3;
+    border-color: #82AD5F;
+}
+
+#id_modalBody label.active:active {
+    background-color: #b4d699;
+    border-color: #b4d699;
+}
+
 /* X Y Z labels */
 .panel-body > .form-group > label {
     /*margin-right: 5px;*/

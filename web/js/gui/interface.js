@@ -5,8 +5,8 @@
 var INTERFACE = new function () {
 
     // For interaction with 3D objects
-    this.intersected;
     this.mouseDown = {};
+    this.mousePressed = false;
 
     // ...
     this.disableInputInitially = function () {
@@ -296,7 +296,7 @@ var INTERFACE = new function () {
     // Adds a dimension button and its menu after the measure was selected.
     this.addDimensionButton = function (dimension, axis, dimensions) {
 
-        var num = 20; // number of preselected entities, TODO: variable? constant? and which ones?
+        var num = 10; // number of preselected entities, TODO: variable? constant? and which ones?
 
         var dimensionList = $("#id_" + axis + "DimensionList");
         var plusButton = $("#id_" + axis + "Plus");
@@ -395,12 +395,18 @@ var INTERFACE = new function () {
                 $("#" + badgeID).text(newEntities.length + " / " + MAIN.entityList[dimension.dimensionName].length);
             });
 
+            // Pause rendering in background
+            WEBGL.stopRendering();
+
             // Show the popup
             $("#id_modal").modal();
 
             // Remove when finished
             modal.on('hidden.bs.modal', function (e) {
                 modal.remove();
+
+                // Resume rendering again
+                WEBGL.resumeRendering()();
             });
 
         });
@@ -431,6 +437,11 @@ var INTERFACE = new function () {
 
     // Adds mouse events to a given result cube TODO sauberes result model!!!!!!!!
     this.addCubeListeners = function (cube, result) {
+
+        // TODO hier alle entities rausholen, in function nur noch auf labelMap zugreifen und entsprechende labels highlighten!!!
+
+
+
 
         cube.onclick = function () {
 
@@ -475,6 +486,55 @@ var INTERFACE = new function () {
 //            WEBGL.resetLabels(result); // TODO labelMap -> to normal font
 
         };
+
+    };
+
+    // Adds mouse events to the given label
+    this.addLabelListeners = function (label, entity) {
+
+        // TODO
+
+
+        // ALTER CODE (X achse):
+
+//        label.toggled = false;
+//        label.onmouseover = function () {
+//            if (!label.toggled) {
+//                label.toBold();
+//            }
+//            // TODO show tooltip if too long label string
+//            // TODO show pre-selected cubes matching the label for later selection (or a big slice around them)
+//
+//        };
+//        label.onmouseout = function () {
+//            if (!label.toggled) {
+//                label.toNormal();
+//            }
+//            // TODO hide ...
+//        };
+//
+//        label.onclick = function () {
+//
+//            // TODO: set status as selected (and all other labels of the same entity)
+//            // TEST: hier immer nur 1 dimension
+//            toggleSelectEntity(entity); // TODO andersrum! man will ja NUR die ausgewählten haben! -> zweite auswalhmenge, die bevorzugen
+//
+//            label.toSelected(); // highlight color
+//
+//            if (!label.toggled) {
+//                // TODO: show surrounding cube and keep entity in mind
+//            } else {
+//                // TODO: remove surrounding cube and remove entity from list (to accept later)
+//            }
+//
+//            label.toggled = !label.toggled;
+//
+//            // TODO hide ...
+//
+//        };
+
+
+
 
     };
 
@@ -567,9 +627,7 @@ var INTERFACE = new function () {
         // TODO
     };
 
-
-    // Executes movement events on the WebGL canvas. Tries to execute objects <onmouseover> and <onmouseout> events.
-    //
+    // Updates the mouse position for webGL event handling
     // TODO: für mobile geräte: auch/nur bei click-event?
     this.onCanvasMouseMove = function (event) {
         event.preventDefault();
@@ -578,52 +636,16 @@ var INTERFACE = new function () {
         var button = event.buttons === undefined ? event.which || event.button : event.buttons; // TODO check IE10+
 //        console.log("MOVE", event.buttons, event.which, event.button);
         if (button !== 0) {
-            return;
+            this.mousePressed = true;
+        } else {
+            this.mousePressed = false;
         }
 
         var node = $(WEBGL.renderer.domElement);
         var x = event.pageX - node.position().left;
         var y = event.pageY - node.position().top;
-
-        var mousePosition = new THREE.Vector3();
-        mousePosition.x = (x / node.width()) * 2 - 1;
-        mousePosition.y = -(y / node.height()) * 2 + 1;
-        mousePosition.z = 0.5;
-
-        // project mouse to 3d scene
-        var vect = mousePosition.unproject(WEBGL.camera);
-        var direction = vect.sub(WEBGL.camera.position).normalize();
-        var rayCaster = new THREE.Raycaster(WEBGL.camera.position, direction);
-        var intersections = rayCaster.intersectObjects(WEBGL.scene.children); // TODO erstmal so, inperformant aber geht
-        if (intersections.length > 0) {
-
-            // Only call once while hovering one object
-            if (this.intersected !== intersections[0].object) {
-//            console.log(intersections[0])
-
-                if (this.intersected && this.intersected.onmouseout !== undefined) {
-//                console.log(intersected)
-                    this.intersected.onmouseout();
-                }
-
-                // Grab new intersection object
-                this.intersected = intersections[0].object;
-                if (this.intersected.onmouseover !== undefined) {
-                    this.intersected.onmouseover();
-                }
-            }
-            WEBGL.renderer.domElement.style.cursor = 'pointer'; // Set cursor to hand
-        } else if (this.intersected) {
-            // Not hovering above anything anymore
-            if (this.intersected.onmouseout !== undefined) {
-                this.intersected.onmouseout();
-            }
-
-            // Forget last intersection
-            this.intersected = null;
-            WEBGL.renderer.domElement.style.cursor = 'auto'; // Set cursor to normal
-        }
-
+        WEBGL.mousePosition.x = (x / node.width()) * 2 - 1;
+        WEBGL.mousePosition.y = -(y / node.height()) * 2 + 1;
     };
 
     // Executes click events on the WebGL canvas
@@ -642,26 +664,17 @@ var INTERFACE = new function () {
             return;
         }
 
-        var mousePosition = new THREE.Vector3();
-        mousePosition.x = (x / node.width()) * 2 - 1;
-        mousePosition.y = -(y / node.height()) * 2 + 1;
-        mousePosition.z = 0.5;
+        WEBGL.mousePosition.x = (x / node.width()) * 2 - 1;
+        WEBGL.mousePosition.y = -(y / node.height()) * 2 + 1;
 
-        // project mouse to 3d scene
-        var vect = mousePosition.unproject(WEBGL.camera);
-        var direction = vect.sub(WEBGL.camera.position).normalize();
-        var rayCaster = new THREE.Raycaster(WEBGL.camera.position, direction);
-        var intersections = rayCaster.intersectObjects(WEBGL.scene.children);
-        if (intersections.length > 0) {
-            // TODO: only if no disabled flag set (?)
-            if (intersections[0].object.onclick !== undefined) {
-                intersections[0].object.onclick();
-            }
-        }
+        // execute click events
+        WEBGL.handleClick();
     };
 
     // For distance limit of clicking
     this.onCanvasMouseDown = function (event) {
+        event.preventDefault();
+
         var node = $(WEBGL.renderer.domElement);
         this.mouseDown.x = event.pageX - node.position().left;
         this.mouseDown.y = event.pageY - node.position().top;
@@ -711,7 +724,7 @@ var INTERFACE = new function () {
                 }
                 $('[data-dimension-name="' + dimensionName + '"]').addClass("disabled"); // TODO enough?
 
-                var num = 20; // number of preselected entities, TODO: variable? constant? which ones?
+                var num = 10; // number of preselected entities, TODO: variable? constant? which ones?
 
                 // TODO mark in entitiyList[dimensionName][entityName] as checked
 

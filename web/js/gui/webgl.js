@@ -6,8 +6,11 @@ var WEBGL = new function () {
 
     // Constants
     this.MAX_LABEL_LENGTH = 20;
-    this.COLOR_LOWEST = 0xd8d8d8; // Almost white
+    this.SPRITE_LENGTH = 6;
+    this.COLOR_LOWEST = 0xdadada; // Almost white
     this.COLOR_HIGHEST = 0xff8921; // Dark blue TODO custom color?
+    this.COLOR_WHITE = new THREE.Color(0xffffff);
+    this.COLOR_HIGHLIGHT = new THREE.Color(0xd8d8d8);
 
     // Properties
     this.scene;
@@ -15,15 +18,31 @@ var WEBGL = new function () {
     this.renderer;
     this.controls;
     this.lighting;
+    this.ambientLight;
     this.animationRequest; // in case of wanting to stop
+
+    // Mouse interaction
+    this.raycaster = new THREE.Raycaster();
+    this.mousePosition = new THREE.Vector2(); // 2D position on canvas
+    this.intersected;
 
     this.totalSize = [0, 0, 0];
 
     // Starts the rendering process of three.js, goes infinitly. Call only once!
     this.render = function () {
+        this.animationRequest = requestAnimationFrame(this.render.bind(this));
         this.renderer.render(this.scene, this.camera);
         this.controls.update();
-        this.animationRequest = requestAnimationFrame(this.render.bind(this));
+
+        // TEST: make cubes shiver randomly
+//        $.each(this.scene.children, function (i, obj) {
+//            obj.translateX((Math.random() - 0.5) * 0.01);
+//            obj.translateY((Math.random() - 0.5) * 0.01);
+//            obj.translateZ((Math.random() - 0.5) * 0.01);
+//        });
+
+        // check for hover events
+        this.handleHover(); // TEMP better performance if only done when rendered
     };
 
     // Stops rendering completely
@@ -54,19 +73,22 @@ var WEBGL = new function () {
 
     // Hilights a given cube mesh
     this.highlightCube = function (cube) {
-        cube.material.emissive = cube.measureColor.clone().multiplyScalar(0.9);
+        cube.material.color = this.COLOR_HIGHLIGHT;
 
         // Show lines around the cube
-        cube.outline = new THREE.EdgesHelper(cube);
-        cube.outline.material.color.set(cube.material.emissive);
-        cube.outline.material.linewidth = 3;
-        this.scene.add(cube.outline);
+
+        // TODO: sind jetzt scheinbar klickbar -> flackern
+
+//        cube.outline = new THREE.EdgesHelper(cube);
+//        cube.outline.material.color.set(cube.material.color);
+//        cube.outline.material.linewidth = 3;
+//        this.scene.add(cube.outline);
     };
 
     // Resets a highlighted cube to its normal state
     this.resetCube = function (cube) {
-        cube.material.emissive = cube.measureColor;
-        this.scene.remove(cube.outline);
+        cube.material.color = this.COLOR_WHITE;
+//        this.scene.remove(cube.outline);
     };
 
     // Adds a cube at given coordinates to the scene
@@ -74,11 +96,10 @@ var WEBGL = new function () {
 
         var ratio = ratios[0]; // TEMP only first ratio is shown for now
         var value = values[0]; // TEMP only first value is shown for now
+
+        // Define the cube
         var cubeSize = 0.80 + 0.20 * ratio;
-
         var geometry = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize); // TODO nicht würfel sonder etwas flacherer quader -> ca 3x3x2
-        var material = new THREE.MeshLambertMaterial();
-
         var texture = this.createSqareLabelTexture(value, ratio); // TEMP only first value for now ( or: "1st \n 2nd")
         var material = new THREE.MeshLambertMaterial({map: texture});
 
@@ -90,7 +111,7 @@ var WEBGL = new function () {
         var colorHighest = new THREE.Color(this.COLOR_HIGHEST);
 
         var resultColor = colorLowest.multiplyScalar(1 - ratio).add(colorHighest.multiplyScalar(ratio));
-        material.emissive = resultColor;
+//        material.emissive = resultColor;
 
         var cube = new THREE.Mesh(geometry, material);
         cube.position.set(coordinates[0], coordinates[1], coordinates[2]);
@@ -103,7 +124,7 @@ var WEBGL = new function () {
 
         // Update the total size of the visualization
         $.each(this.totalSize, function (i, size) {
-            this.totalSize[i] = (coordinates[i] > size) ? coordinates[i] : size;
+            this.totalSize[i] = (coordinates[i] + 1 > size) ? coordinates[i] + 1 : size;
         }.bind(this));
 
         // TEST: Lines around every cube
@@ -114,6 +135,43 @@ var WEBGL = new function () {
 
         return cube;
 
+    };
+
+    // Adds a label which is placed depending on the given axis and position
+    // TODO know highest sprite length of a dimension (to not waste space)
+    this.addLabel = function (axis, position, entity, row) {
+        var label = this.createLabel(entity.label);
+        switch (axis) {
+            case "x" :
+                // Position
+                label.position.x = position;
+                label.position.y = -0.5;
+                label.position.z = (this.totalSize[2] + label.labelWidth / 2 + row * this.SPRITE_LENGTH);
+
+                // Rotation
+                label.rotation.x = -degToRad(90);
+                label.rotation.z = degToRad(90);
+                break;
+
+            case "y" :
+                // Position (needs no rotation)
+                label.position.x = (this.totalSize[0] + label.labelWidth / 2 + row * this.SPRITE_LENGTH);
+                label.position.y = position;
+                label.position.z = -0.5;
+                break;
+
+            case "z" :
+                // Position
+                label.position.x = (this.totalSize[0] + label.labelWidth / 2 + row * this.SPRITE_LENGTH);
+                label.position.y = -0.5;
+                label.position.z = position;
+
+                // Rotation
+                label.rotation.x = -degToRad(90);
+                break;
+        }
+        WEBGL.scene.add(label);
+        return label;
     };
 
     // Adds three grids to each ground of the visualization with the known total size
@@ -152,8 +210,8 @@ var WEBGL = new function () {
         var abbrSign = '\u2026'; // a single char "..." sign
 
         text = String(text);
-        if (text.length > MAX_LABEL_LENGTH) {
-            text = text.substring(0, MAX_LABEL_LENGTH - abbrSign.length);
+        if (text.length > this.MAX_LABEL_LENGTH) {
+            text = text.substring(0, this.MAX_LABEL_LENGTH - abbrSign.length);
             text = text + abbrSign;
         }
 
@@ -175,6 +233,7 @@ var WEBGL = new function () {
 
         var texture = new THREE.Texture(canvas);
         texture.needsUpdate = true;
+        texture.minFilter = THREE.LinearFilter;
 
         var material = new THREE.MeshBasicMaterial({
             map: texture,
@@ -226,6 +285,13 @@ var WEBGL = new function () {
             text = Math.round(text * 100) / 100;
         }
 
+        // Compute a background color
+        var colorLowest = new THREE.Color(this.COLOR_LOWEST);
+        var colorHighest = new THREE.Color(this.COLOR_HIGHEST);
+        var backgroundColor = colorLowest.multiplyScalar(1 - ratio).add(colorHighest.multiplyScalar(ratio)).getHexString();
+
+        // TODO (evtl) method to change background color to a given value
+
         ratio = Math.max(ratio, 0.25);
         var fontSize = 20;
         var backgroundMargin = fontSize / 2;
@@ -241,13 +307,14 @@ var WEBGL = new function () {
         context.textAlign = "center";
         context.textBaseline = "middle";
 
-        context.fillStyle = "white";
-        context.fillRect(0, 0, canvas.width, canvas.width);
-        context.fillStyle = "rgba(0,0,0," + ratio + ")";
+        context.fillStyle = "#" + backgroundColor;
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        context.fillStyle = "rgba(0,0,0," + ratio + ")"; // TODO if brightness below 50% -> white font und 1-ratio
         context.fillText(text, canvas.width / 2, canvas.height / 2);
 
         var texture = new THREE.Texture(canvas);
         texture.needsUpdate = true;
+        texture.minFilter = THREE.LinearFilter;
 
         return texture;
     };
@@ -263,12 +330,14 @@ var WEBGL = new function () {
 //        this.renderer = new THREE.SVGRenderer();
         this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
         this.lighting = new THREE.PointLight(0x202020, 1, 0);
+        this.ambientLight = new THREE.AmbientLight(0xffffff);
         this.scene.add(this.lighting);
+        this.scene.add(this.ambientLight);
 
         // Orbit controls
         this.controls.noKeys = true;
 //        this.controls.noPan = true;
-        this.controls.minDistance = 20;
+        this.controls.minDistance = 15;
 //        this.controls.maxDistance = 40;
         this.controls.rotateSpeed = 0.75;
 //        this.controls.zoomSpeed = 0.5;
@@ -308,13 +377,12 @@ var WEBGL = new function () {
         }
 
         var geometry = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
-        var material = new THREE.MeshLambertMaterial();
+        var material = new THREE.MeshLambertMaterial({color: 0xe4e4e4});
         material.shading = THREE.NoShading;
         material.fog = false;
-        material.emissive = new THREE.Color(0xe8e8e8);
         var cube = new THREE.Mesh(geometry, material);
         var lines = new THREE.BoxHelper(cube);
-        lines.material.color.set(material.emissive);
+        lines.material.color.set(0xe0e0e0);
         lines.material.linewidth = 3;
         cube.rotation.y = 0.5 * (Math.PI / 180);
 
@@ -340,12 +408,68 @@ var WEBGL = new function () {
         // Clear old scene
         this.scene.children = []; // TODO better way?
         this.scene.add(this.lighting); // Add light again
+        this.scene.add(this.ambientLight);
 
         // Reset the total size
         this.totalSize = [0, 0, 0];
 
         // Reset controls
         this.controls.autoRotate = false;
+    };
+
+    // Executes hover events on threejs objects
+    this.handleHover = function () {
+
+        // only highlight results if no mouse buttons pressed
+        if (INTERFACE.mousePressed) {
+            return;
+        }
+
+        // project mouse to 3d scene
+        this.raycaster.setFromCamera(this.mousePosition, this.camera);
+        var intersections = this.raycaster.intersectObjects(this.scene.children); // TODO erstmal so, inperformant aber geht
+        if (intersections.length > 0) {
+
+            // Only call once while hovering one object
+            if (this.intersected !== intersections[0].object) {
+//            console.log(intersections[0])
+
+                if (this.intersected && this.intersected.onmouseout !== undefined) {
+//                console.log(intersected)
+                    this.intersected.onmouseout();
+                }
+
+                // Grab new intersection object
+                this.intersected = intersections[0].object;
+                if (this.intersected.onmouseover !== undefined) {
+                    this.intersected.onmouseover();
+                }
+            }
+            this.renderer.domElement.style.cursor = 'pointer'; // Set cursor to hand TODO only certain types (resut cubes, labels, ...)
+        } else if (this.intersected) {
+            // Not hovering above anything anymore
+            if (this.intersected.onmouseout !== undefined) {
+                this.intersected.onmouseout();
+            }
+
+            // Forget last intersection
+            this.intersected = null;
+            this.renderer.domElement.style.cursor = 'auto'; // Set cursor to normal
+        }
+    };
+
+    // Executes click events on threejs objects
+    this.handleClick = function () {
+
+        // project mouse to 3d scene
+        this.raycaster.setFromCamera(this.mousePosition, this.camera);
+        var intersections = this.raycaster.intersectObjects(this.scene.children); // TODO erstmal so, inperformant aber geht
+        if (intersections.length > 0) {
+            // TODO: only if no disabled flag set (?)
+            if (intersections[0].object.onclick !== undefined) {
+                intersections[0].object.onclick();
+            }
+        }
     };
 
 

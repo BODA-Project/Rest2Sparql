@@ -260,8 +260,8 @@ var MAIN = new function () {
                     ratios[index2] = Math.max(1, (measureValue - lowestMeasure)) / Math.max(1, (highestMeasure - lowestMeasure));
                     values[index2] = measureValue;
 
-                    // TEST Logarithmic value
-                    ratios[index2] = Math.log((ratios[index2] * 10) + 1) / Math.log(11);
+                    // TEST Logarithmic value (log10)
+                    ratios[index2] = Math.log((ratios[index2] * 9) + 1) / Math.log(10);
                 }.bind(this));
 
                 // Get the coordinates based on the result's dimension-entities
@@ -274,6 +274,11 @@ var MAIN = new function () {
 
 
             // Draw (stacked) labels around the result-cubes
+            insertLabels(this.xDimensions, "x");
+            insertLabels(this.yDimensions, "y");
+            insertLabels(this.zDimensions, "z");
+
+
             // TODO: draw (stacked) labels
 
             // TODO iterate through xyzDimensions + entityMap
@@ -282,103 +287,14 @@ var MAIN = new function () {
 
 
             // Update the camera and center point of the visualization
-            WEBGL.updateCenterPoint(); // TODO auch labels dazuzählen!!!
+            WEBGL.updateCenterPoint(); // TODO auch labels dazuzählen!!! #######################
 
             // TODO Draw a grid for better orientation on the ground
             WEBGL.addGrid();
 
-
-
             // DEBUG:
             console.log("sorted entityMap: ", this.entityMap);
             console.log("lowest measure: ", lowestMeasures, ", highest: ", highestMeasures, ", #results: ", results.length);
-
-
-
-            // TODO Alter label code: ==========================================
-
-
-            // Add the labels on the side TODO: where exacltey? here: always up to 3 dimensions?! (0 = cube, 1 = dim1, ...)
-//            if (entityMap[1]) { // x
-//                $.each(entityMap[1], function (i, entity) {
-//                    // Dimension name TODO
-//                    var label = createLabel(entity.label);
-//                    var offset = entityMap[3] ? entityMap[3].length - 1 : 0;
-//                    label.rotation.x = -degToRad(90);
-//                    label.rotation.z = degToRad(90);
-////                label.rotation.z += degToRad(90);
-////                label.position.z -= (0.5 + label.labelWidth / 2);
-//                    label.position.x = i;
-//                    label.position.y = -0.5;
-//                    label.position.z = (offset + 0.5 + label.labelWidth / 2);
-//                    WEBGL.scene.add(label);
-//
-//                    // TEST:
-//                    label.toggled = false;
-//                    label.onmouseover = function () {
-//                        if (!label.toggled) {
-//                            label.toBold();
-//                        }
-//                        // TODO show tooltip if too long label string
-//                        // TODO show pre-selected cubes matching the label for later selection (or a big slice around them)
-//
-//                    };
-//                    label.onmouseout = function () {
-//                        if (!label.toggled) {
-//                            label.toNormal();
-//                        }
-//                        // TODO hide ...
-//                    };
-//
-//                    label.onclick = function () {
-//
-//                        // TODO: set status as selected (and all other labels of the same entity)
-//                        // TEST: hier immer nur 1 dimension
-//                        toggleSelectEntity(entity); // TODO andersrum! man will ja NUR die ausgewählten haben! -> zweite auswalhmenge, die bevorzugen
-//
-//                        label.toSelected(); // highlight color
-//
-//                        if (!label.toggled) {
-//                            // TODO: show surrounding cube and keep entity in mind
-//                        } else {
-//                            // TODO: remove surrounding cube and remove entity from list (to accept later)
-//                        }
-//
-//                        label.toggled = !label.toggled;
-//
-//                        // TODO hide ...
-//
-//                    };
-//
-//
-//                });
-//            }
-//
-//            if (entityMap[2]) { // y
-//                // Dimension name TODO
-//                $.each(entityMap[2], function (i, entity) {
-//                    var label = createLabel(entity.label);
-//                    var offset = entityMap[1] ? entityMap[1].length - 1 : 0;
-//                    label.position.x = (offset + 0.5 + label.labelWidth / 2);
-//                    label.position.y = i;
-//                    label.position.z = -0.5;
-//                    WEBGL.scene.add(label);
-//                });
-//            }
-//
-//            if (entityMap[3]) { // z
-//                // Dimension name TODO
-//                $.each(entityMap[3], function (i, entity) {
-//                    var label = createLabel(entity.label);
-//                    var offset = entityMap[1] ? entityMap[1].length - 1 : 0;
-//                    label.rotation.x = -degToRad(90);
-//                    label.position.x = (offset + 0.5 + label.labelWidth / 2);
-//                    label.position.y = -0.5;
-//                    label.position.z = i;
-////                label.scale.set(0.75,0.75,0.75)
-//                    WEBGL.scene.add(label);
-//                });
-//            }
 
         }.bind(this));
 
@@ -661,6 +577,48 @@ var MAIN = new function () {
             return 0;
         }
     };
+
+    // Iterates through entities of a given dimension and adds labels
+    var insertLabels = function (dimensionList, axis) {
+        if (dimensionList.length === 0) {
+            return; // No dimension in this axis
+        }
+        var dimensionName = dimensionList[0].dimensionName;
+        var entityList = this.entityMap[dimensionName];
+
+        // Count only entities of the last dimension (recursively)
+        var iterateEntities = function (entityList, depth) {
+            if (depth === dimensionList.length - 1) {
+                // Last dimension, get label positions and add them
+                $.each(entityList, function (index, entity) {
+                    var position = entity.position;
+                    var label = WEBGL.addLabel(axis, position, entity, 0);
+                    INTERFACE.addLabelListeners(label, entity); // TODO #########
+                });
+
+                // Compute middle position
+                entityList.avgPosition = (entityList[0].position + entityList[entityList.length - 1].position) / 2;
+
+            } else {
+                // Go deeper and add labels in the Nth row
+                var nextDimension = dimensionList[depth + 1];
+                $.each(entityList, function (index, entity) {
+                    var nextList = entity[nextDimension.dimensionName];
+                    iterateEntities(nextList, depth + 1); // recursion
+
+                    var row = dimensionList.length - 1 - depth;
+                    var label = WEBGL.addLabel(axis, nextList.avgPosition, entity, row);
+                    INTERFACE.addLabelListeners(label, entity); // TODO #########
+                });
+
+                // Compute middle position for above label
+                var firstAvg = entityList[0][nextDimension.dimensionName].avgPosition;
+                var lastAvg = entityList[entityList.length - 1][nextDimension.dimensionName].avgPosition;
+                entityList.avgPosition = (firstAvg + lastAvg) / 2;
+            }
+        };
+        iterateEntities(entityList, 0);
+    }.bind(this);
 
     // Assign positions to last entities in the entityMap
     var assignCoordinates = function (dimensionList) {
