@@ -33,16 +33,33 @@ body {
 }
 
 .badge.ms-1 {
-    background-color: #ff8921;
+    background-color: #428ED5;
     /* TODO more colors? */
 }
 
-/* button size in panels */
-.panel-body button {
-    max-width: 100%;
-    overflow: hidden;
-}
+@media(min-width:768px) {
 
+    /* button size in panels */
+    .panel-body button .cube-button-text {
+        max-width: 200px;
+        vertical-align: top;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        display: inline-block;
+        padding-right: 5px;
+    }
+
+    /* button size in panels */
+    .panel-body button .button-text{
+        max-width: 130px;
+        vertical-align: top;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        display: inline-block;
+        padding-right: 5px;
+    }
+
+}
 /* entity selection buttons (labels) */
 #id_modalBody label.active {
     background-color: #CAF2AB;

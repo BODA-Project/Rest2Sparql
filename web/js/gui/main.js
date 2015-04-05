@@ -33,8 +33,8 @@ function Entity(dimensionName, entityName, label) {
     this.position;                      // x, y or z coordinate (to be set later)
 }
 
-// Filter class, either for dimension or measures
-function Filter(dimension, measure) {
+// Filter class, for measures
+function Filter(measure) {
 
 }
 
@@ -51,6 +51,14 @@ var MAIN = new function () {
     this.currentCube = "";
     this.entityList = []; // Contains all entities of all dimensions (and their selected status)
 
+
+    // TODO
+    this.currentColor = "#5080c0";
+    this.currentAGG = "sum";
+    this.currentScale = "linear"; // log or linear
+
+
+
     // Selected objects for creating a query uri later
     this.xDimensions = [];   // Type: Dimension
     this.yDimensions = [];   // -
@@ -61,7 +69,7 @@ var MAIN = new function () {
     this.tempSelection = {}; // Temprary selection of dimensions' entities (to be accepted on button click)
     // TEMP: z.b.: tempSelection[dimensionName][entityName] = true;
 
-    // For visual selection of labels / entities
+    // TODO For visual selection of labels / entities
     this.labelMap = {};
 
     // List of actually used entities (for the visualization) with stacked dimensions in every entity (if more than one dimension / axis)
@@ -236,6 +244,7 @@ var MAIN = new function () {
                 $.each(this.measures, function (index2, measure) {
                     var measureName = measure.measureName;
                     var value = this.getMeasureValueFromJson(result, measure); // TODO: fehlende zahlen im json bei AGG???
+                    // TODO: kann sein, dass gar kein measure im result drin steht... (API problem beim parsen von "-")
                     var currentHighest = highestMeasures[measureName];
                     var currentLowest = lowestMeasures[measureName];
                     highestMeasures[measureName] = (currentHighest === undefined || currentHighest < value) ? value : currentHighest;
@@ -260,8 +269,8 @@ var MAIN = new function () {
                     ratios[index2] = Math.max(1, (measureValue - lowestMeasure)) / Math.max(1, (highestMeasure - lowestMeasure));
                     values[index2] = measureValue;
 
-                    // TEST Logarithmic value (log10)
-                    ratios[index2] = Math.log((ratios[index2] * 9) + 1) / Math.log(10);
+                    // TEST Logarithmic value (log10) TODO setting ein aus
+//                    ratios[index2] = Math.log((ratios[index2] * 9) + 1) / Math.log(10);
                 }.bind(this));
 
                 // Get the coordinates based on the result's dimension-entities
@@ -273,16 +282,19 @@ var MAIN = new function () {
             }.bind(this));
 
 
-            // Draw (stacked) labels around the result-cubes
-            insertLabels(this.xDimensions, "x");
-            insertLabels(this.yDimensions, "y");
-            insertLabels(this.zDimensions, "z");
+            // Draw (stacked) entity labels around the result-cubes
+            insertEntityLabels(this.xDimensions, "x");
+            insertEntityLabels(this.yDimensions, "y");
+            insertEntityLabels(this.zDimensions, "z");
 
 
-            // TODO: draw (stacked) labels
+            // Draw (stacked) dimension + axis labels
+            insertDimensionLabels(this.xDimensions, "x");
+            insertDimensionLabels(this.yDimensions, "y");
+            insertDimensionLabels(this.zDimensions, "z");
+
 
             // TODO iterate through xyzDimensions + entityMap
-            // TODO dimension labels too!
             // TODO INTERFACE.js -> labels onclick und co.
 
 
@@ -365,7 +377,7 @@ var MAIN = new function () {
             try {
                 obj = $.parseJSON(content);
             } catch (e) {
-                alert(content);
+                alert(content); // TODO popupError(...)
                 return;
             }
             var results = obj.results.bindings; // array
@@ -534,6 +546,7 @@ var MAIN = new function () {
 
     // Returns the numerical value of a given measure of a json result
     this.getMeasureValueFromJson = function (result, measure) {
+//        console.log(result);
         return parseFloat(result["V_NAME_AGG"].value); // TODO so stehts im json von rest2sparql, was wenn mehrere measures?
     };
 
@@ -579,7 +592,7 @@ var MAIN = new function () {
     };
 
     // Iterates through entities of a given dimension and adds labels
-    var insertLabels = function (dimensionList, axis) {
+    var insertEntityLabels = function (dimensionList, axis) {
         if (dimensionList.length === 0) {
             return; // No dimension in this axis
         }
@@ -592,8 +605,8 @@ var MAIN = new function () {
                 // Last dimension, get label positions and add them
                 $.each(entityList, function (index, entity) {
                     var position = entity.position;
-                    var label = WEBGL.addLabel(axis, position, entity, 0);
-                    INTERFACE.addLabelListeners(label, entity); // TODO #########
+                    var label = WEBGL.addEntityLabel(axis, position, entity, 0);
+                    INTERFACE.addEntityLabelListener(label, entity); // TODO #########
                 });
 
                 // Compute middle position
@@ -607,8 +620,8 @@ var MAIN = new function () {
                     iterateEntities(nextList, depth + 1); // recursion
 
                     var row = dimensionList.length - 1 - depth;
-                    var label = WEBGL.addLabel(axis, nextList.avgPosition, entity, row);
-                    INTERFACE.addLabelListeners(label, entity); // TODO #########
+                    var label = WEBGL.addEntityLabel(axis, nextList.avgPosition, entity, row);
+                    INTERFACE.addEntityLabelListener(label, entity); // TODO #########
                 });
 
                 // Compute middle position for above label
@@ -619,6 +632,17 @@ var MAIN = new function () {
         };
         iterateEntities(entityList, 0);
     }.bind(this);
+
+
+    // Iterates through dimension of a given axis and adds labels
+    var insertDimensionLabels = function (dimensionList, axis) {
+        $.each(dimensionList, function (index, dimension) {
+            var row = dimensionList.length - index - 1;
+            var label = WEBGL.addDimensionLabel(axis, dimension, row, dimensionList.length);
+            INTERFACE.addDimensionLabelListener(label, dimension); // TODO #########
+        });
+    }.bind(this);
+
 
     // Assign positions to last entities in the entityMap
     var assignCoordinates = function (dimensionList) {

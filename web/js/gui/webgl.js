@@ -7,8 +7,9 @@ var WEBGL = new function () {
     // Constants
     this.MAX_LABEL_LENGTH = 20;
     this.SPRITE_LENGTH = 6;
+    this.SPRITE_HEIGHT_DIMENSION = 1.2;
     this.COLOR_LOWEST = 0xdadada; // Almost white
-    this.COLOR_HIGHEST = 0xff8921; // Dark blue TODO custom color?
+    this.COLOR_HIGHEST = 0x3484CF; // Dark blue TODO custom color?
     this.COLOR_WHITE = new THREE.Color(0xffffff);
     this.COLOR_HIGHLIGHT = new THREE.Color(0xd8d8d8);
 
@@ -99,6 +100,7 @@ var WEBGL = new function () {
 
         // Define the cube
         var cubeSize = 0.80 + 0.20 * ratio;
+//        var cubeSize = 0.95;
         var geometry = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize); // TODO nicht würfel sonder etwas flacherer quader -> ca 3x3x2
         var texture = this.createSqareLabelTexture(value, ratio); // TEMP only first value for now ( or: "1st \n 2nd")
         var material = new THREE.MeshLambertMaterial({map: texture});
@@ -139,14 +141,15 @@ var WEBGL = new function () {
 
     // Adds a label which is placed depending on the given axis and position
     // TODO know highest sprite length of a dimension (to not waste space)
-    this.addLabel = function (axis, position, entity, row) {
-        var label = this.createLabel(entity.label);
+    // TODO bei 2D darstellung -> rotation nach unten bei X-labels
+    this.addEntityLabel = function (axis, position, entity, row) {
+        var label = this.createEntityLabel(entity.label);
         switch (axis) {
             case "x" :
                 // Position
                 label.position.x = position;
                 label.position.y = -0.5;
-                label.position.z = (this.totalSize[2] + label.labelWidth / 2 + row * this.SPRITE_LENGTH);
+                label.position.z = (this.totalSize[2] + (label.labelWidth - 1) / 2 + row * this.SPRITE_LENGTH);
 
                 // Rotation
                 label.rotation.x = -degToRad(90);
@@ -155,19 +158,60 @@ var WEBGL = new function () {
 
             case "y" :
                 // Position (needs no rotation)
-                label.position.x = (this.totalSize[0] + label.labelWidth / 2 + row * this.SPRITE_LENGTH);
+                label.position.x = (this.totalSize[0] + (label.labelWidth - 1) / 2 + row * this.SPRITE_LENGTH);
                 label.position.y = position;
                 label.position.z = -0.5;
                 break;
 
             case "z" :
                 // Position
-                label.position.x = (this.totalSize[0] + label.labelWidth / 2 + row * this.SPRITE_LENGTH);
+                label.position.x = (this.totalSize[0] + (label.labelWidth - 1) / 2 + row * this.SPRITE_LENGTH);
                 label.position.y = -0.5;
                 label.position.z = position;
 
                 // Rotation
                 label.rotation.x = -degToRad(90);
+                break;
+        }
+        WEBGL.scene.add(label);
+        return label;
+    };
+
+    // Adds a dimension label which is placed depending on the given axis
+    // TODO bei 2D darstellung -> rotation nach unten bei X-labels
+    this.addDimensionLabel = function (axis, dimension, row, numDimensions) {
+        var label = this.createDimensionLabel(dimension.label, axis);
+        var labelOffset = numDimensions * this.SPRITE_LENGTH + 0.5 + row * this.SPRITE_HEIGHT_DIMENSION; // EntityLabels + previous DimensionLabels
+        switch (axis) {
+            case "x" :
+                // Position
+                label.position.x = (this.totalSize[0] - 1) / 2;
+                label.position.y = -0.5;
+                label.position.z = this.totalSize[2] + labelOffset;
+
+                // Rotation
+                label.rotation.x = -degToRad(90);
+                break;
+
+            case "y" :
+                // Position
+                label.position.x = this.totalSize[0] + labelOffset;
+                label.position.y = Math.max((label.labelWidth - 1) / 2, (this.totalSize[1] - 1) / 2); // to not overlap with Z labels
+                label.position.z = -0.5;
+
+                // Rotation
+                label.rotation.z = degToRad(90);
+                break;
+
+            case "z" :
+                // Position
+                label.position.x = this.totalSize[0] + labelOffset;
+                label.position.y = -0.5;
+                label.position.z = Math.max((label.labelWidth - 1) / 2, (this.totalSize[2] - 1) / 2); // to not overlap with Y labels
+
+                // Rotation
+                label.rotation.x = -degToRad(90);
+                label.rotation.z = degToRad(90);
                 break;
         }
         WEBGL.scene.add(label);
@@ -205,7 +249,7 @@ var WEBGL = new function () {
 
 
     // Creates an entity label with different drawing modes (bold, normal, ...)
-    this.createLabel = function (text) {
+    this.createEntityLabel = function (text) {
         var size = 30;
         var abbrSign = '\u2026'; // a single char "..." sign
 
@@ -221,12 +265,16 @@ var WEBGL = new function () {
         context.font = size + "px monospace";
         var textWidth = context.measureText(text).width;
 
-        canvas.width = textWidth + backgroundMargin * 2;
+        canvas.width = textWidth + backgroundMargin * 3; // more horizontal space
         canvas.height = size + backgroundMargin * 2;
         context.font = size + "px monospace"; // important (2. after setting size)
 
         context.textAlign = "center";
         context.textBaseline = "middle";
+
+//        // DEBUG BORDERS
+//        context.strokeStyle = "rgba(0,128,255,0.5)";
+//        context.strokeRect(0, 0, canvas.width, canvas.height);
 
         context.fillStyle = "rgba(0,0,0,0.7)";
         context.fillText(text, canvas.width / 2, canvas.height / 2);
@@ -273,6 +321,92 @@ var WEBGL = new function () {
 //        console.log(mesh)
 
         return mesh;
+    };
+
+
+
+    // Creates an entity label with different drawing modes (bold, normal, ...)
+    this.createDimensionLabel = function (text, axis) {
+
+
+
+        // TODO: code von entityLabel:
+
+
+        var size = 30;
+        var abbrSign = '\u2026'; // a single char "..." sign
+
+        var finalText = String(axis.toUpperCase() + ": " + text);
+        if (finalText.length > this.MAX_LABEL_LENGTH) {
+            finalText = finalText.substring(0, this.MAX_LABEL_LENGTH - abbrSign.length);
+            finalText = finalText + abbrSign;
+        }
+
+        var backgroundMargin = size / 4;
+        var canvas = document.createElement("canvas");
+        var context = canvas.getContext("2d");
+        context.font = size + "px monospace";
+        var textWidth = context.measureText(finalText).width;
+
+        canvas.width = textWidth + backgroundMargin * 3; // more horizontal space
+        canvas.height = size + backgroundMargin * 2;
+        context.font = size + "px monospace"; // important (2. after setting size)
+
+        context.textAlign = "center";
+        context.textBaseline = "middle";
+
+//        // DEBUG BORDERS
+//        context.strokeStyle = "rgba(0,128,255,0.5)";
+//        context.strokeRect(0, 0, canvas.width, canvas.height);
+
+        context.fillStyle = "rgba(0,0,0,0.25)";
+        context.fillText(finalText, canvas.width / 2, canvas.height / 2);
+
+        var texture = new THREE.Texture(canvas);
+        texture.needsUpdate = true;
+        texture.minFilter = THREE.LinearFilter;
+
+        var material = new THREE.MeshBasicMaterial({
+            map: texture,
+            transparent: true,
+            useScreenCoordinates: false
+        });
+
+        var finalWidth = (canvas.width / canvas.height) * this.SPRITE_HEIGHT_DIMENSION;
+        var mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(finalWidth, this.SPRITE_HEIGHT_DIMENSION), material);
+        mesh.labelWidth = finalWidth;
+        mesh.doubleSided = true;
+
+        // To change between bold and normal font
+        mesh.toBold = function () {
+            context.font = "bold " + size + "px monospace"; // important (2. after setting size)
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            context.fillStyle = "rgba(0,0,0,1.0)";
+            context.fillText(finalText, canvas.width / 2, canvas.height / 2);
+            texture.needsUpdate = true;
+        };
+        mesh.toNormal = function () {
+            context.font = size + "px monospace"; // important (2. after setting size)
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            context.fillStyle = "rgba(0,0,0,0.25)";
+            context.fillText(finalText, canvas.width / 2, canvas.height / 2);
+            texture.needsUpdate = true;
+        };
+        mesh.toSelected = function () {
+            context.font = "bold " + size + "px monospace"; // important (2. after setting size)
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            context.fillStyle = "rgba(50,200,50,1.0)";
+            context.fillText(finalText, canvas.width / 2, canvas.height / 2);
+            texture.needsUpdate = true;
+        };
+
+        mesh.tooltip = text;
+//        console.log(mesh)
+
+        return mesh;
+
+
+
     };
 
 

@@ -103,18 +103,20 @@ var INTERFACE = new function () {
                 e.preventDefault();
 
                 // Set button title and current cube URI
-                $("#id_cubeButton").text(label);
-                $("#id_pageTitle").text("Cube: " + label); // set page title
-                $("#id_cubeButton").attr("title", label + ":\n\n" + comment); // tooltip
+                $("#id_cubeButton").empty();
+                $("#id_cubeButton").append("<span class=cube-button-text>" + label + "</span>");
                 $("#id_cubeButton").append(" <span class='caret'></span>");
+                $("#id_cubeButton").attr("title", label + ":\n\n" + comment); // tooltip
+                $("#id_pageTitle").text("Cube: " + label); // set page title        TODO needed? smaller??
                 MAIN.currentCube = cubeName; // TODO Cube object?
-
-                // Show a loading screen while ajax infos are loading (dimensions + entities and measures)
-                INTERFACE.popupWhileAjax();
 
                 // Query available dimensions and measures and fill the lists
                 MAIN.loadDimensionList();
                 MAIN.loadMeasureList();
+
+                // Show a loading screen while ajax infos are loading (dimensions + entities and measures)
+                // Pre-select up to 3 dimensions per default to begin with after the ajax calls are done
+                INTERFACE.popupWhileAjax(showSomeData);
 
                 // TODO: nacheinander + popover anzeigen / verstecken!
                 // TDOD: oder: einfach alles mit default werten befüllen (dimensionen, measures) -> welche? wieviele?
@@ -193,15 +195,59 @@ var INTERFACE = new function () {
 
                 // Add measure to selected list
                 var addedMeasure = new Measure(measureName, label, "sum");
+                MAIN.measures = [] // TEMP only one measure? #####
                 MAIN.measures.push(addedMeasure);
 
+                // Change the measure (dropdown) button
+                $("#id_measureButton").empty();
+                $("#id_measureButton").append("<span class=cube-button-text>" + label + "</span>");
+                var badge = $('<span class="badge"></span>');
+                badge.addClass("ms-1"); // TODO different badge colors
+
+                // TODO auslesen von MAIN.currentAGG? #######################################
+                badge.text("SUM"); // TODO badge ID -> später agg ändern + toUppercase
+
+                $("#id_measureButton").append(badge);
+                $("#id_measureButton").append(" <span class='caret'></span>");
+
+                // Disable the selected measure from list (and re-enable all others)
+                $('[data-measure-name]').removeClass("disabled");
+                $('[data-measure-name="' + measureName + '"]').addClass("disabled");
+
                 // Add a measure button and its listeners
-                this.addMeasureButton(addedMeasure);
+//                this.addMeasureButton(addedMeasure); // TEMP nicht nötig bei nur 1 measure
 
             }.bind(this));
 
         }.bind(this));
+
+
+
+        // Include other measure options like color and aggregation
+        var aggItem = $('<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Change Aggregation...</a></li>');
+        var colorItem = $('<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Change Color...</a></li>');
+        measureList.append('<li role="presentation" class="divider"></li>');
+        measureList.append(aggItem);
+        measureList.append(colorItem);
+
+        // Add item listeners
+        aggItem.on("click", function (e) {
+//            TODO
+            alert("TODO");
+        });
+
+        colorItem.on("click", function (e) {
+//            TODO color picker?
+            alert("TODO");
+        });
+
+
+
     };
+
+
+    // TODO "addMeasureButton" erstmal nicht benutzt, da bug (?) in API und nur 1 measure möglich
+
 
     // Adds a measure button and its menu after the measure was selected.
     // TODO: measure kann manipuliert werden (agg setzen)!!!
@@ -213,6 +259,7 @@ var INTERFACE = new function () {
         // Rebuild a measure button and its menu
         var btnGroup = $('<div class="btn-group" id="' + buttonID + '"></div>');
         var button = $('<button class="btn dropdown-toggle btn-default" type="button" data-toggle="dropdown"></button>');
+        var text = $('<span class=button-text>' + measure.label + '</span>');
         var badge = $('<span class="badge"></span>');
         var menu = $('<ul class="dropdown-menu" role="menu"></ul>');
         var aggItem = $('<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Change Aggregation...</a></li>');
@@ -223,7 +270,7 @@ var INTERFACE = new function () {
 
         // Combine button and list
         btnGroup.append(button);
-        button.text(measure.label + " ");
+        button.append(text);
         button.append(badge);
         badge.addClass("ms-1"); // TODO different badge colors
         badge.text("SUM"); // TODO badge ID -> später agg ändern + toUppercase
@@ -312,6 +359,7 @@ var INTERFACE = new function () {
         // Rebuild a dimension button and its menu
         var btnGroup = $('<div class="btn-group" id="' + buttonID + '"></div>');
         var button = $('<button class="btn dropdown-toggle btn-default" type="button" data-toggle="dropdown"></button>');
+        var text = $('<span class=button-text>' + dimension.label + '</span>');
         var badge = $('<span class="badge" id="' + badgeID + '"></span>');
         var menu = $('<ul class="dropdown-menu" role="menu"></ul>');
         var filterItem = $('<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Filter Entities...</a></li>');
@@ -320,7 +368,7 @@ var INTERFACE = new function () {
 
         // Combine button and list
         btnGroup.append(button);
-        button.text(dimension.label + " ");
+        button.append(text);
         button.append(badge);
 
         var numEntities = MAIN.entityList[dimension.dimensionName].length;
@@ -490,51 +538,74 @@ var INTERFACE = new function () {
     };
 
     // Adds mouse events to the given label
-    this.addLabelListeners = function (label, entity) {
+    this.addEntityLabelListener = function (label, entity) {
 
         // TODO
 
 
         // ALTER CODE (X achse):
 
+        label.toggled = false;
+        label.onmouseover = function () {
+            if (!label.toggled) {
+                label.toBold();
+            }
+            // TODO show tooltip if too long label string
+            // TODO show pre-selected cubes matching the label for later selection (or a big slice around them)
+
+        };
+        label.onmouseout = function () {
+            if (!label.toggled) {
+                label.toNormal();
+            }
+            // TODO hide ...
+        };
+
+        label.onclick = function () {
+
+            alert(label.labelWidth);
+
+            // TODO: set status as selected (and all other labels of the same entity)
+            // TEST: hier immer nur 1 dimension
+//            toggleSelectEntity(entity); // TODO andersrum! man will ja NUR die ausgewählten haben! -> zweite auswalhmenge, die bevorzugen
+
+            label.toSelected(); // highlight color
+
+            if (!label.toggled) {
+                // TODO: show surrounding cube and keep entity in mind
+            } else {
+                // TODO: remove surrounding cube and remove entity from list (to accept later)
+            }
+
+            label.toggled = !label.toggled;
+
+            // TODO hide ...
+
+        };
+
+
+
+
+    };
+
+    // Adds mouse events to the given dimension label
+    this.addDimensionLabelListener = function (label, dimension) {
+
+        // TODO
+
 //        label.toggled = false;
+//
 //        label.onmouseover = function () {
-//            if (!label.toggled) {
-//                label.toBold();
-//            }
-//            // TODO show tooltip if too long label string
-//            // TODO show pre-selected cubes matching the label for later selection (or a big slice around them)
 //
 //        };
+//
 //        label.onmouseout = function () {
-//            if (!label.toggled) {
-//                label.toNormal();
-//            }
-//            // TODO hide ...
+//
 //        };
 //
 //        label.onclick = function () {
 //
-//            // TODO: set status as selected (and all other labels of the same entity)
-//            // TEST: hier immer nur 1 dimension
-//            toggleSelectEntity(entity); // TODO andersrum! man will ja NUR die ausgewählten haben! -> zweite auswalhmenge, die bevorzugen
-//
-//            label.toSelected(); // highlight color
-//
-//            if (!label.toggled) {
-//                // TODO: show surrounding cube and keep entity in mind
-//            } else {
-//                // TODO: remove surrounding cube and remove entity from list (to accept later)
-//            }
-//
-//            label.toggled = !label.toggled;
-//
-//            // TODO hide ...
-//
 //        };
-
-
-
 
     };
 
@@ -575,7 +646,8 @@ var INTERFACE = new function () {
             $('#id_loginModalID').focus(); // TODO geht nicht :C
 
             // TEMP for testing purpose ########################################
-            $('#id_loginModalID').val("8023903");
+            $('#id_loginModalID').val("https://github.com/bayerls");
+//            $('#id_loginModalID').val("8023903");
 
 
         });
@@ -606,7 +678,7 @@ var INTERFACE = new function () {
     };
 
     // Pops up a blocking loading screen that is removed when all ajax calls are done
-    this.popupWhileAjax = function () {
+    this.popupWhileAjax = function (callback) {
         this.popupLoadingScreen("Processing...");
         $(document).ajaxStop(function () {
             console.log("DEBUG: all ajax done");
@@ -614,12 +686,26 @@ var INTERFACE = new function () {
 
             // Remove loading screen
             $('#id_loadingModal').modal('hide');
+
+            // Execute given callback function
+            if (callback) {
+                callback();
+            }
         });
     };
 
     // enables / disables the Apply button according to selected items
     this.refreshApplyButton = function () {
         // TODO: needed?
+    };
+
+    // Updates the whole interface (buttons, menus) according to the model data
+    this.updateInterface = function () {
+
+        // TODO
+
+        // TODO enable / disable: Undo, Redo, Accept, Cancel, (cubes dimensions, measures, filters, + menus ?)
+
     };
 
     // Undo all selected labels and disable Accept button
@@ -713,8 +799,7 @@ var INTERFACE = new function () {
             itemLink.on("click", function (e) {
                 e.preventDefault();
 
-                // TODO: enable MEASURE input, hide dimension popover, show measure popover (first time only)
-                // TODO correct placement below panel (after adding dimension field)
+                // TODO: hide dimension popover / ganz weg?
                 $("#id_dimensionPanel").popover("hide");
 //                $("#id_measurePanel").popover("show"); // TEMP disabled
 
@@ -730,7 +815,7 @@ var INTERFACE = new function () {
 
                 var entities = MAIN.getFirstEntities(MAIN.entityList, dimensionName, num); // ...
                 var dimension = new Dimension(dimensionName, label, entities);
-                dimensions.push(dimension);
+                dimensions.push(dimension); // add it to the list of selected dimensions
 
                 // Add the dimension button with its menu and listeners
                 this.addDimensionButton(dimension, axis, dimensions);
@@ -738,6 +823,26 @@ var INTERFACE = new function () {
             }.bind(this));
         }.bind(this));
     }.bind(this);
+
+
+    // Select some dimensions and a measure and visualize them right away
+    var showSomeData = function () {
+
+        // Dimensions
+        $("#id_xDimensionList > li:nth-child(1) > a").click(); // Preselect X
+        $("#id_yDimensionList > li:nth-child(2) > a").click(); // Preselect Y
+        $("#id_zDimensionList > li:nth-child(3) > a").click(); // Preselect Z
+
+        // Measures
+        $("#id_measureList > li:nth-child(1) > a").click(); // Preselect measure
+
+        // Visualize!
+        MAIN.applyOLAP();
+
+        // TODO: updateUI() // check states for undo/redo/cancel/apply/...
+
+    }.bind(this);
+
 
     // Help function...
     var isSelectedDimension = function (dimensionName) {
