@@ -42,24 +42,34 @@ body {
     /* button size in panels */
     .panel-body button .cube-button-text {
         max-width: 200px;
-        vertical-align: top;
         text-overflow: ellipsis;
         overflow: hidden;
-        display: inline-block;
-        padding-right: 5px;
     }
 
     /* button size in panels */
     .panel-body button .button-text{
         max-width: 130px;
-        vertical-align: top;
         text-overflow: ellipsis;
         overflow: hidden;
-        display: inline-block;
-        padding-right: 5px;
     }
 
 }
+
+/* button size in panels (all screen sizes) */
+.panel-body button .button-text{
+    vertical-align: top;
+    display: inline-block;
+    padding-right: 5px;
+}
+
+/* button size in panels (all screen sizes) */
+.panel-body button .cube-button-text {
+    vertical-align: top;
+    display: inline-block;
+    padding-right: 5px;
+}
+
+
 /* entity selection buttons (labels) */
 #id_modalBody label.active {
     background-color: #CAF2AB;
@@ -145,6 +155,11 @@ body {
         margin-top: 0;
         padding: 0 15px 15px 15px!important;
     }
+}
+
+.dimension-divider {
+    border-bottom: 1px solid #dddddd;
+    margin: -10px -15px 10px -15px;
 }
 
 #id_xButtonArea,

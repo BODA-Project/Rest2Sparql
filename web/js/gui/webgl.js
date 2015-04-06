@@ -148,24 +148,24 @@ var WEBGL = new function () {
             case "x" :
                 // Position
                 label.position.x = position;
-                label.position.y = -0.5;
-                label.position.z = (this.totalSize[2] + (label.labelWidth - 1) / 2 + row * this.SPRITE_LENGTH);
+                label.position.y = (this.totalSize[1] + (label.labelWidth - 1) / 2 + row * this.SPRITE_LENGTH);
+                label.position.z = -0.5;
 
                 // Rotation
-                label.rotation.x = -degToRad(90);
-                label.rotation.z = degToRad(90);
+//                label.rotation.x = -degToRad(90);
+                label.rotation.z = -degToRad(90);
                 break;
 
             case "y" :
                 // Position (needs no rotation)
-                label.position.x = (this.totalSize[0] + (label.labelWidth - 1) / 2 + row * this.SPRITE_LENGTH);
+                label.position.x = -(label.labelWidth + 1) / 2 - row * this.SPRITE_LENGTH;
                 label.position.y = position;
                 label.position.z = -0.5;
                 break;
 
             case "z" :
                 // Position
-                label.position.x = (this.totalSize[0] + (label.labelWidth - 1) / 2 + row * this.SPRITE_LENGTH);
+                label.position.x = -(label.labelWidth + 1) / 2 - row * this.SPRITE_LENGTH;
                 label.position.y = -0.5;
                 label.position.z = position;
 
@@ -181,21 +181,25 @@ var WEBGL = new function () {
     // TODO bei 2D darstellung -> rotation nach unten bei X-labels
     this.addDimensionLabel = function (axis, dimension, row, numDimensions) {
         var label = this.createDimensionLabel(dimension.label, axis);
-        var labelOffset = numDimensions * this.SPRITE_LENGTH + 0.5 + row * this.SPRITE_HEIGHT_DIMENSION; // EntityLabels + previous DimensionLabels
+        var labelOffset = numDimensions * this.SPRITE_LENGTH + row * this.SPRITE_HEIGHT_DIMENSION; // EntityLabels + previous DimensionLabels
         switch (axis) {
             case "x" :
                 // Position
+//                label.position.x = (this.totalSize[0] - 1) / 2;
+//                label.position.y = -0.5;
+//                label.position.z = this.totalSize[2] + labelOffset;
+
                 label.position.x = (this.totalSize[0] - 1) / 2;
-                label.position.y = -0.5;
-                label.position.z = this.totalSize[2] + labelOffset;
+                label.position.y = this.totalSize[1] + labelOffset + this.SPRITE_HEIGHT_DIMENSION - 1;
+                label.position.z = -0.5;
 
                 // Rotation
-                label.rotation.x = -degToRad(90);
+//                label.rotation.x = -degToRad(90);
                 break;
 
             case "y" :
                 // Position
-                label.position.x = this.totalSize[0] + labelOffset;
+                label.position.x = -this.SPRITE_HEIGHT_DIMENSION - labelOffset;
                 label.position.y = Math.max((label.labelWidth - 1) / 2, (this.totalSize[1] - 1) / 2); // to not overlap with Z labels
                 label.position.z = -0.5;
 
@@ -205,7 +209,7 @@ var WEBGL = new function () {
 
             case "z" :
                 // Position
-                label.position.x = this.totalSize[0] + labelOffset;
+                label.position.x = -this.SPRITE_HEIGHT_DIMENSION - labelOffset;
                 label.position.y = -0.5;
                 label.position.z = Math.max((label.labelWidth - 1) / 2, (this.totalSize[2] - 1) / 2); // to not overlap with Y labels
 
