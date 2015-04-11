@@ -8,8 +8,10 @@ var WEBGL = new function () {
     this.MAX_LABEL_LENGTH = 20;
     this.SPRITE_LENGTH = 6;
     this.SPRITE_HEIGHT_DIMENSION = 1.2;
+    this.COLOR_SELECTION = 0xff2020;
     this.COLOR_LOWEST = 0xdadada; // Almost white
     this.COLOR_HIGHEST = 0x3484CF; // Dark blue TODO custom color?
+//    this.COLOR_HIGHEST = 0x0000a0; // Dark blue TODO custom color?
     this.COLOR_WHITE = new THREE.Color(0xffffff);
     this.COLOR_HIGHLIGHT = new THREE.Color(0xd8d8d8);
 
@@ -77,19 +79,16 @@ var WEBGL = new function () {
         cube.material.color = this.COLOR_HIGHLIGHT;
 
         // Show lines around the cube
-
-        // TODO: sind jetzt scheinbar klickbar -> flackern
-
-//        cube.outline = new THREE.EdgesHelper(cube);
-//        cube.outline.material.color.set(cube.material.color);
-//        cube.outline.material.linewidth = 3;
-//        this.scene.add(cube.outline);
+        cube.outline = new THREE.EdgesHelper(cube);
+        cube.outline.material.color.set(cube.lineColor);
+        cube.outline.material.linewidth = 3;
+        this.scene.add(cube.outline);
     };
 
     // Resets a highlighted cube to its normal state
     this.resetCube = function (cube) {
         cube.material.color = this.COLOR_WHITE;
-//        this.scene.remove(cube.outline);
+        this.scene.remove(cube.outline);
     };
 
     // Adds a cube at given coordinates to the scene
@@ -123,6 +122,7 @@ var WEBGL = new function () {
 
         // Add additional information to each result cube
         cube.measureColor = resultColor; // save color to object TEMP first one for now...
+        cube.lineColor = resultColor.clone().multiplyScalar(0.75); // save color to object TEMP first one for now...
 
         // Update the total size of the visualization
         $.each(this.totalSize, function (i, size) {
@@ -144,6 +144,7 @@ var WEBGL = new function () {
     // TODO bei 2D darstellung -> rotation nach unten bei X-labels
     this.addEntityLabel = function (axis, position, entity, row) {
         var label = this.createEntityLabel(entity.label);
+        label.axis = axis; // Save the axis which it belongs to
         switch (axis) {
             case "x" :
                 // Position
@@ -204,7 +205,7 @@ var WEBGL = new function () {
                 label.position.z = -0.5;
 
                 // Rotation
-                label.rotation.z = degToRad(90);
+                label.rotation.z = -degToRad(90);
                 break;
 
             case "z" :
@@ -215,7 +216,7 @@ var WEBGL = new function () {
 
                 // Rotation
                 label.rotation.x = -degToRad(90);
-                label.rotation.z = degToRad(90);
+                label.rotation.z = -degToRad(90);
                 break;
         }
         WEBGL.scene.add(label);
@@ -233,6 +234,65 @@ var WEBGL = new function () {
 //        gridHelper.position.set(centerPoint[0], -0.5, centerPoint[2]);
 //        scene.add(gridHelper);
 
+    };
+
+    // Shows a surrounding transparent cube of a selected label
+    this.addSelectionCube = function (label) {
+
+        var x, y, z, width, height, depth;
+
+        switch (label.axis) {
+            case "x" :
+                x = label.position.x;
+                y = (this.totalSize[1] - 1) / 2;
+                z = (this.totalSize[2] - 1) / 2;
+                width = 1 + 0.02; // TODO so breit wie anzahl an leaves (falls stacked)
+                height = this.totalSize[1] + 0.02;
+                depth = this.totalSize[2] + 0.02;
+                break;
+            case "y" :
+                x = (this.totalSize[0] - 1) / 2;
+                y = label.position.y;
+                z = (this.totalSize[2] - 1) / 2;
+                width = this.totalSize[0] + 0.04;
+                height = 1 + 0.04; // TODO so breit wie anzahl an leaves (falls stacked)
+                depth = this.totalSize[2] + 0.04;
+                break;
+            case "z" :
+                x = (this.totalSize[0] - 1) / 2;
+                y = (this.totalSize[1] - 1) / 2;
+                z = label.position.z + 0.06;
+                width = this.totalSize[0] + 0.06;
+                height = this.totalSize[1] + 0.06;
+                depth = 1; // TODO so breit wie anzahl an leaves (falls stacked)
+                break;
+        }
+        var geometry = new THREE.BoxGeometry(width, height, depth);
+        var material = new THREE.MeshLambertMaterial({color: this.COLOR_SELECTION});
+        material.transparent = true;
+        material.opacity = 0.15;
+        label.selectionCube = new THREE.Mesh(geometry, material);
+        label.selectionCube.position.set(x, y, z);
+
+        console.log(label.selectionCube);
+
+//        label.selectionCube.scale.set(scale,scale,scale);
+        label.selectionCubeOutline = new THREE.BoxHelper(label.selectionCube);
+        label.selectionCubeOutline.material.color.set(this.COLOR_SELECTION);
+        label.selectionCubeOutline.material.linewidth = 3;
+        label.selectionCubeOutline.material.opacity = 0.25;
+        label.selectionCubeOutline.material.transparent = true;
+
+        this.scene.add(label.selectionCube);
+        this.scene.add(label.selectionCubeOutline);
+    };
+
+    // Hides / Removes the selection cube of a given label
+    this.removeSelectionCube = function (label) {
+        this.scene.remove(label.selectionCube);
+        this.scene.remove(label.selectionCubeOutline);
+        label.selectionCube = null;
+        label.selectionCubeOutline = null;
     };
 
 
@@ -316,7 +376,7 @@ var WEBGL = new function () {
         mesh.toSelected = function () {
             context.font = "bold " + size + "px monospace"; // important (2. after setting size)
             context.clearRect(0, 0, canvas.width, canvas.height);
-            context.fillStyle = "rgba(50,200,50,1.0)";
+            context.fillStyle = "rgba(200,50,50,1.0)";
             context.fillText(text, canvas.width / 2, canvas.height / 2);
             texture.needsUpdate = true;
         };
@@ -340,7 +400,8 @@ var WEBGL = new function () {
         var size = 30;
         var abbrSign = '\u2026'; // a single char "..." sign
 
-        var finalText = String(axis.toUpperCase() + ": " + text);
+//        var finalText = String(axis.toUpperCase() + ": " + text); // with Axis label
+        var finalText = text;
         if (finalText.length > this.MAX_LABEL_LENGTH) {
             finalText = finalText.substring(0, this.MAX_LABEL_LENGTH - abbrSign.length);
             finalText = finalText + abbrSign;
@@ -399,7 +460,7 @@ var WEBGL = new function () {
         mesh.toSelected = function () {
             context.font = "bold " + size + "px monospace"; // important (2. after setting size)
             context.clearRect(0, 0, canvas.width, canvas.height);
-            context.fillStyle = "rgba(50,200,50,1.0)";
+            context.fillStyle = "rgba(200,50,50,1.0)";
             context.fillText(finalText, canvas.width / 2, canvas.height / 2);
             texture.needsUpdate = true;
         };
@@ -426,11 +487,10 @@ var WEBGL = new function () {
         // Compute a background color
         var colorLowest = new THREE.Color(this.COLOR_LOWEST);
         var colorHighest = new THREE.Color(this.COLOR_HIGHEST);
-        var backgroundColor = colorLowest.multiplyScalar(1 - ratio).add(colorHighest.multiplyScalar(ratio)).getHexString();
+        var backgroundColor = colorLowest.multiplyScalar(1 - ratio).add(colorHighest.multiplyScalar(ratio));
 
         // TODO (evtl) method to change background color to a given value
 
-        ratio = Math.max(ratio, 0.25);
         var fontSize = 20;
         var backgroundMargin = fontSize / 2;
         var canvas = document.createElement("canvas");
@@ -445,9 +505,21 @@ var WEBGL = new function () {
         context.textAlign = "center";
         context.textBaseline = "middle";
 
-        context.fillStyle = "#" + backgroundColor;
+        context.fillStyle = "#" + backgroundColor.getHexString();
         context.fillRect(0, 0, canvas.width, canvas.height);
-        context.fillStyle = "rgba(0,0,0," + ratio + ")"; // TODO if brightness below 50% -> white font und 1-ratio
+
+
+        // TODO needed white font?
+        var lightness = backgroundColor.getHSL().l;
+        if (lightness < 0.5) {
+            var opacity = 0.25 + lightness;
+            context.fillStyle = "rgba(255,255,255," + opacity + ")";
+        } else {
+            var opacity = 0.25 + (1 - lightness);
+            context.fillStyle = "rgba(0,0,0," + opacity + ")";
+        }
+
+
         context.fillText(text, canvas.width / 2, canvas.height / 2);
 
         var texture = new THREE.Texture(canvas);
@@ -540,11 +612,14 @@ var WEBGL = new function () {
 
     };
 
+    // Empty the current scene
     this.unloadVisualization = function () {
-        // TODO: hide/empty current scene, and show loading screen
-
         // Clear old scene
-        this.scene.children = []; // TODO better way?
+        var obj, i;
+        for (i = this.scene.children.length - 1; i >= 0; i--) {
+            obj = this.scene.children[i];
+            this.scene.remove(obj);
+        }
         this.scene.add(this.lighting); // Add light again
         this.scene.add(this.ambientLight);
 
@@ -568,22 +643,30 @@ var WEBGL = new function () {
         var intersections = this.raycaster.intersectObjects(this.scene.children); // TODO erstmal so, inperformant aber geht
         if (intersections.length > 0) {
 
-            // Only call once while hovering one object
-            if (this.intersected !== intersections[0].object) {
-//            console.log(intersections[0])
+            // Hover through objects without hover events
+            var hitSomething = false;
+            $.each(intersections, function (index, obj) {
+                if (obj.object.onmouseover !== undefined) {
 
-                if (this.intersected && this.intersected.onmouseout !== undefined) {
-//                console.log(intersected)
-                    this.intersected.onmouseout();
-                }
+                    // leave previous object
+                    if (this.intersected && this.intersected.onmouseout !== undefined) {
+                        this.intersected.onmouseout();
+                    }
 
-                // Grab new intersection object
-                this.intersected = intersections[0].object;
-                if (this.intersected.onmouseover !== undefined) {
-                    this.intersected.onmouseover();
+                    // hover the new object
+                    obj.object.onmouseover();
+                    this.renderer.domElement.style.cursor = 'pointer'; // Set cursor to hand TODO only certain types (resut cubes, labels, ...)
+                    this.intersected = obj.object; // Grab new intersection object
+                    hitSomething = true;
+                    return false;
                 }
+            }.bind(this));
+
+            // no object with hover event -> leave object
+            if (!hitSomething && this.intersected && this.intersected.onmouseout !== undefined) {
+                this.intersected.onmouseout();
+                this.renderer.domElement.style.cursor = 'auto'; // Set cursor to normal
             }
-            this.renderer.domElement.style.cursor = 'pointer'; // Set cursor to hand TODO only certain types (resut cubes, labels, ...)
         } else if (this.intersected) {
             // Not hovering above anything anymore
             if (this.intersected.onmouseout !== undefined) {
@@ -604,9 +687,12 @@ var WEBGL = new function () {
         var intersections = this.raycaster.intersectObjects(this.scene.children); // TODO erstmal so, inperformant aber geht
         if (intersections.length > 0) {
             // TODO: only if no disabled flag set (?)
-            if (intersections[0].object.onclick !== undefined) {
-                intersections[0].object.onclick();
-            }
+            $.each(intersections, function (index, obj) {
+                if (obj.object.onclick !== undefined) {
+                    obj.object.onclick();
+                    return false;
+                }
+            });
         }
     };
 

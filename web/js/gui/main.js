@@ -243,12 +243,18 @@ var MAIN = new function () {
             $.each(results, function (index1, result) {
                 $.each(this.measures, function (index2, measure) {
                     var measureName = measure.measureName;
-                    var value = this.getMeasureValueFromJson(result, measure); // TODO: fehlende zahlen im json bei AGG???
+                    var measureValue = this.getMeasureValueFromJson(result, measure); // TODO: fehlende zahlen im json bei AGG???
+
+                    // TEMP fix for API error
+                    if (measureValue === null) {
+                        return true; // skip this result
+                    }
+
                     // TODO: kann sein, dass gar kein measure im result drin steht... (API problem beim parsen von "-")
                     var currentHighest = highestMeasures[measureName];
                     var currentLowest = lowestMeasures[measureName];
-                    highestMeasures[measureName] = (currentHighest === undefined || currentHighest < value) ? value : currentHighest;
-                    lowestMeasures[measureName] = (currentLowest === undefined || currentLowest > value) ? value : currentLowest;
+                    highestMeasures[measureName] = (currentHighest === undefined || currentHighest < measureValue) ? measureValue : currentHighest;
+                    lowestMeasures[measureName] = (currentLowest === undefined || currentLowest > measureValue) ? measureValue : currentLowest;
                 }.bind(this));
             }.bind(this));
 
@@ -266,6 +272,12 @@ var MAIN = new function () {
                     var highestMeasure = highestMeasures[measure.measureName];
                     var lowestMeasure = lowestMeasures[measure.measureName];
                     var measureValue = this.getMeasureValueFromJson(result, measure);
+
+                    // TEMP fix for API error
+                    if (measureValue === null) {
+                        return true; // skip this result
+                    }
+
                     ratios[index2] = Math.max(1, (measureValue - lowestMeasure)) / Math.max(1, (highestMeasure - lowestMeasure));
                     values[index2] = measureValue;
 
@@ -547,7 +559,11 @@ var MAIN = new function () {
     // Returns the numerical value of a given measure of a json result
     this.getMeasureValueFromJson = function (result, measure) {
 //        console.log(result);
-        return parseFloat(result["V_NAME_AGG"].value); // TODO so stehts im json von rest2sparql, was wenn mehrere measures?
+        if (result["V_NAME_AGG"]) {
+            return parseFloat(result["V_NAME_AGG"].value); // TODO so stehts im json von rest2sparql, was wenn mehrere measures?
+        } else {
+            return null;
+        }
     };
 
     // Returns a generated entity of a given dimension from a json result

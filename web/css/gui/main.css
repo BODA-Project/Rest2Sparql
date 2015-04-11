@@ -47,6 +47,7 @@ body {
     }
 
     /* button size in panels */
+    .panel-body a .button-text,
     .panel-body button .button-text{
         max-width: 130px;
         text-overflow: ellipsis;
@@ -56,6 +57,7 @@ body {
 }
 
 /* button size in panels (all screen sizes) */
+.panel-body a .button-text,
 .panel-body button .button-text{
     vertical-align: top;
     display: inline-block;

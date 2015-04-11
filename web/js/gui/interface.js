@@ -358,7 +358,7 @@ var INTERFACE = new function () {
 
         // Rebuild a dimension button and its menu
         var btnGroup = $('<div class="btn-group" id="' + buttonID + '"></div>');
-        var button = $('<button class="btn dropdown-toggle btn-default" type="button" data-toggle="dropdown"></button>');
+        var button = $('<a class="btn dropdown-toggle btn-default" type="button" data-toggle="dropdown"></a>');
         var text = $('<span class=button-text>' + dimension.label + '</span>');
         var badge = $('<span class="badge" id="' + badgeID + '"></span>');
         var menu = $('<ul class="dropdown-menu" role="menu"></ul>');
@@ -481,9 +481,33 @@ var INTERFACE = new function () {
         });
 
 
+        // TODO Add drag and rop functionality to the button#####################
+        button.attr("draggable", "true");
+        button.on("dragstart", function (e) {
+            console.log("EVENT:", e);
+        });
+
+        buttonArea.on("drop", function (e) {
+            console.log("EVENT:", e);
+            alert("DROP! " + e)
+            e.preventDefault();
+
+        });
+
+        buttonArea.on("dragover", function (e) {
+            console.log("EVENT:", e);
+            e.stopPropagation();
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'copy';
+        });
+
+
+
+
+
     };
 
-    // Adds mouse events to a given result cube TODO sauberes result model!!!!!!!!
+    // Adds mouse events to a given result cube
     this.addCubeListeners = function (cube, result) {
 
         // TODO hier alle entities rausholen, in function nur noch auf labelMap zugreifen und entsprechende labels highlighten!!!
@@ -563,7 +587,7 @@ var INTERFACE = new function () {
 
         label.onclick = function () {
 
-            alert(label.labelWidth);
+//            alert(label.labelWidth);
 
             // TODO: set status as selected (and all other labels of the same entity)
             // TEST: hier immer nur 1 dimension
@@ -573,8 +597,20 @@ var INTERFACE = new function () {
 
             if (!label.toggled) {
                 // TODO: show surrounding cube and keep entity in mind
+
+
+                // TODO: für alle (stacked) labels des selben entities
+                WEBGL.addSelectionCube(label);
+
+
             } else {
                 // TODO: remove surrounding cube and remove entity from list (to accept later)
+
+
+                WEBGL.removeSelectionCube(label);
+
+
+
             }
 
             label.toggled = !label.toggled;
