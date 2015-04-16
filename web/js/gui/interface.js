@@ -195,7 +195,7 @@ var INTERFACE = new function () {
 
                 // Add measure to selected list
                 var addedMeasure = new Measure(measureName, label, "sum");
-                MAIN.measures = [] // TEMP only one measure? #####
+                MAIN.measures = []; // TEMP only one measure? #####
                 MAIN.measures.push(addedMeasure);
 
                 // Change the measure (dropdown) button
@@ -363,6 +363,10 @@ var INTERFACE = new function () {
         var badge = $('<span class="badge" id="' + badgeID + '"></span>');
         var menu = $('<ul class="dropdown-menu" role="menu"></ul>');
         var filterItem = $('<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Filter Entities...</a></li>');
+        var drillItem = $('<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Rollup ?</a></li>');
+//        var drillItem = $('<li role="presentation"><label role="menuitem"><input type="checkbox" autocomplete="off"> Rollup </label></li>');
+
+
         var dividerItem = $('<li role="presentation" class="divider"></li>');
         var removeItem = $('<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Remove</a></li>');
 
@@ -376,6 +380,7 @@ var INTERFACE = new function () {
         badge.text(badgeNum + " / " + numEntities);
 
         menu.append(filterItem);
+        menu.append(drillItem);
         menu.append(dividerItem);
         menu.append(removeItem);
         btnGroup.append(menu);
@@ -481,7 +486,15 @@ var INTERFACE = new function () {
         });
 
 
+
+
+
         // TODO Add drag and rop functionality to the button#####################
+
+
+        // TODO
+
+
         button.attr("draggable", "true");
         button.on("dragstart", function (e) {
             console.log("EVENT:", e);
@@ -512,7 +525,7 @@ var INTERFACE = new function () {
 
         // TODO hier alle entities rausholen, in function nur noch auf labelMap zugreifen und entsprechende labels highlighten!!!
 
-
+        cube.result = result; // Temporarly save the result to the cube
 
 
         cube.onclick = function () {
@@ -543,6 +556,7 @@ var INTERFACE = new function () {
 
         cube.onmouseover = function () {
             WEBGL.highlightCube(cube);
+            WEBGL.highlightLabels(cube);
 
             // TODO: TOOLTIP schon bei hover? oder erst bei click?
             // TODO: highlight matching labels (use bold font; -> alternative texture)
@@ -553,6 +567,7 @@ var INTERFACE = new function () {
 
         cube.onmouseout = function () {
             WEBGL.resetCube(cube);
+            WEBGL.resetLabels(cube);
 
             // TODO: reset matching labels (use normal font; -> standard texture)
 //            WEBGL.resetLabels(result); // TODO labelMap -> to normal font
@@ -562,14 +577,13 @@ var INTERFACE = new function () {
     };
 
     // Adds mouse events to the given label
-    this.addEntityLabelListener = function (label, entity) {
+    this.addEntityLabelListener = function (label) {
 
-        // TODO
-
-
-        // ALTER CODE (X achse):
+//        label.entity;
+//        label.selectionSize;
 
         label.toggled = false;
+
         label.onmouseover = function () {
             if (!label.toggled) {
                 label.toBold();
@@ -585,42 +599,43 @@ var INTERFACE = new function () {
             // TODO hide ...
         };
 
+
         label.onclick = function () {
 
-//            alert(label.labelWidth);
-
-            // TODO: set status as selected (and all other labels of the same entity)
             // TEST: hier immer nur 1 dimension
 //            toggleSelectEntity(entity); // TODO andersrum! man will ja NUR die ausgewählten haben! -> zweite auswalhmenge, die bevorzugen
 
-            label.toSelected(); // highlight color
+//            console.log("ENTITY ", label.entity, "LABEL", label)
 
             if (!label.toggled) {
-                // TODO: show surrounding cube and keep entity in mind
 
+                $.each(label.sprites, function (i, sprite) {
+                    sprite.showSelection();
+                    sprite.toggled = true;
+                });
 
-                // TODO: für alle (stacked) labels des selben entities
-                WEBGL.addSelectionCube(label);
-
+                // TODO: add entity to temp selection
 
             } else {
-                // TODO: remove surrounding cube and remove entity from list (to accept later)
+                $.each(label.sprites, function (i, sprite) {
+                    sprite.hideSelection();
+                    sprite.toggled = false;
+                });
 
-
-                WEBGL.removeSelectionCube(label);
-
-
+                // TODO remove from temp selection
 
             }
-
-            label.toggled = !label.toggled;
-
-            // TODO hide ...
-
         };
 
+        label.showSelection = function () {
+            label.toSelected(); // highlight color
+            WEBGL.addSelectionCube(label);
+        };
 
-
+        label.hideSelection = function () {
+            label.toNormal(); // highlight color // TODO: to previous?
+            WEBGL.removeSelectionCube(label);
+        };
 
     };
 

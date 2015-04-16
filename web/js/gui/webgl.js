@@ -9,9 +9,8 @@ var WEBGL = new function () {
     this.SPRITE_LENGTH = 6;
     this.SPRITE_HEIGHT_DIMENSION = 1.2;
     this.COLOR_SELECTION = 0xff2020;
-    this.COLOR_LOWEST = 0xdadada; // Almost white
-    this.COLOR_HIGHEST = 0x3484CF; // Dark blue TODO custom color?
-//    this.COLOR_HIGHEST = 0x0000a0; // Dark blue TODO custom color?
+    this.COLOR_LOWEST = 0xe0e0e0; // Almost white
+    this.COLOR_HIGHEST = 0x4D91D5; // Dark blue TODO custom color?
     this.COLOR_WHITE = new THREE.Color(0xffffff);
     this.COLOR_HIGHLIGHT = new THREE.Color(0xd8d8d8);
 
@@ -91,6 +90,24 @@ var WEBGL = new function () {
         this.scene.remove(cube.outline);
     };
 
+    // Hilights a given labels's similar labels
+    this.highlightLabels = function (label) {
+        $.each(label.sprites, function (i, sprite) {
+            if (!sprite.toggled) {
+                sprite.toBold();
+            }
+        });
+    };
+
+    // Resets a given labels's similar labels
+    this.resetLabels = function (label) {
+        $.each(label.sprites, function (i, sprite) {
+            if (!sprite.toggled) {
+                sprite.toNormal();
+            }
+        });
+    };
+
     // Adds a cube at given coordinates to the scene
     this.addCube = function (coordinates, values, ratios) {
 
@@ -98,8 +115,9 @@ var WEBGL = new function () {
         var value = values[0]; // TEMP only first value is shown for now
 
         // Define the cube
-        var cubeSize = 0.80 + 0.20 * ratio;
-//        var cubeSize = 0.95;
+//        var cubeSize = 0.80 + 0.20 * ratio;
+        var cubeSize = 0.95;
+//        var cubeSize = 1;
         var geometry = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize); // TODO nicht würfel sonder etwas flacherer quader -> ca 3x3x2
         var texture = this.createSqareLabelTexture(value, ratio); // TEMP only first value for now ( or: "1st \n 2nd")
         var material = new THREE.MeshLambertMaterial({map: texture});
@@ -112,7 +130,6 @@ var WEBGL = new function () {
         var colorHighest = new THREE.Color(this.COLOR_HIGHEST);
 
         var resultColor = colorLowest.multiplyScalar(1 - ratio).add(colorHighest.multiplyScalar(ratio));
-//        material.emissive = resultColor;
 
         var cube = new THREE.Mesh(geometry, material);
         cube.position.set(coordinates[0], coordinates[1], coordinates[2]);
@@ -132,7 +149,7 @@ var WEBGL = new function () {
         // TEST: Lines around every cube
 //        var cube2 = new THREE.EdgesHelper(cube);
 //        cube2.material.color.set(resultColor);
-//        cube2.material.linewidth = 1;
+//        cube2.material.linewidth = 2;
 //        this.scene.add(cube2);
 
         return cube;
@@ -237,16 +254,14 @@ var WEBGL = new function () {
     };
 
     // Shows a surrounding transparent cube of a selected label
-    this.addSelectionCube = function (label) {
-
+    this.addSelectionCube = function (label) { // TODO label + width ?
         var x, y, z, width, height, depth;
-
         switch (label.axis) {
             case "x" :
                 x = label.position.x;
                 y = (this.totalSize[1] - 1) / 2;
                 z = (this.totalSize[2] - 1) / 2;
-                width = 1 + 0.02; // TODO so breit wie anzahl an leaves (falls stacked)
+                width = label.selectionSize + 0.02;
                 height = this.totalSize[1] + 0.02;
                 depth = this.totalSize[2] + 0.02;
                 break;
@@ -255,16 +270,16 @@ var WEBGL = new function () {
                 y = label.position.y;
                 z = (this.totalSize[2] - 1) / 2;
                 width = this.totalSize[0] + 0.04;
-                height = 1 + 0.04; // TODO so breit wie anzahl an leaves (falls stacked)
+                height = label.selectionSize + 0.04;
                 depth = this.totalSize[2] + 0.04;
                 break;
             case "z" :
                 x = (this.totalSize[0] - 1) / 2;
                 y = (this.totalSize[1] - 1) / 2;
-                z = label.position.z + 0.06;
+                z = label.position.z;
                 width = this.totalSize[0] + 0.06;
                 height = this.totalSize[1] + 0.06;
-                depth = 1; // TODO so breit wie anzahl an leaves (falls stacked)
+                depth = label.selectionSize + 0.06;
                 break;
         }
         var geometry = new THREE.BoxGeometry(width, height, depth);
@@ -273,8 +288,6 @@ var WEBGL = new function () {
         material.opacity = 0.15;
         label.selectionCube = new THREE.Mesh(geometry, material);
         label.selectionCube.position.set(x, y, z);
-
-        console.log(label.selectionCube);
 
 //        label.selectionCube.scale.set(scale,scale,scale);
         label.selectionCubeOutline = new THREE.BoxHelper(label.selectionCube);
@@ -303,7 +316,7 @@ var WEBGL = new function () {
         // TODO better view / distance / panning view?
 
         var distance = Math.max(this.totalSize[0], this.totalSize[1], this.totalSize[2]);
-        this.camera.position.x = this.totalSize[0] + 5;
+        this.camera.position.x = -this.totalSize[0] - 5;
         this.camera.position.y = this.totalSize[1] + 5;
         this.camera.position.z = this.totalSize[2] + distance * 2; // TODO how far away?
         this.controls.target = new THREE.Vector3(this.totalSize[0] / 2, this.totalSize[1] / 2, this.totalSize[2] / 2);

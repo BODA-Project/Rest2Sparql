@@ -285,6 +285,11 @@ var MAIN = new function () {
 //                    ratios[index2] = Math.log((ratios[index2] * 9) + 1) / Math.log(10);
                 }.bind(this));
 
+                // TEMP fix for API error
+                if (values.length === 0) {
+                    return true; // skip this result
+                }
+
                 // Get the coordinates based on the result's dimension-entities
                 var coordinates = getCoordinates(result);
 
@@ -299,11 +304,16 @@ var MAIN = new function () {
             insertEntityLabels(this.yDimensions, "y");
             insertEntityLabels(this.zDimensions, "z");
 
-
             // Draw (stacked) dimension + axis labels
             insertDimensionLabels(this.xDimensions, "x");
             insertDimensionLabels(this.yDimensions, "y");
             insertDimensionLabels(this.zDimensions, "z");
+
+            // Add references to label sprites for each cube
+            assignLabelsToCubes();
+
+            // Add references to label sprites of the same entity for each label
+            assignLabelsToLabels();
 
 
             // TODO iterate through xyzDimensions + entityMap
@@ -618,32 +628,44 @@ var MAIN = new function () {
         // Count only entities of the last dimension (recursively)
         var iterateEntities = function (entityList, depth) {
             if (depth === dimensionList.length - 1) {
+
+                // Compute middle position
+                entityList.leftMost = entityList[0].position;
+                entityList.rightMost = entityList[entityList.length - 1].position;
+                entityList.avgPosition = (entityList.leftMost + entityList.rightMost) / 2;
+
                 // Last dimension, get label positions and add them
                 $.each(entityList, function (index, entity) {
                     var position = entity.position;
                     var label = WEBGL.addEntityLabel(axis, position, entity, 0);
-                    INTERFACE.addEntityLabelListener(label, entity); // TODO #########
+                    entity.sprite = label; // Save label to entity
+                    label.selectionSize = 1;
+                    label.entity = entity; // Save entity to label
+                    INTERFACE.addEntityLabelListener(label);
                 });
-
-                // Compute middle position
-                entityList.avgPosition = (entityList[0].position + entityList[entityList.length - 1].position) / 2;
-
             } else {
-                // Go deeper and add labels in the Nth row
+                // Go deeper
                 var nextDimension = dimensionList[depth + 1];
                 $.each(entityList, function (index, entity) {
                     var nextList = entity[nextDimension.dimensionName];
                     iterateEntities(nextList, depth + 1); // recursion
-
-                    var row = dimensionList.length - 1 - depth;
-                    var label = WEBGL.addEntityLabel(axis, nextList.avgPosition, entity, row);
-                    INTERFACE.addEntityLabelListener(label, entity); // TODO #########
                 });
 
                 // Compute middle position for above label
-                var firstAvg = entityList[0][nextDimension.dimensionName].avgPosition;
-                var lastAvg = entityList[entityList.length - 1][nextDimension.dimensionName].avgPosition;
-                entityList.avgPosition = (firstAvg + lastAvg) / 2;
+                entityList.leftMost = entityList[0][nextDimension.dimensionName].leftMost;
+                entityList.rightMost = entityList[entityList.length - 1][nextDimension.dimensionName].rightMost;
+                entityList.avgPosition = (entityList.leftMost + entityList.rightMost) / 2;
+
+                // and add labels in the current row
+                $.each(entityList, function (index, entity) {
+                    var nextList = entity[nextDimension.dimensionName];
+                    var row = dimensionList.length - 1 - depth;
+                    var label = WEBGL.addEntityLabel(axis, nextList.avgPosition, entity, row);
+                    entity.sprite = label; // Save label to entity
+                    label.selectionSize = nextList.rightMost - nextList.leftMost + 1;
+                    label.entity = entity; // Save entity to label
+                    INTERFACE.addEntityLabelListener(label);
+                });
             }
         };
         iterateEntities(entityList, 0);
@@ -754,6 +776,65 @@ var MAIN = new function () {
         }
     }.bind(this);
 
+
+    // Assigns all matching label sprites to each cube
+    var assignLabelsToCubes = function () {
+
+        // Help function for one axis
+        var assign = function (dimensionList, cube) {
+            if (dimensionList.length === 0) {
+                return; // No dimension in this axis
+            }
+            var dimension = dimensionList[0];
+            var entityName = this.getEntityFromJson(cube.result, dimension).entityName;
+            var currentEntity = this.entityMap[dimension.dimensionName][entityName]; // Entity from tree
+            cube.sprites.push(currentEntity.sprite); // add label to list
+            for (var i = 1; i < dimensionList.length; i++) {
+                var nextDimension = dimensionList[i];
+                var nextEntityName = this.getEntityFromJson(cube.result, nextDimension).entityName;
+                ;
+                currentEntity = currentEntity[nextDimension.dimensionName][nextEntityName];
+                cube.sprites.push(currentEntity.sprite); // add label to list
+            }
+        }.bind(this);
+        $.each(WEBGL.scene.children, function (index, cube) {
+
+            // Skip non-cubes
+            if (!cube.geometry || cube.geometry.type !== "BoxGeometry") {
+                return true;
+            }
+            cube.sprites = [];
+
+            // Fill xyz WebGL labels
+            assign(this.xDimensions, cube);
+            assign(this.yDimensions, cube);
+            assign(this.zDimensions, cube);
+
+            // Forget result
+            cube.result = undefined;
+        }.bind(this));
+    }.bind(this);
+
+    // Assigns all matching label sprites to each label sprite
+    var assignLabelsToLabels = function () {
+        $.each(WEBGL.scene.children, function (index1, labelSprite1) {
+
+            // Skip non-entity-labels
+            if (!labelSprite1.entity) {
+                return true;
+            }
+            labelSprite1.sprites = [];
+            $.each(WEBGL.scene.children, function (index2, labelSprite2) {
+                // Skip non-entity-labels
+                if (!labelSprite2.entity) {
+                    return true;
+                }
+                if (labelSprite1.entity.entityName === labelSprite2.entity.entityName) {
+                    labelSprite1.sprites.push(labelSprite2); // Add same entity sprite (including itself)
+                }
+            });
+        }.bind(this));
+    }.bind(this);
 
 
     // String extensions
