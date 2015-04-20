@@ -15,7 +15,7 @@ function Dimension(dimensionName, label, entities) {
     this.dimensionName = dimensionName; // e.g. http://code-research.eu/resource/Country
     this.label = label;                 // e.g. Country
     this.entities = entities;           // list of entities selected
-    this.rollup;                        // to be set later
+    this.rollup = false;                // to be set later
 }
 
 // Measure class (getMeasures)
@@ -49,7 +49,7 @@ var MAIN = new function () {
     this.ID = "";
     this.HASH = "";
     this.currentCube = "";
-    this.entityList = []; // Contains all entities of all dimensions (and their selected status)
+    this.entityList = {}; // Contains all entities of all dimensions (and their selected status)
 
 
     // TODO
@@ -69,10 +69,10 @@ var MAIN = new function () {
     this.tempSelection = {}; // Temprary selection of dimensions' entities (to be accepted on button click)
     // TEMP: z.b.: tempSelection[dimensionName][entityName] = true;
 
-    // TODO For visual selection of labels / entities
+    // TODO For visual selection of labels / entities (not needed anymore?)
     this.labelMap = {};
 
-    // List of actually used entities (for the visualization) with stacked dimensions in every entity (if more than one dimension / axis)
+    // List of actually used entities (for the visualization only) with stacked dimensions in every entity (if more than one dimension / axis)
     this.entityMap = {};
 
 
@@ -295,7 +295,8 @@ var MAIN = new function () {
 
                 // Create and add a new result-cube
                 var cube = WEBGL.addCube(coordinates, values, ratios); // TODO custom colors?
-                INTERFACE.addCubeListeners(cube, result); // add click and hover events
+                cube.result = result; // Temporarly save the result to the cube
+                INTERFACE.addCubeListeners(cube); // add click and hover events
             }.bind(this));
 
 
@@ -527,13 +528,14 @@ var MAIN = new function () {
 
         // Add dimensions
         function addDim(index, dimension) {
+            var tmp;
 
-            // TODO: if rollup: DIMENSION_ROLLUP_PART_URL
+            // Rollup (group) the dimension entities?
             if (dimension.rollup) {
-                // TODO: "TEMPLATES.DIMENSION_ROLLUP_PART_URL"
+                tmp = TEMPLATES.DIMENSION_ROLLUP_PART_URL.replace("__dimension__", dimension.dimensionName);
+            } else {
+                tmp = TEMPLATES.DIMENSION_PART_URL.replace("__dimension__", dimension.dimensionName);
             }
-
-            var tmp = TEMPLATES.DIMENSION_PART_URL.replace("__dimension__", dimension.dimensionName);
 
             // Add fix option if entities were selected
             if (dimension.entities.length > 0) {
@@ -578,24 +580,29 @@ var MAIN = new function () {
 
     // Returns a generated entity of a given dimension from a json result
     this.getEntityFromJson = function (result, dimension) {
-
-        // TODO was bei rollup machen? -> z.b. "D_NAME_1_AGG" : "http://code-research.eu/resource/Species", dann in xyzDimensions nach entities schauen
-
-        // Generate a custom Entity from multiple ones
-        if (dimension.rollup) {
-            // TODO: dimension.entities + tooltip
-            // return new Entity(...)
-        }
-
         var entityName = "";
         var label = "";
-        $.each(result, function (key, val) {
-            if (val.value === dimension.dimensionName) {
-                entityName = result[key.replace("_AGG", "")].value;
-                label = result[key.replace("E_NAME", "L_NAME")].value;
-                return false;
-            }
-        });
+
+        if (dimension.rollup) {
+            // Generate a custom Entity from multiple ones since the dimension was grouped (rolled up)
+            $.each(result, function (key, val) {
+                if (val.value === dimension.dimensionName) {
+                    entityName = "DRILL"; // TODO entity name??? leer lassen?
+                    label = "ROLLUP: " + dimension.entities.length;// TODO entity name suchen + tooltip aller beteiligter entities
+                    return false;
+                }
+            });
+        } else {
+            // Normal non-grouped entity
+            $.each(result, function (key, val) {
+                if (val.value === dimension.dimensionName) {
+                    entityName = result[key.replace("_AGG", "")].value;
+                    label = result[key.replace("E_NAME", "L_NAME")].value;
+                    return false;
+                }
+            });
+        }
+
         return new Entity(dimension.dimensionName, entityName, label);
     };
 
@@ -641,7 +648,7 @@ var MAIN = new function () {
                     entity.sprite = label; // Save label to entity
                     label.selectionSize = 1;
                     label.entity = entity; // Save entity to label
-                    INTERFACE.addEntityLabelListener(label);
+                    INTERFACE.addEntityLabelListeners(label); // TODO: dimension übergeben für selection?
                 });
             } else {
                 // Go deeper
@@ -664,7 +671,7 @@ var MAIN = new function () {
                     entity.sprite = label; // Save label to entity
                     label.selectionSize = nextList.rightMost - nextList.leftMost + 1;
                     label.entity = entity; // Save entity to label
-                    INTERFACE.addEntityLabelListener(label);
+                    INTERFACE.addEntityLabelListeners(label); // TODO: dimension übergeben für selection?
                 });
             }
         };

@@ -4,6 +4,8 @@
 
 var INTERFACE = new function () {
 
+    this.NUM_ENTITIES = 10; // TODO: which ones? how many?
+
     // For interaction with 3D objects
     this.mouseDown = {};
     this.mousePressed = false;
@@ -101,6 +103,11 @@ var INTERFACE = new function () {
             // Add on-click handler for chosen cubes
             itemLink.on("click", function (e) {
                 e.preventDefault();
+
+                // Is the same cube already selected?
+                if (MAIN.currentCube === cubeName) {
+                    return;
+                }
 
                 // Set button title and current cube URI
                 $("#id_cubeButton").empty();
@@ -295,6 +302,7 @@ var INTERFACE = new function () {
             alert("TODO");
         });
 
+        // TODO: needed?
         hideItem.on("click", function (e) {
 //            TODO
             alert("TODO");
@@ -325,10 +333,13 @@ var INTERFACE = new function () {
     // Inits the dimension dropdown lists and its listeners
     this.initDimensionLists = function (results) {
 
-        // Clear old dimension lists first
-        $("#id_xDimensionList").empty();
-        $("#id_yDimensionList").empty();
-        $("#id_zDimensionList").empty();
+        // Empty selected dimensions lists
+        MAIN.xDimensions = [];
+        MAIN.yDimensions = [];
+        MAIN.zDimensions = [];
+
+        // Clear old dimension lists and selected dimensions first
+        INTERFACE.clearDimensions();
 
         // Load the list of available entities for each dimension
         $.each(results, function (index, dimension) {
@@ -342,8 +353,6 @@ var INTERFACE = new function () {
 
     // Adds a dimension button and its menu after the measure was selected.
     this.addDimensionButton = function (dimension, axis, dimensions) {
-
-        var num = 10; // number of preselected entities, TODO: variable? constant? and which ones?
 
         var dimensionList = $("#id_" + axis + "DimensionList");
         var plusButton = $("#id_" + axis + "Plus");
@@ -376,7 +385,7 @@ var INTERFACE = new function () {
         button.append(badge);
 
         var numEntities = MAIN.entityList[dimension.dimensionName].length;
-        var badgeNum = Math.min(num, numEntities);
+        var badgeNum = Math.min(INTERFACE.NUM_ENTITIES, numEntities);
         badge.text(badgeNum + " / " + numEntities);
 
         menu.append(filterItem);
@@ -445,7 +454,7 @@ var INTERFACE = new function () {
                 } else {
                     dimension.entities = newEntities; // TEMP unschön aber geht
                 }
-                $("#" + badgeID).text(newEntities.length + " / " + MAIN.entityList[dimension.dimensionName].length);
+                $("#" + badgeID).text(newEntities.length + " / " + MAIN.entityList[dimension.dimensionName].length); // TODO (0 / X)
             });
 
             // Pause rendering in background
@@ -459,7 +468,7 @@ var INTERFACE = new function () {
                 modal.remove();
 
                 // Resume rendering again
-                WEBGL.resumeRendering()();
+                WEBGL.resumeRendering();
             });
 
         });
@@ -488,6 +497,21 @@ var INTERFACE = new function () {
 
 
 
+        // TEMP for rollup test
+        drillItem.on("click", function (e) {
+
+            if (dimension.rollup) {
+                console.log("DRILLED DOWN", dimension);
+            } else {
+                console.log("ROLLED UP", dimension);
+            }
+            dimension.rollup = !dimension.rollup;
+
+        });
+
+
+
+
 
         // TODO Add drag and rop functionality to the button#####################
 
@@ -502,7 +526,7 @@ var INTERFACE = new function () {
 
         buttonArea.on("drop", function (e) {
             console.log("EVENT:", e);
-            alert("DROP! " + e)
+            alert("DROP! " + e);
             e.preventDefault();
 
         });
@@ -521,12 +545,15 @@ var INTERFACE = new function () {
     };
 
     // Adds mouse events to a given result cube
-    this.addCubeListeners = function (cube, result) {
+    this.addCubeListeners = function (cube) {
+
+        /*
+         * Properties:
+         *
+         * cube.result;
+         */
 
         // TODO hier alle entities rausholen, in function nur noch auf labelMap zugreifen und entsprechende labels highlighten!!!
-
-        cube.result = result; // Temporarly save the result to the cube
-
 
         cube.onclick = function () {
 
@@ -559,9 +586,6 @@ var INTERFACE = new function () {
             WEBGL.highlightLabels(cube);
 
             // TODO: TOOLTIP schon bei hover? oder erst bei click?
-            // TODO: highlight matching labels (use bold font; -> alternative texture)
-
-//            WEBGL.highlightLabels(result); // TODO labelMap -> to bold font
 
         };
 
@@ -570,17 +594,20 @@ var INTERFACE = new function () {
             WEBGL.resetLabels(cube);
 
             // TODO: reset matching labels (use normal font; -> standard texture)
-//            WEBGL.resetLabels(result); // TODO labelMap -> to normal font
 
         };
 
     };
 
     // Adds mouse events to the given label
-    this.addEntityLabelListener = function (label) {
+    this.addEntityLabelListeners = function (label) {
 
-//        label.entity;
-//        label.selectionSize;
+        /*
+         * Properties:
+         *
+         * label.entity;
+         * label.selectionSize;
+         */
 
         label.toggled = false;
 
@@ -614,13 +641,21 @@ var INTERFACE = new function () {
                     sprite.toggled = true;
                 });
 
-                // TODO: add entity to temp selection
+                // TODO: add entity to temp selection + SYNC with panel config
+
+                MAIN.entityList[label.entity.dimensionName][label.entity.entityName] = true;
+
+                // TODO: MAIN.xyzDimensions[i].entities = [...]
+
 
             } else {
                 $.each(label.sprites, function (i, sprite) {
                     sprite.hideSelection();
                     sprite.toggled = false;
                 });
+
+                MAIN.entityList[label.entity.dimensionName][label.entity.entityName] = false;
+
 
                 // TODO remove from temp selection
 
@@ -860,20 +895,32 @@ var INTERFACE = new function () {
                 }
                 $('[data-dimension-name="' + dimensionName + '"]').addClass("disabled"); // TODO enough?
 
-                var num = 10; // number of preselected entities, TODO: variable? constant? which ones?
-
                 // TODO mark in entitiyList[dimensionName][entityName] as checked
 
-                var entities = MAIN.getFirstEntities(MAIN.entityList, dimensionName, num); // ...
+                var entities = MAIN.getFirstEntities(MAIN.entityList, dimensionName, INTERFACE.NUM_ENTITIES); // ...
                 var dimension = new Dimension(dimensionName, label, entities);
                 dimensions.push(dimension); // add it to the list of selected dimensions
 
                 // Add the dimension button with its menu and listeners
-                this.addDimensionButton(dimension, axis, dimensions);
+                INTERFACE.addDimensionButton(dimension, axis, dimensions);
 
-            }.bind(this));
-        }.bind(this));
-    }.bind(this);
+            });
+        });
+    };
+
+    // Clears selected dimensions and dropdown lists
+    this.clearDimensions = function () {
+        $.each(["x", "y", "z"], function (i, axis) {
+
+            // Clear lists
+            $("#id_" + axis + "DimensionList").empty();
+
+            // Clear previous added dimension Buttons
+            var plus = $("#id_" + axis + "Plus");
+            $("#id_" + axis + "ButtonArea > *").detach();
+            $("#id_" + axis + "ButtonArea").append(plus); // Re-attach adding button
+        });
+    };
 
 
     // Select some dimensions and a measure and visualize them right away
