@@ -23,9 +23,30 @@ body {
     }
 }
 
+/* Glyphicons */
+a.side-glyph {
+    position: relative;
+    padding: 5px;
+    top: -5px;
+    right: -5px;
+    display: inline-block;
+    float: right;
+}
+a.side-glyph {
+    color: #c0c0c0;
+}
+a.side-glyph:hover {
+    color: inherit;
+}
+
+
 /* badges in buttons */
 .btn .badge {
     font-size: 10px;
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: middle;
 }
 
 .btn-default .badge {
@@ -54,6 +75,14 @@ body {
         overflow: hidden;
     }
 
+    /* button size in panels */
+    .panel-body a .filter-button-text,
+    .panel-body button .filter-button-text {
+        max-width: 110px;
+        text-overflow: ellipsis;
+        overflow: hidden;
+    }
+
 }
 
 /* button size in panels (all screen sizes) */
@@ -65,6 +94,9 @@ body {
 }
 
 /* button size in panels (all screen sizes) */
+.panel-body a .filter-button-text,
+.panel-body button .filter-button-text,
+.panel-body a .cube-button-text,
 .panel-body button .cube-button-text {
     vertical-align: top;
     display: inline-block;
@@ -90,12 +122,11 @@ body {
 
 /* X Y Z labels */
 .panel-body > .form-group > label {
-    /*margin-right: 5px;*/
-    /*position: relative;*/
+    position: relative;
+    /*top: 5px;*/
     float: left;
-    /*display: inline-block;*/
 
-    /*TODO: label klebt zu weit oben*/
+    /*TODO: label klebt zu weit oben -> vertikal zentrieren!*/
 }
 
 .panel-body > .form-group:last-child {
@@ -140,6 +171,40 @@ body {
     overflow: hidden;
 }
 
+/* Result table */
+#id_resultModalBody table td:first-child {
+    text-align: right;
+}
+
+#id_resultModalBody table td {
+    width: 50%;
+}
+
+#id_resultModalBody table th {
+    font-size: 16px;
+}
+
+#id_resultModalBody {
+    padding-bottom: 0;
+}
+
+/* Add Filter Modal */
+#id_filterModalBody > .input-group > .input-group-btn:nth-child(2) > button {
+    border-radius: 0;
+    margin-right: -1px;
+}
+
+#id_filterInputLine input {
+    border-bottom-left-radius: 0;
+    border-top-left-radius: 0;
+    border-bottom-right-radius: 4px;
+    border-top-right-radius: 4px;
+}
+
+#id_filterInputLine span.glyphicon {
+    right: 20px;
+}
+
 /* Navigation sidebar and layout */
 
 .sidebar {
@@ -173,6 +238,7 @@ body {
 #id_xButtonArea > .btn-group,
 #id_yButtonArea > .btn-group,
 #id_zButtonArea > .btn-group,
+#id_filterButtonArea > .btn-group,
 #id_modalBody > .btn-group {
     margin-bottom: 5px;
 }

@@ -18,19 +18,18 @@ var TEMPLATES = new function () {
     this.MEASURE_PART_URL = "&m=<__measure__>,select=<true>,group=<false>,agg=<__agg__>";
 
     this.FILTER_DIMENSION_PART_URL = "&d=<__dimension__>,select=<false>,group=<false>,fix=<__fix__>";
-    this.FILTER_MEASURE_PART_URL = "&m=<__measure__>,select=<false>,group=<false>,filterR=<__filterR__>,filterV=<__filterV__>";
+    this.FILTER_MEASURE_PART_URL = "&m=<__measure__>,select=<false>,filterR=<__filterR__>,filterV=<__filterV__>";
 
 
     // HTML Templates
 
-    this.MODAL_DIMENSION_TEMPLATE = '<div class="modal fade" id="id_modal"> <div class="modal-dialog modal-lg"> <div class="modal-content"> <div class="modal-header"> <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button> <h4 class="modal-title">Choose Entities for Dimension: &lt;__label__&gt;</h4><a href="#">select all</a> | <a href="#">select none</a> | <a href="#">previous 10</a> | <a href="#">next 10</a> | <a href="#">reset entities</a> (todo) </div> <div class="modal-body" id="id_modalBody"></div><div class="modal-footer"><button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button><button type="button" class="btn btn-primary" data-dismiss="modal" id="id_modalOkay">Okay</button></div></div></div></div>';
-    //this.MODAL_DIMENSION_TEMPLATE = '<div class="modal fade" id="id_modal"> <div class="modal-dialog"> <div class="modal-content"> <div class="modal-header"> <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button> <h4 class="modal-title">Choose Entities for Dimension: &lt;__label__&gt;</h4> </div> <div class="modal-body" id="id_modalBody"></div><div class="modal-footer"><button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button><button type="button" class="btn btn-primary" data-dismiss="modal" id="id_modalOkay">Okay</button></div></div></div></div>';
-    this.MODAL_LOGIN_TEMPLATE = '<div class="modal fade" id="id_loginModal"><div class="modal-dialog modal-sm"><div class="modal-content"><div class="modal-header"><h4 class="modal-title">Authentication</h4></div><div class="modal-body" id="id_loginModalBody"><form><div class="form-group"><label for="id_loginModalID" class="control-label">Please enter your user ID:</label><input type="text" class="form-control" id="id_loginModalID"></div></form></div><div class="modal-footer"><button type="button" class="btn btn-primary" data-dismiss="modal" id="id_loginModalOkay">Okay</button></div></div></div></div>';
+    this.MODAL_DIMENSION_TEMPLATE = '<div class="modal fade" id="id_modal"> <div class="modal-dialog modal-lg"> <div class="modal-content"> <div class="modal-header"> <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button> <h4 class="modal-title">Entities of Dimension &lt;__label__&gt;</h4><a href="#">select all</a> | <a href="#">select none</a> | <a href="#">previous 10</a> | <a href="#">next 10</a> | <a href="#">reset entities</a> (todo) </div> <div class="modal-body" id="id_modalBody"></div><div class="modal-footer"><button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button><button type="button" class="btn btn-primary" data-dismiss="modal" id="id_modalOkay">Apply</button></div></div></div></div>';
+    this.MODAL_LOGIN_TEMPLATE = '<div class="modal fade" id="id_loginModal"><div class="modal-dialog modal-sm"><div class="modal-content"><div class="modal-header"><h4 class="modal-title">Authentication</h4></div><div class="modal-body" id="id_loginModalBody"><form><div class="form-group"><label for="id_loginModalID" class="control-label">Please enter your user ID:</label><input type="text" class="form-control" id="id_loginModalID"></div></form></div><div class="modal-footer"><button type="button" class="btn btn-primary" data-dismiss="modal" id="id_loginModalOkay">Login</button></div></div></div></div>';
     this.MODAL_LOADING_TEMPLATE = '<div class="modal fade" id="id_loadingModal"><div class="modal-dialog modal-sm"><div class="modal-content"><div class="modal-header"><h4 class="modal-title">__title__</h4></div><div class="modal-body"><div class="progress"><div class="progress-bar progress-bar-striped active" role="progressbar" style="width: 100%"></div></div></div></div></div></div>';
 
+    this.MODAL_RESULT_TEMPLATE = '<div class="modal fade" id="id_resultModal"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button><h4 class="modal-title">Data Cell Summary</h4></div><div class="modal-body" id="id_resultModalBody"></div><div class="modal-footer"><button type="button" class="btn btn-default" data-dismiss="modal">Close</button></div></div></div></div>';
+
 };
-
-
 
 
 

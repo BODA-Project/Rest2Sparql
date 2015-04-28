@@ -50,10 +50,15 @@ var INTERFACE = new function () {
         // Top bar
         $("#id_changeUserButton").on('click', MAIN.logoutUser.bind(MAIN));
 
-        // Side bar
+        // Side bar TODO: cancel-button, + onchange -> update -> disable/enable
         $("#id_applyButton").on('click', MAIN.applyOLAP.bind(MAIN));
 
         // ...TODO
+
+        // Filter area
+        $("#id_filterPlus").on('click', function () {
+            INTERFACE.popupMeasureFilter();
+        });
 
         // Resize visualization on browser resize
         $(window).on('resize', WEBGL.resizeVizualisation.bind(WEBGL));
@@ -120,6 +125,10 @@ var INTERFACE = new function () {
                 // Query available dimensions and measures and fill the lists
                 MAIN.loadDimensionList();
                 MAIN.loadMeasureList();
+
+                // Reset filters
+                MAIN.filters = [];
+                INTERFACE.clearFilters();
 
                 // Show a loading screen while ajax infos are loading (dimensions + entities and measures)
                 // Pre-select up to 3 dimensions per default to begin with after the ajax calls are done
@@ -231,9 +240,11 @@ var INTERFACE = new function () {
 
 
         // Include other measure options like color and aggregation
+        var filterItem = $('<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Add Filter...</a></li>');
         var aggItem = $('<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Change Aggregation...</a></li>');
         var colorItem = $('<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Change Color...</a></li>');
         measureList.append('<li role="presentation" class="divider"></li>');
+        measureList.append(filterItem);
         measureList.append(aggItem);
         measureList.append(colorItem);
 
@@ -252,9 +263,7 @@ var INTERFACE = new function () {
 
     };
 
-
     // TODO "addMeasureButton" erstmal nicht benutzt, da bug (?) in API und nur 1 measure möglich
-
 
     // Adds a measure button and its menu after the measure was selected.
     // TODO: measure kann manipuliert werden (agg setzen)!!!
@@ -372,7 +381,11 @@ var INTERFACE = new function () {
         var badge = $('<span class="badge" id="' + badgeID + '"></span>');
         var menu = $('<ul class="dropdown-menu" role="menu"></ul>');
         var filterItem = $('<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Filter Entities...</a></li>');
-        var drillItem = $('<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Rollup ?</a></li>');
+        var drillItem = $('<li role="presentation"><a role="menuitem" tabindex="-1" href="#"><span class="glyphicon glyphicon-unchecked"></span> Group Entities</a></li>');
+
+//        <span class="glyphicon glyphicon-check"></span>
+//        <span class="glyphicon glyphicon-unchecked"></span>
+//
 //        var drillItem = $('<li role="presentation"><label role="menuitem"><input type="checkbox" autocomplete="off"> Rollup </label></li>');
 
 
@@ -501,8 +514,12 @@ var INTERFACE = new function () {
         drillItem.on("click", function (e) {
 
             if (dimension.rollup) {
+                drillItem.find(".glyphicon").removeClass("glyphicon-check");
+                drillItem.find(".glyphicon").addClass("glyphicon-unchecked");
                 console.log("DRILLED DOWN", dimension);
             } else {
+                drillItem.find(".glyphicon").removeClass("glyphicon-unchecked");
+                drillItem.find(".glyphicon").addClass("glyphicon-check");
                 console.log("ROLLED UP", dimension);
             }
             dimension.rollup = !dimension.rollup;
@@ -546,49 +563,49 @@ var INTERFACE = new function () {
 
     // Adds mouse events to a given result cube
     this.addCubeListeners = function (cube) {
-
         /*
          * Properties:
          *
          * cube.result;
          */
 
-        // TODO hier alle entities rausholen, in function nur noch auf labelMap zugreifen und entsprechende labels highlighten!!!
-
-        cube.onclick = function () {
-
-            // TODO show clear popup with correct labels ...
-            // TODO iterate through xyzDimensions, MAIN.getEntityFromJson, get labels, ...
-
-//            foreach... dimension -> +=str
-//            MAIN.getEntityFromJson(result, dimension);
-
-            var str = "TODO";
-//            $.each(dimensionNumbers, function (key, number) {
-//                str += "Dim #" + key + ": ";
-//                str += result["L_NAME_" + number + "_AGG"].value;
-//                str += "\n";
-//            });
-//            $.each(measureNumbers, function (key, number) {
-////                        str += result["M_NAME_" + number + "_AGG"].value; // TODO
-//                str += "Euro"; // TODO: measure label fehlt immer :C also von anfrage nehmen, oder in api ändern
-//                str += ": ";
-//                str += measureVals[key]; // TODO format nicely
-//                str += "\n";
-//            });
-            alert(str); // TEMP
-            //
-//            INTERFACE.popupResult(str);
+        var collectDimensions = function (dimensionList) {
+            $.each(dimensionList, function (i, dimension) {
+                var entity = MAIN.getEntityFromJson(cube.result, dimension);
+                dimensions.push({
+                    dimension: dimension.label,
+                    entity: entity.label
+                });
+            });
+        };
+        var collectMeasures = function (measureList) {
+            $.each(measureList, function (i, measure) {
+                var value = MAIN.getMeasureValueFromJson(cube.result, measure);
+                measures.push({
+                    measure: measure.label,
+                    value: value
+                });
+            });
         };
 
+        // Gather dimension details from all axis
+        var dimensions = [];
+        collectDimensions(MAIN.xDimensions);
+        collectDimensions(MAIN.yDimensions);
+        collectDimensions(MAIN.zDimensions);
+
+        // Gather measure informations
+        var measures = [];
+        collectMeasures(MAIN.measures);
+
+        // Add click and hover events
+        cube.onclick = function () {
+            INTERFACE.popupResult(dimensions, measures);
+        };
         cube.onmouseover = function () {
             WEBGL.highlightCube(cube);
             WEBGL.highlightLabels(cube);
-
-            // TODO: TOOLTIP schon bei hover? oder erst bei click?
-
         };
-
         cube.onmouseout = function () {
             WEBGL.resetCube(cube);
             WEBGL.resetLabels(cube);
@@ -665,6 +682,18 @@ var INTERFACE = new function () {
         label.showSelection = function () {
             label.toSelected(); // highlight color
             WEBGL.addSelectionCube(label);
+
+            // TEST (X) Transparency
+
+//            $.each(WEBGL.scene.children, function (i,obj){
+//               if(obj.position.x === label.position.x && obj.material){
+//                   obj.material.transparent = true;
+//                   obj.material.opacity = 0.25;
+//               }
+//            });
+
+
+
         };
 
         label.hideSelection = function () {
@@ -714,12 +743,13 @@ var INTERFACE = new function () {
         $("body").append(modal);
 
         // Accept action of popup
-        $("#id_loginModalOkay").on("click", function (e) {
-
+        var submitLogin = function (e) {
             // Try to login the user with the given ID
-            var id = $("#id_loginModalID").val(); // TODO ungültige werte...
+            var id = $("#id_loginModalID").val();
             MAIN.loginUser(id);
-        });
+        };
+        $("#id_loginModalOkay").on("click", submitLogin);
+        $('#id_loginModal form').on("submit", submitLogin);
 
         // Show the popup
         $('#id_loginModal').modal({
@@ -729,7 +759,7 @@ var INTERFACE = new function () {
 
         // Focus input field
         modal.on('shown.bs.modal', function (e) {
-            $('#id_loginModalID').focus(); // TODO geht nicht :C
+            $('#id_loginModalID').focus();
 
             // TEMP for testing purpose ########################################
             $('#id_loginModalID').val("https://github.com/bayerls");
@@ -777,6 +807,276 @@ var INTERFACE = new function () {
             if (callback) {
                 callback();
             }
+        });
+    };
+
+    // Shows a popup of a result
+    this.popupResult = function (dimensions, measures) {
+
+        var modal = $(TEMPLATES.MODAL_RESULT_TEMPLATE);
+        $("body").append(modal);
+        var modalBody = $("#id_resultModalBody");
+
+        // Add the dimension data
+        modalBody.append("<h4>Dimensions</h4>");
+        var table = $("<table>");
+        table.addClass("table table-bordered table-striped");
+        $.each(dimensions, function (i, dimension) {
+            var row = $("<tr>");
+            row.append("<td>" + dimension.dimension + "</td>");
+            row.append("<td><b>" + dimension.entity + "</b></td>");
+            table.append(row);
+        });
+        modalBody.append(table);
+
+        // Add the measure data
+        modalBody.append("<h4>Measures</h4>");
+        var table = $("<table>");
+        table.addClass("table table-bordered table-striped");
+        $.each(measures, function (i, measure) {
+            var row = $("<tr>");
+            row.append("<td>" + measure.measure + "</td>");
+            row.append("<td><b>" + measure.value + "</b></td>");
+            table.append(row);
+        });
+        modalBody.append(table);
+
+        // Pause rendering in background
+        WEBGL.stopRendering();
+
+        // Show the popup
+        $('#id_resultModal').modal();
+
+        // Remove when finished
+        modal.on('hidden.bs.modal', function (e) {
+            modal.remove();
+
+            // Resume rendering again
+            WEBGL.resumeRendering();
+        });
+    };
+
+    // Shows a popup for adding a measure filter
+    this.popupMeasureFilter = function (measure, filter, buttonGroup) {
+
+        /* measure, filter and badge are optional */
+
+        var modal = $("#id_filterModal"); // TODO template instead...
+        $("body").append(modal);
+
+        var modalBody = $("#id_filterModalBody");
+        var modalMeasureButton = $("#id_filterMeasureButton");
+        var modalMeasureList = $("#id_filterMeasureList");
+        var modalRelationButton = $("#id_filterRelationButton");
+        var modalRelationList = $("#id_filterRelationList");
+        var modalInput = $("#id_filterValue");
+        var modalAcceptButton = $("#id_filterOkay");
+
+        // Filter variables
+        var filterMeasure = MAIN.availableMeasures[0];
+        var filterRelation = MAIN.RELATIONS[0].type;
+        var filterValue = 0; // Default input value: 0
+
+        // read optional parameters as default values (e.g. to edit a given filter)
+        if (filter !== undefined) {
+            filterMeasure = filter.measure;
+            filterRelation = filter.relation;
+            filterValue = filter.value;
+            modalAcceptButton.text("Change Filter");
+        } else if (measure !== undefined) {
+            var filterMeasure = measure; // Set first measure by default
+        } else {
+            modalAcceptButton.text("Add Filter");
+        }
+        modalInput.val(filterValue);
+
+        // Set button text initially
+        modalMeasureButton.empty();
+        modalMeasureButton.text(filterMeasure.label + " ");
+        modalMeasureButton.append(" <span class='caret'></span>");
+
+        // Create entry for each measure
+        modalMeasureList.empty();
+        $.each(MAIN.availableMeasures, function (i, measure) {
+
+            // Create Dropdown entries
+            var itemLink = $("<a role='menuitem' tabindex='-1' href='#'></a>");
+            itemLink.text(measure.label);
+            var item = $("<li role='presentation'></li>");
+            item.append(itemLink);
+            modalMeasureList.append(item);
+
+            // Add on-click handler for chosen measure
+            itemLink.on("click", function (e) {
+                e.preventDefault();
+
+                filterMeasure = measure;
+
+                // Change the measure (dropdown) button
+                modalMeasureButton.empty();
+                modalMeasureButton.text(measure.label + " ");
+                modalMeasureButton.append(" <span class='caret'></span>");
+
+            }.bind(this));
+        });
+
+        // Create entry for each relation type
+        modalRelationList.empty();
+        $.each(MAIN.RELATIONS, function (i, relation) {
+
+            // Create Dropdown entries
+            var itemLink = $("<a role='menuitem' tabindex='-1' href='#'></a>");
+            itemLink.text(relation.label);
+            var item = $("<li role='presentation'></li>");
+            item.append(itemLink);
+            modalRelationList.append(item);
+
+            // Add on-click handler for chosen relation
+            itemLink.on("click", function (e) {
+                e.preventDefault();
+
+                filterRelation = relation.type;
+
+                // Change the measure (dropdown) button
+                modalRelationButton.empty();
+                modalRelationButton.text(relation.label + " ");
+                modalRelationButton.append(" <span class='caret'></span>");
+
+            });
+        });
+
+        // Set relation
+        modalRelationButton.empty();
+        if (filter !== undefined) {
+            modalRelationButton.text(getRelationLabel(filter.relation));
+        } else {
+            modalRelationButton.text(" < "); // Default relation: smaller
+        }
+        modalRelationButton.append(" <span class='caret'></span>");
+
+        // Validates input and shows error sign for wrong input
+        var validateFilterInput = function () {
+            if (!$.isNumeric(modalInput.val())) {
+                // Add error sign
+                if ($("#id_filterInputLine > span").length === 0) {
+                    $("#id_filterInputLine").append('<span class="glyphicon glyphicon-remove form-control-feedback" aria-hidden="true"></span>');
+                    $("#id_filterInputLine").addClass('has-error');
+                }
+                return false;
+            } else {
+                // Remove error sign
+                $("#id_filterInputLine > span").detach();
+                $("#id_filterInputLine").removeClass('has-error');
+                filterValue = modalInput.val();
+                return true;
+            }
+        };
+
+        // Validate the numerical input
+        modalInput.off("change");
+        modalInput.on("change", validateFilterInput);
+
+        // Validate and accept
+        modalAcceptButton.off("click");
+        modalAcceptButton.removeAttr("disabled");
+        modalAcceptButton.on("click", function (e) {
+            if (validateFilterInput()) {
+
+                // Disable button to avoid multiple adding
+                modalAcceptButton.attr("disabled", "disabled");
+
+                // Change given filter or create new one
+                if (filter !== undefined) {
+                    filter.measure = filterMeasure;
+                    filter.relation = filterRelation;
+                    filter.value = filterValue;
+
+                    // Change old button text
+                    var relationLabel = getRelationLabel(filter.relation);
+                    var textField = buttonGroup.find(".filter-button-text");
+                    var badge = buttonGroup.find(".badge");
+                    textField.text(filterMeasure.label);
+                    badge.text(relationLabel + " " + filterValue);
+                } else {
+                    filter = new Filter(filterMeasure, filterRelation, filterValue);
+                    MAIN.filters.push(filter);
+                    INTERFACE.addFilterButton(filter);
+                }
+
+
+                console.log("FILTER:", filter); // DEBUG
+
+
+
+                modal.modal("hide");
+
+                // add a filter button
+
+            }
+        });
+
+        // Pause rendering in background
+        WEBGL.stopRendering();
+
+        // Show the popup
+        modal.modal();
+
+        // Remove when finished
+        modal.off('hidden.bs.modal');
+        modal.on('hidden.bs.modal', function (e) {
+            // Resume rendering again
+            WEBGL.resumeRendering();
+        });
+    };
+
+    // Add a filter button that shows a filter status
+    this.addFilterButton = function (filter) {
+        var plusButton = $("#id_filterPlus");
+        var buttonArea = $("#id_filterButtonArea");
+
+        // Get label from relation type (e.g. "smaller": "<")
+        var relationLabel = getRelationLabel(filter.relation);
+
+        // Rebuild a filter button and its menu
+        var btnGroup = $('<div class="btn-group"></div>');
+        var button = $('<button class="btn dropdown-toggle btn-default" type="button" data-toggle="dropdown"></button>');
+        var text = $('<span class=filter-button-text>' + filter.measure.label + '</span>');
+        var badge = $('<span class="badge"></span>');
+        var menu = $('<ul class="dropdown-menu" role="menu"></ul>');
+        var changeItem = $('<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Change...</a></li>');
+        var dividerItem = $('<li role="presentation" class="divider"></li>');
+        var removeItem = $('<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Remove</a></li>');
+
+        // Combine button and list
+        btnGroup.append(button);
+        button.append(text);
+        button.append(badge);
+        badge.text(relationLabel + " " + filter.value);
+        menu.append(changeItem);
+        menu.append(dividerItem);
+        menu.append(removeItem);
+        btnGroup.append(menu);
+
+        buttonArea.append(btnGroup);
+        buttonArea.append(" ");
+        buttonArea.append(plusButton); // Move plus to end
+
+        // Change existing filter
+        changeItem.on("click", function (e) {
+            e.preventDefault();
+            INTERFACE.popupMeasureFilter(null, filter, btnGroup);
+        });
+
+        // Add event for removing the measure
+        removeItem.on("click", function (e) {
+            e.preventDefault();
+
+            // Delete from selected list
+            var index = MAIN.filters.indexOf(filter);
+            MAIN.filters.splice(index, 1);
+
+            // Remove HTML button and list
+            btnGroup.remove();
         });
     };
 
@@ -831,7 +1131,7 @@ var INTERFACE = new function () {
         var y = event.pageY - node.position().top;
 
         // cancel if dragged a certain min distance
-        var distance = 6; // TODO as CONSTANT!
+        var distance = 6; // TODO as CONSTANT! + darunter keine drehung
         if (Math.abs(x - this.mouseDown.x) > distance || Math.abs(y - this.mouseDown.y) > distance) {
             return;
         }
@@ -885,7 +1185,7 @@ var INTERFACE = new function () {
             itemLink.on("click", function (e) {
                 e.preventDefault();
 
-                // TODO: hide dimension popover / ganz weg?
+                // TODO: hide dimension popover / ganz weg? -> keine popover mehr, info-signs
                 $("#id_dimensionPanel").popover("hide");
 //                $("#id_measurePanel").popover("show"); // TEMP disabled
 
@@ -922,6 +1222,13 @@ var INTERFACE = new function () {
         });
     };
 
+    // Clears selected filters
+    this.clearFilters = function () {
+        var plus = $("#id_filterPlus");
+        $("#id_filterButtonArea > *").detach();
+        $("#id_filterButtonArea").append(plus); // Re-attach adding button
+    };
+
 
     // Select some dimensions and a measure and visualize them right away
     var showSomeData = function () {
@@ -941,6 +1248,17 @@ var INTERFACE = new function () {
 
     }.bind(this);
 
+    // Gets the label version of a relation (e.g. "smaller": "<")
+    var getRelationLabel = function (relationType) {
+        var relationLabel;
+        $.each(MAIN.RELATIONS, function (i, relation) {
+            if (relation.type === relationType) {
+                relationLabel = relation.label;
+                return false;
+            }
+        });
+        return relationLabel;
+    };
 
     // Help function...
     var isSelectedDimension = function (dimensionName) {

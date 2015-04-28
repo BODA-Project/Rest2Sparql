@@ -125,7 +125,10 @@ var WEBGL = new function () {
         material.shading = THREE.NoShading;
         material.fog = false;
 
-        // TODO custom color per measure -> ~ multiply/overlay/opacity effect RGB? "multiply(color);"
+        // Transparency
+//        material.transparent = true;
+//        material.opacity = 1.0;
+
         var colorLowest = new THREE.Color(this.COLOR_LOWEST);
         var colorHighest = new THREE.Color(this.COLOR_HIGHEST);
 
@@ -158,8 +161,7 @@ var WEBGL = new function () {
 
     // Adds a label which is placed depending on the given axis and position
     // TODO know highest sprite length of a dimension (to not waste space)
-    // TODO bei 2D darstellung -> rotation nach unten bei X-labels
-    this.addEntityLabel = function (axis, position, entity, row) {
+    this.addEntityLabel = function (axis, position, entity, row) { // TODO: rollup labels dürfen breiter sein... (nur wenn nicht untergeordnet?)
         var label = this.createEntityLabel(entity.label);
         label.axis = axis; // Save the axis which it belongs to
         switch (axis) {
@@ -196,7 +198,6 @@ var WEBGL = new function () {
     };
 
     // Adds a dimension label which is placed depending on the given axis
-    // TODO bei 2D darstellung -> rotation nach unten bei X-labels
     this.addDimensionLabel = function (axis, dimension, row, numDimensions) {
         var label = this.createDimensionLabel(dimension.label, axis);
         var labelOffset = numDimensions * this.SPRITE_LENGTH + row * this.SPRITE_HEIGHT_DIMENSION; // EntityLabels + previous DimensionLabels
@@ -254,7 +255,7 @@ var WEBGL = new function () {
     };
 
     // Shows a surrounding transparent cube of a selected label
-    this.addSelectionCube = function (label) { // TODO label + width ?
+    this.addSelectionCube = function (label) {
         var x, y, z, width, height, depth;
         switch (label.axis) {
             case "x" :

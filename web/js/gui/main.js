@@ -34,16 +34,26 @@ function Entity(dimensionName, entityName, label) {
 }
 
 // Filter class, for measures
-function Filter(measure) {
-
+function Filter(measure, relation, value) {
+    this.measure = measure;             // Measure object
+    this.relation = relation;           // e.g. bigger
+    this.value = value;                 // e.g. 12345
+    this.disabled = false;              // to be set later
 }
-
-
-//function Result(dimensions, )
 
 // Main namespace
 
 var MAIN = new function () {
+
+    // Constants
+    this.RELATIONS = [
+        {type: "smaller", label: "<"},
+        {type: "smaller_or_eq", label: "<="},
+        {type: "eq", label: "=="},
+        {type: "not_eq", label: "!="},
+        {type: "bigger", label: ">"},
+        {type: "bigger_or_eq", label: ">="}
+    ];
 
     // Globas vars
     this.ID = "";
@@ -58,6 +68,9 @@ var MAIN = new function () {
     this.currentScale = "linear"; // log or linear
 
 
+    // All possible dimensions and measures
+    this.availableDimensions = [];
+    this.availableMeasures = [];
 
     // Selected objects for creating a query uri later
     this.xDimensions = [];   // Type: Dimension
@@ -111,7 +124,7 @@ var MAIN = new function () {
                 }
                 var results = obj.results.bindings; // array
                 if (results.length === 0) {
-                    // TODO: schöner
+                    // TODO: schöner + "wrong ID?"
                     alert("There are no Cubes belonging to User ID <" + id + ">.");
 
                     // Bring up modal if not shown
@@ -243,7 +256,7 @@ var MAIN = new function () {
             $.each(results, function (index1, result) {
                 $.each(this.measures, function (index2, measure) {
                     var measureName = measure.measureName;
-                    var measureValue = this.getMeasureValueFromJson(result, measure); // TODO: fehlende zahlen im json bei AGG???
+                    var measureValue = this.getMeasureValueFromJson(result, measure);
 
                     // TEMP fix for API error
                     if (measureValue === null) {
@@ -428,7 +441,8 @@ var MAIN = new function () {
         request.done(function (content) {
             var obj = $.parseJSON(content);
             var results = obj.results.bindings;
-            INTERFACE.initDimensionLists(results);
+//            MAIN.parseDimensions(results); // TODO
+            INTERFACE.initDimensionLists(results); // TODO use availableDimensions
         });
 
     };
@@ -450,7 +464,8 @@ var MAIN = new function () {
         request.done(function (content) {
             var obj = $.parseJSON(content);
             var results = obj.results.bindings;
-            INTERFACE.initMeasureList(results);
+            MAIN.parseMeasures(results);
+            INTERFACE.initMeasureList(results); // TODO use availableMeasures
         });
 
     };
@@ -554,15 +569,19 @@ var MAIN = new function () {
 
         // Add measures
         $.each(this.measures, function (index, measure) {
-            var tmp = TEMPLATES.MEASURE_PART_URL.replace("__measure__", measure.measureName);
-            tmp = tmp.replace("__agg__", measure.agg);
-            url += tmp;
-//        url += ",filterR=<bigger>,filterV=<999999999>"; // TEST
+            url += TEMPLATES.MEASURE_PART_URL
+                    .replace("__measure__", measure.measureName)
+                    .replace("__agg__", measure.agg);
         });
 
         // Add filters
-        $.each(this.filters, function (index, filter) {
-            // TODO: unterscheiden: dimension / measure!
+        $.each(MAIN.filters, function (index, filter) {
+            if (!filter.disabled) {
+                url += TEMPLATES.FILTER_MEASURE_PART_URL
+                        .replace("__measure__", filter.measure.measureName)
+                        .replace("__filterR__", filter.relation)
+                        .replace("__filterV__", filter.value);
+            }
         });
 
         return url;
@@ -606,6 +625,30 @@ var MAIN = new function () {
         return new Entity(dimension.dimensionName, entityName, label);
     };
 
+    // Add results to available measures
+    this.parseMeasures = function (results) {
+        MAIN.availableMeasures = [];
+
+        // Iterate through available measures
+        $.each(results, function (index, element) {
+            var measureName = element.MEASURE_NAME.value;
+            var label = element.LABEL.value;
+            MAIN.availableMeasures.push(new Measure(measureName, label, "SUM"));
+        });
+    };
+
+    // Add results to available measures
+    this.parseDimensions = function (results) {
+        MAIN.availableDimensions = [];
+
+        // Iterate through available dimensions
+        $.each(results, function (index, element) { // TODO
+//            var measureName = element.MEASURE_NAME.value;
+//            var label = element.LABEL.value;
+//            MAIN.availableDimensions.push(new Dimension(...));
+        });
+    };
+
     // HELP FUNCTIONS ==========================================================
 
     /**
@@ -615,6 +658,9 @@ var MAIN = new function () {
      * @param b second entity
      */
     var labelCompare = function (a, b) {
+
+        // TODO lexikogr. ?
+
         if (a.label > b.label) {
             return 1;
         } else if (a.label < b.label) {
