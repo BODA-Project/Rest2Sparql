@@ -79,13 +79,17 @@ var MAIN = new function () {
     this.measures = [];      // Type: Measure
     this.filters = [];       // Type: Filter
 
+    // Undo, Redo
+    this.undoStack = []; // TODO
+    this.redoStack = []; // TODO
+
     this.tempSelection = {}; // Temprary selection of dimensions' entities (to be accepted on button click)
     // TEMP: z.b.: tempSelection[dimensionName][entityName] = true;
 
     // TODO For visual selection of labels / entities (not needed anymore?)
     this.labelMap = {};
 
-    // List of actually used entities (for the visualization only) with stacked dimensions in every entity (if more than one dimension / axis)
+    // List of actually used entities (for the visualization only) with stacked dimensions in every entity (if more than one dimension / axis))
     this.entityMap = {};
 
 
@@ -142,7 +146,7 @@ var MAIN = new function () {
                     $('#id_loginModal').modal('hide');
 
                     // Load users cubes...
-                    this.loadCubeList();
+                    MAIN.loadCubeList();
 
                 }
 
@@ -152,14 +156,46 @@ var MAIN = new function () {
 
     };
 
-
-    // Removes user id vars and cookies and prompts a new login
+    // Drops current configuration and prompts a new login
     this.logoutUser = function () {
-        this.ID = "";
-        $.removeCookie('ID');
-        INTERFACE.popupLogin();
 
-        // TODO: reset rest of the UI...
+        // TODO nice confirm popup
+        if (confirm("Really log out?")) {
+            MAIN.ID = "";
+            MAIN.HASH = "";
+            $.removeCookie('ID');
+
+            // Reset configuration
+            MAIN.currentCube = "";
+            MAIN.xDimensions = [];
+            MAIN.xDimensions = [];
+            MAIN.xDimensions = [];
+            MAIN.measures = [];
+            MAIN.filters = [];
+            MAIN.undoStack = [];
+            MAIN.redoStack = [];
+            MAIN.entityList = {};
+            MAIN.entityMap = {};
+
+            // Reset interface
+            INTERFACE.clearCubes();
+            INTERFACE.clearDimensions();
+            INTERFACE.clearFilters();
+//            INTERFACE.clearMeasures(); // only 1 measure
+
+            // Fade out panels
+            $("#id_dimensionPanel").removeClass("in");
+            $("#id_measurePanel").removeClass("in");
+            $("#id_filterPanel").removeClass("in");
+            $("#id_acceptArea").removeClass("in");
+            $("#id_pageTitle").text("Rest2Sparql");
+
+            // Show default visualization
+            WEBGL.showLoadingScreen();
+
+            // Show login popup again
+            INTERFACE.popupLogin();
+        }
 
     };
 
@@ -405,8 +441,6 @@ var MAIN = new function () {
             }
         });
 
-        $("#id_cubeList").empty(); // Clear old cube list
-
         // Recreate dropdown list for cubes
         request.done(function (content) {
             var obj;
@@ -420,6 +454,12 @@ var MAIN = new function () {
             if (results.length === 0) {
                 return;
             }
+
+            // Sort cube list
+            results.sort(function (a, b) {
+                return alphanumCase(a.LABEL.value, b.LABEL.value);
+            });
+
             INTERFACE.initCubeList(results);
         });
 
@@ -441,6 +481,12 @@ var MAIN = new function () {
         request.done(function (content) {
             var obj = $.parseJSON(content);
             var results = obj.results.bindings;
+
+            // Sort dimension list
+            results.sort(function (a, b) {
+                return alphanumCase(a.LABEL.value, b.LABEL.value);
+            });
+
 //            MAIN.parseDimensions(results); // TODO
             INTERFACE.initDimensionLists(results); // TODO use availableDimensions
         });
@@ -464,6 +510,12 @@ var MAIN = new function () {
         request.done(function (content) {
             var obj = $.parseJSON(content);
             var results = obj.results.bindings;
+
+            // Sort measure list
+            results.sort(function (a, b) {
+                return alphanumCase(a.LABEL.value, b.LABEL.value);
+            });
+
             MAIN.parseMeasures(results);
             INTERFACE.initMeasureList(results); // TODO use availableMeasures
         });
@@ -658,16 +710,7 @@ var MAIN = new function () {
      * @param b second entity
      */
     var labelCompare = function (a, b) {
-
-        // TODO lexikogr. ?
-
-        if (a.label > b.label) {
-            return 1;
-        } else if (a.label < b.label) {
-            return -1;
-        } else {
-            return 0;
-        }
+        return alphanumCase(a.label, b.label);
     };
 
     // Iterates through entities of a given dimension and adds labels

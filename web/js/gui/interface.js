@@ -14,34 +14,15 @@ var INTERFACE = new function () {
     this.disableInputInitially = function () {
 
         // Disable navigation input initially and set conditions of usage
-        var opacity = 0.35;
-        $("#id_cubePanel").css("opacity", opacity);
-        $("#id_dimensionPanel").css("opacity", opacity);
-        $("#id_measurePanel").css("opacity", opacity);
-        $("#id_filterPanel").css("opacity", opacity);
-        $("#id_applyButton").css("opacity", opacity);
-
-//        $("#id_cubePanel").css("display", "none");
-//        $("#id_dimensionPanel").css("display", "none");
-//        $("#id_measurePanel").css("display", "none");
-//        $("#id_filterPanel").css("display", "none");
-//        $("#id_filterPanel").css("display", "none");
-//        $("#id_applyButton").css("display", "none");
-
         $("#id_cubePanel button").attr("disabled", "disabled");
         $("#id_dimensionPanel button").attr("disabled", "disabled");
         $("#id_measurePanel button").attr("disabled", "disabled");
         $("#id_filterPanel button").attr("disabled", "disabled");
         $("#id_cancelButton").attr("disabled", "disabled");
         $("#id_applyButton").attr("disabled", "disabled");
-
-        $("#id_undoButton").css("opacity", opacity);
-        $("#id_redoButton").css("opacity", opacity);
         $("#id_undoButton").attr("disabled", "disabled");
         $("#id_redoButton").attr("disabled", "disabled");
-
-        // TODO: ganz verstecken, nach und nach zeigen, popover hinzufügen
-
+        $("#id_mergeButton").attr("disabled", "disabled");
     };
 
     // ...
@@ -68,28 +49,24 @@ var INTERFACE = new function () {
     // Inits the cube dropdown lists and its listeners
     this.initCubeList = function (results) {
 
+        // TEST HIGHLIGHT CUBE LIST
+        flashHTMLNode($("#id_cubePanel"));
+
         // enable cube selection
-        $("#id_cubePanel").css("opacity", "");
         $("#id_cubePanel button").removeAttr("disabled");
 
-        // but disable the rest TODO: nacheinander fade-in + popover ODER default werte (dimensions) besetzen
-        var opacity = 0.35;
-        $("#id_dimensionPanel").css("opacity", opacity);
-        $("#id_measurePanel").css("opacity", opacity);
-        $("#id_filterPanel").css("opacity", opacity);
-        $("#id_applyButton").css("opacity", opacity);
-
-        $("#id_undoButton").css("opacity", opacity);
-        $("#id_redoButton").css("opacity", opacity);
-
-        $("#id_dimensionPanel button").attr("disabled", "disabled");
-        $("#id_measurePanel button").attr("disabled", "disabled");
-        $("#id_filterPanel button").attr("disabled", "disabled");
+        // still disable other actions
+        $("#id_cancelButton").attr("disabled", "disabled");
         $("#id_applyButton").attr("disabled", "disabled");
 
         $("#id_undoButton").attr("disabled", "disabled");
         $("#id_redoButton").attr("disabled", "disabled");
+        $("#id_mergeButton").attr("disabled", "disabled");
 
+        // TODO info icons sind unsichtbar ABER klickbar
+
+        // Clear old cube list
+        $("#id_cubeList").empty();
 
         // Iterate through available cubes and fill the list
         $.each(results, function (index, element) {
@@ -119,8 +96,8 @@ var INTERFACE = new function () {
                 $("#id_cubeButton").append("<span class=cube-button-text>" + label + "</span>");
                 $("#id_cubeButton").append(" <span class='caret'></span>");
                 $("#id_cubeButton").attr("title", label + ":\n\n" + comment); // tooltip
-                $("#id_pageTitle").text("Cube: " + label); // set page title        TODO needed? smaller??
-                MAIN.currentCube = cubeName; // TODO Cube object?
+                $("#id_pageTitle").text(label); // set page title
+                MAIN.currentCube = cubeName;
 
                 // Query available dimensions and measures and fill the lists
                 MAIN.loadDimensionList();
@@ -134,28 +111,25 @@ var INTERFACE = new function () {
                 // Pre-select up to 3 dimensions per default to begin with after the ajax calls are done
                 INTERFACE.popupWhileAjax(showSomeData);
 
-                // TODO: nacheinander + popover anzeigen / verstecken!
-                // TDOD: oder: einfach alles mit default werten befüllen (dimensionen, measures) -> welche? wieviele?
-
-                // TEST: popover of dimension panel
-                $("#id_dimensionPanel").popover("show");
+                // TEST: popover of dimension panel (TODO stattdessen: info-icon)
+//                $("#id_dimensionPanel").popover("show");
 
                 // Enable dimension, measure and filter input
-                // TODO nacheinander, oder: siehe oben...
-                $("#id_dimensionPanel").css("opacity", "");
+                $("#id_dimensionPanel").addClass("in");
                 $("#id_dimensionPanel button").removeAttr("disabled");
-                $("#id_measurePanel").css("opacity", "");
+                $("#id_measurePanel").addClass("in");
                 $("#id_measurePanel button").removeAttr("disabled");
-                $("#id_filterPanel").css("opacity", "");
+                $("#id_filterPanel").addClass("in");
                 $("#id_filterPanel button").removeAttr("disabled");
+                $("#id_acceptArea").addClass("in");
 
-                $("#id_applyButton").css("opacity", "");
+                // TODO immer prüfen, nur enabled wenn vorher action war
+                $("#id_cancelButton").removeAttr("disabled");
                 $("#id_applyButton").removeAttr("disabled");
 
-                $("#id_undoButton").css("opacity", "");
-                $("#id_redoButton").css("opacity", "");
                 $("#id_undoButton").removeAttr("disabled"); // TODO erst wenn undo stack nicht leer -> immer prüfen!
                 $("#id_redoButton").removeAttr("disabled");
+                $("#id_mergeButton").removeAttr("disabled");
 
                 // Disable the selected cube from list (and re-enable all others)
                 $('[data-cube-name]').removeClass("disabled");
@@ -233,6 +207,9 @@ var INTERFACE = new function () {
                 // Add a measure button and its listeners
 //                this.addMeasureButton(addedMeasure); // TEMP nicht nötig bei nur 1 measure
 
+                // Update visualization right away
+                MAIN.applyOLAP();
+
             }.bind(this));
 
         }.bind(this));
@@ -270,11 +247,10 @@ var INTERFACE = new function () {
     this.addMeasureButton = function (measure) {
         var plusButton = $("#id_measurePlus");
         var buttonArea = $("#id_measureButtonArea");
-        var buttonID = createUniqueID(10); // ID for the HTML element
 
         // Rebuild a measure button and its menu
-        var btnGroup = $('<div class="btn-group" id="' + buttonID + '"></div>');
-        var button = $('<button class="btn dropdown-toggle btn-default" type="button" data-toggle="dropdown"></button>');
+        var btnGroup = $('<div class="btn-group"></div>');
+        var button = $('<button class="btn dropdown-toggle btn-default btn-sm" type="button" data-toggle="dropdown"></button>');
         var text = $('<span class=button-text>' + measure.label + '</span>');
         var badge = $('<span class="badge"></span>');
         var menu = $('<ul class="dropdown-menu" role="menu"></ul>');
@@ -328,7 +304,7 @@ var INTERFACE = new function () {
             });
 
             // Remove HTML button and list
-            $("#" + buttonID).remove();
+            btnGroup.remove();
 
             // Re-enable the menu item
             $('[data-measure-name="' + measure.measureName + '"]').removeClass("disabled"); // TODO enough?
@@ -367,21 +343,14 @@ var INTERFACE = new function () {
         var plusButton = $("#id_" + axis + "Plus");
         var buttonArea = $("#id_" + axis + "ButtonArea");
 
-
-        // IDs for the HTML elements
-        var buttonID = createUniqueID(10);
-        var badgeID = createUniqueID(10);
-
-        // TODO: count entities to be displayed as selected in badge
-
         // Rebuild a dimension button and its menu
-        var btnGroup = $('<div class="btn-group" id="' + buttonID + '"></div>');
-        var button = $('<a class="btn dropdown-toggle btn-default" type="button" data-toggle="dropdown"></a>');
+        var btnGroup = $('<div class="btn-group"></div>');
+        var button = $('<a class="btn dropdown-toggle btn-default btn-sm" type="button" data-toggle="dropdown"></a>');
         var text = $('<span class=button-text>' + dimension.label + '</span>');
-        var badge = $('<span class="badge" id="' + badgeID + '"></span>');
+        var badge = $('<span class="badge"></span>');
         var menu = $('<ul class="dropdown-menu" role="menu"></ul>');
         var filterItem = $('<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Filter Entities...</a></li>');
-        var drillItem = $('<li role="presentation"><a role="menuitem" tabindex="-1" href="#"><span class="glyphicon glyphicon-unchecked"></span> Group Entities</a></li>');
+        var drillItem = $('<li role="presentation"><a role="menuitem" tabindex="-1" href="#"><span class="glyphicon glyphicon-unchecked"></span> Combine Entities</a></li>');
 
 //        <span class="glyphicon glyphicon-check"></span>
 //        <span class="glyphicon glyphicon-unchecked"></span>
@@ -411,7 +380,6 @@ var INTERFACE = new function () {
         buttonArea.append(" ");
         buttonArea.append(plusButton); // Move plus to end
 
-
         // TODO CLEANUP!!!
         // TODO keep filter in sync with other slicing/dicing on canvas!
         filterItem.on("click", function (e) {
@@ -420,7 +388,7 @@ var INTERFACE = new function () {
             var modal = $(TEMPLATES.MODAL_DIMENSION_TEMPLATE.replace("__label__", dimension.label));
             $("body").append(modal);
 
-//                        console.log(dimensionName, entitiyList[dimensionName])
+//            console.log(dimensionName, entitiyList[dimensionName])
 
             // Add all entities to the popup body
             $.each(MAIN.entityList[dimension.dimensionName], function (index, entity) {
@@ -467,7 +435,10 @@ var INTERFACE = new function () {
                 } else {
                     dimension.entities = newEntities; // TEMP unschön aber geht
                 }
-                $("#" + badgeID).text(newEntities.length + " / " + MAIN.entityList[dimension.dimensionName].length); // TODO (0 / X)
+                badge.text(newEntities.length + " / " + MAIN.entityList[dimension.dimensionName].length); // TODO (0 / X)
+
+                // Update visualization right away
+                MAIN.applyOLAP();
             });
 
             // Pause rendering in background
@@ -498,10 +469,13 @@ var INTERFACE = new function () {
             });
 
             // Remove HTML button and list
-            $("#" + buttonID).remove();
+            btnGroup.remove();
 
             // Re-enable all axis dropdown items of this dimension
             $('[data-dimension-name="' + dimension.dimensionName + '"]').removeClass("disabled");
+
+            // Update visualization right away
+            MAIN.applyOLAP();
 
             // TODO: update UI and disable/enable accept+cancel button
 
@@ -761,7 +735,7 @@ var INTERFACE = new function () {
         modal.on('shown.bs.modal', function (e) {
             $('#id_loginModalID').focus();
 
-            // TEMP for testing purpose ########################################
+            // TEMP for testing purpose ##############################################
             $('#id_loginModalID').val("https://github.com/bayerls");
 //            $('#id_loginModalID').val("8023903");
 
@@ -1003,6 +977,9 @@ var INTERFACE = new function () {
                     INTERFACE.addFilterButton(filter);
                 }
 
+                // Update visualization right away
+                MAIN.applyOLAP();
+
 
                 console.log("FILTER:", filter); // DEBUG
 
@@ -1039,7 +1016,7 @@ var INTERFACE = new function () {
 
         // Rebuild a filter button and its menu
         var btnGroup = $('<div class="btn-group"></div>');
-        var button = $('<button class="btn dropdown-toggle btn-default" type="button" data-toggle="dropdown"></button>');
+        var button = $('<button class="btn dropdown-toggle btn-default btn-sm" type="button" data-toggle="dropdown"></button>');
         var text = $('<span class=filter-button-text>' + filter.measure.label + '</span>');
         var badge = $('<span class="badge"></span>');
         var menu = $('<ul class="dropdown-menu" role="menu"></ul>');
@@ -1077,6 +1054,9 @@ var INTERFACE = new function () {
 
             // Remove HTML button and list
             btnGroup.remove();
+
+            // Update visualization right away
+            MAIN.applyOLAP();
         });
     };
 
@@ -1163,7 +1143,7 @@ var INTERFACE = new function () {
     // HELP FUNCTIONS ==========================================================
 
 
-    // Add list for X, Y, Z axis
+    // Add html list for X, Y, Z axis
     var fillDimensionList = function (axis, dimensions, results) {
         var dimensionList = $("#id_" + axis + "DimensionList");
         var plusButton = $("#id_" + axis + "Plus");
@@ -1204,11 +1184,27 @@ var INTERFACE = new function () {
                 // Add the dimension button with its menu and listeners
                 INTERFACE.addDimensionButton(dimension, axis, dimensions);
 
+                // Update visualization right away
+                MAIN.applyOLAP();
+
             });
         });
     };
 
-    // Clears selected dimensions and dropdown lists
+    // Clears the cube dropdown list
+    this.clearCubes = function () {
+
+        // Reset cube selection button
+        $("#id_cubeButton").empty();
+        $("#id_cubeButton").append("<span class=cube-button-text> Select Cube </span>");
+        $("#id_cubeButton").append("<span class='caret'></span>");
+        $("#id_cubeButton").attr("title", ""); // tooltip
+
+        // Reset dropdown list
+        $("#id_cubeList").empty();
+    };
+
+    // Clears selected dimension buttons and dropdown lists
     this.clearDimensions = function () {
         $.each(["x", "y", "z"], function (i, axis) {
 
@@ -1222,7 +1218,7 @@ var INTERFACE = new function () {
         });
     };
 
-    // Clears selected filters
+    // Clears selected filter buttons
     this.clearFilters = function () {
         var plus = $("#id_filterPlus");
         $("#id_filterButtonArea > *").detach();
@@ -1244,7 +1240,7 @@ var INTERFACE = new function () {
         // Visualize!
         MAIN.applyOLAP();
 
-        // TODO: updateUI() // check states for undo/redo/cancel/apply/...
+        // TODO: updateUI() // check states for undo/redo/cancel/apply/badges...
 
     }.bind(this);
 
@@ -1280,6 +1276,26 @@ var INTERFACE = new function () {
         }
         $.each(MAIN.measures, checkMeasure);
         return result;
+    };
+
+    // Make a html note flash for users attention
+    var flashHTMLNode = function (node) {
+        var boxShadow = "0px 0px 8px rgba(102, 175, 233, 0.75)";
+        var blinkDuration = 0.5;
+        node.css("transition", blinkDuration + "s all ease");
+        node.css("box-shadow", boxShadow);
+        setTimeout(function () {
+            node.css("box-shadow", "");
+            setTimeout(function () {
+                node.css("box-shadow", boxShadow);
+                setTimeout(function () {
+                    node.css("box-shadow", "");
+                    setTimeout(function () {
+                        node.css("transition", "");
+                    }, blinkDuration * 1000);
+                }, blinkDuration * 1000);
+            }, blinkDuration * 1000);
+        }, blinkDuration * 1000);
     };
 
     // Creates a pseudo random unique ID for HTML elements

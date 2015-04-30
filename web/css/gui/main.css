@@ -39,6 +39,13 @@ a.side-glyph:hover {
     color: inherit;
 }
 
+/* Plus Glyphicons in button */
+#id_xPlus .glyphicon-plus,
+#id_yPlus .glyphicon-plus,
+#id_zPlus .glyphicon-plus,
+#id_filterPlus .glyphicon-plus {
+    color: #a0a0a0;
+}
 
 /* badges in buttons */
 .btn .badge {
@@ -103,6 +110,22 @@ a.side-glyph:hover {
     padding-right: 5px;
 }
 
+/* Panel fade in */
+#id_dimensionPanel,
+#id_measurePanel,
+#id_filterPanel,
+#id_cancelButton,
+#id_applyButton
+#id_acceptArea {
+    /*opacity: 0;  initially*/
+}
+
+/* flash highlight */
+.highlight {
+    transition: 0.5s all ease;
+    box-shadow: 0 0 5px #80a0f0;
+}
+
 
 /* entity selection buttons (labels) */
 #id_modalBody label.active {
@@ -123,7 +146,7 @@ a.side-glyph:hover {
 /* X Y Z labels */
 .panel-body > .form-group > label {
     position: relative;
-    /*top: 5px;*/
+    top: 5px;
     float: left;
 
     /*TODO: label klebt zu weit oben -> vertikal zentrieren!*/

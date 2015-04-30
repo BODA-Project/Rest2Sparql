@@ -21,7 +21,10 @@ var WEBGL = new function () {
     this.controls;
     this.lighting;
     this.ambientLight;
-    this.animationRequest; // in case of wanting to stop
+
+    // WebGL status (in case of wanting to pause)
+    this.animationRequest;
+    this.isPaused = false;
 
     // Mouse interaction
     this.raycaster = new THREE.Raycaster();
@@ -49,12 +52,18 @@ var WEBGL = new function () {
 
     // Stops rendering completely
     this.stopRendering = function () {
-        cancelAnimationFrame(this.animationRequest);
+        if (!WEBGL.isPaused) {
+            cancelAnimationFrame(this.animationRequest);
+            WEBGL.isPaused = true;
+        }
     };
 
     // Resumes rendering
     this.resumeRendering = function () {
-        this.animationRequest = requestAnimationFrame(this.render.bind(this));
+        if (WEBGL.isPaused) {
+            this.animationRequest = requestAnimationFrame(this.render.bind(this));
+            WEBGL.isPaused = false;
+        }
     };
 
     // Update when the orbit control was moved
@@ -262,40 +271,50 @@ var WEBGL = new function () {
                 x = label.position.x;
                 y = (this.totalSize[1] - 1) / 2;
                 z = (this.totalSize[2] - 1) / 2;
-                width = label.selectionSize + 0.02;
-                height = this.totalSize[1] + 0.02;
-                depth = this.totalSize[2] + 0.02;
+                width = label.selectionSize;
+                height = this.totalSize[1];
+                depth = this.totalSize[2];
                 break;
             case "y" :
                 x = (this.totalSize[0] - 1) / 2;
                 y = label.position.y;
                 z = (this.totalSize[2] - 1) / 2;
-                width = this.totalSize[0] + 0.04;
-                height = label.selectionSize + 0.04;
-                depth = this.totalSize[2] + 0.04;
+                width = this.totalSize[0];
+                height = label.selectionSize;
+                depth = this.totalSize[2];
                 break;
             case "z" :
                 x = (this.totalSize[0] - 1) / 2;
                 y = (this.totalSize[1] - 1) / 2;
                 z = label.position.z;
-                width = this.totalSize[0] + 0.06;
-                height = this.totalSize[1] + 0.06;
-                depth = label.selectionSize + 0.06;
+                width = this.totalSize[0];
+                height = this.totalSize[1];
+                depth = label.selectionSize;
                 break;
         }
         var geometry = new THREE.BoxGeometry(width, height, depth);
         var material = new THREE.MeshLambertMaterial({color: this.COLOR_SELECTION});
+//        var material = new THREE.MeshBasicMaterial({color: this.COLOR_SELECTION});
         material.transparent = true;
         material.opacity = 0.15;
+
+        // Test
+        material.depthTest = true;
+        material.depthWrite = false;
+
         label.selectionCube = new THREE.Mesh(geometry, material);
         label.selectionCube.position.set(x, y, z);
 
 //        label.selectionCube.scale.set(scale,scale,scale);
         label.selectionCubeOutline = new THREE.BoxHelper(label.selectionCube);
         label.selectionCubeOutline.material.color.set(this.COLOR_SELECTION);
-        label.selectionCubeOutline.material.linewidth = 3;
-        label.selectionCubeOutline.material.opacity = 0.25;
+        label.selectionCubeOutline.material.linewidth = 2;
+        label.selectionCubeOutline.material.opacity = 0.15;
         label.selectionCubeOutline.material.transparent = true;
+
+        // Test
+        label.selectionCubeOutline.material.depthTest = true;
+        label.selectionCubeOutline.material.depthWrite = false;
 
         this.scene.add(label.selectionCube);
         this.scene.add(label.selectionCubeOutline);
@@ -623,6 +642,9 @@ var WEBGL = new function () {
         this.controls.autoRotate = true;
         this.controls.autoRotateSpeed = 5;
         this.controls.update();
+
+        // Resume if webGL was paused
+        WEBGL.resumeRendering();
 
     };
 
