@@ -11,8 +11,9 @@
 
         <init-param>
             <param-name>engine</param-name>
-            <!--<param-value>virtuoso</param-value>-->
             <param-value>bigdata</param-value>
+            <!--<param-value>marmotta</param-value>-->
+            <!--<param-value>virtuoso</param-value>-->
         </init-param>
         <init-param>
             <param-name>host</param-name>

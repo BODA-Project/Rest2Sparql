@@ -126,21 +126,24 @@ a.side-glyph:hover {
     box-shadow: 0 0 5px #80a0f0;
 }
 
-
 /* entity selection buttons (labels) */
-#id_modalBody label.active {
+#id_entityModalBody label.active {
     background-color: #CAF2AB;
     border-color: #82AD5F;
 }
 
-#id_modalBody label.active:hover {
+#id_entityModalBody label.active:hover {
     background-color: #c1e5a3;
     border-color: #82AD5F;
 }
 
-#id_modalBody label.active:active {
+#id_entityModalBody label.active:active {
     background-color: #b4d699;
     border-color: #b4d699;
+}
+
+#id_entityModal .modal-header > h4 {
+    margin-bottom: 5px;
 }
 
 /* X Y Z labels */
@@ -262,7 +265,7 @@ a.side-glyph:hover {
 #id_yButtonArea > .btn-group,
 #id_zButtonArea > .btn-group,
 #id_filterButtonArea > .btn-group,
-#id_modalBody > .btn-group {
+#id_entityModalBody > .btn-group {
     margin-bottom: 5px;
 }
 

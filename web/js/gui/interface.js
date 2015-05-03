@@ -4,7 +4,7 @@
 
 var INTERFACE = new function () {
 
-    this.NUM_ENTITIES = 10; // TODO: which ones? how many?
+    this.NUM_ENTITIES = 15; // TODO: which ones? how many?
 
     // For interaction with 3D objects
     this.mouseDown = {};
@@ -326,13 +326,11 @@ var INTERFACE = new function () {
 
     // Adds a dimension button and its menu after the measure was selected.
     this.addDimensionButton = function (dimension, axis, dimensions) {
-
         var dimensionList = $("#id_" + axis + "DimensionList");
         var plusButton = $("#id_" + axis + "Plus");
         var buttonArea = $("#id_" + axis + "ButtonArea");
 
         var rollupIcon = dimension.rollup ? "glyphicon glyphicon-check" : "glyphicon glyphicon-unchecked";
-
 
         // Rebuild a dimension button and its menu
         var btnGroup = $('<div class="btn-group" data-dimension-name="' + dimension.dimensionName + '"></div>');
@@ -340,7 +338,7 @@ var INTERFACE = new function () {
         var text = $('<span class=button-text>' + dimension.label + '</span>');
         var badge = $('<span class="badge"></span>');
         var menu = $('<ul class="dropdown-menu" role="menu"></ul>');
-        var filterItem = $('<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Filter Entities...</a></li>');
+        var filterItem = $('<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Select Entities...</a></li>');
         var drillItem = $('<li role="presentation"><a role="menuitem" tabindex="-1" href="#"><span class="' + rollupIcon + '"></span> Combine Entities</a></li>');
 
         var dividerItem = $('<li role="presentation" class="divider"></li>');
@@ -371,76 +369,9 @@ var INTERFACE = new function () {
         buttonArea.append(" ");
         buttonArea.append(plusButton); // Move plus to end
 
-        // TODO CLEANUP!!!
-        // TODO keep filter in sync with other slicing/dicing on canvas!
+        // Popup a modal for entity selection
         filterItem.on("click", function (e) {
-
-            // Add popup to the body
-            var modal = $(TEMPLATES.MODAL_DIMENSION_TEMPLATE.replace("__label__", dimension.label));
-            $("body").append(modal);
-
-//            console.log(dimensionName, entitiyList[dimensionName])
-
-            // Add all entities to the popup body
-            $.each(MAIN.entityList[dimension.dimensionName].list, function (index, entity) {
-
-                // TODO nicht ganz bootstrap konform (row missing)
-                var btnGroup = $('<div class="btn-group col-md-4 col-xs-12 entity-button" data-toggle="buttons"></div> ');
-                var label = $('<label class="btn btn-default btn-xs ' + (MAIN.entityList[dimension.dimensionName][entity.entityName] ? 'active' : '') + '" title="' + entity.label + '"></label>');
-                var button = $('<input type="checkbox" autocomplete="off"' + (MAIN.entityList[dimension.dimensionName][entity.entityName] ? 'checked' : '') + ' data-entity-name="' + entity.entityName + '" data-entity-label="' + entity.label + '">');
-
-                // Combine the checkbox and add
-                label.append(button);
-                label.append(document.createTextNode(entity.label)); // escaping TODO überall
-                btnGroup.append(label);
-                $("#id_modalBody").append(btnGroup);
-                $("#id_modalBody").append(" ");
-            });
-
-            // Set max modal height
-            $("#id_modalBody").css("max-height", $(window).height() - 210 + "px");
-            $("#id_modalBody").css("overflow-y", "scroll");
-
-            // Accept action of popup
-            $("#id_modalOkay").on("click", function (e) {
-
-                // TODO diverse sonderfälle...
-
-                // TODO apply selected entities
-                var newEntities = [];
-
-                $("input[data-entity-name]").each(function () {
-                    var entityName = $(this).data('entity-name');
-                    var label = $(this).data('entity-label');
-                    if ($(this).prop("checked")) {
-                        MAIN.entityList[dimension.dimensionName][entityName] = true;
-                        newEntities.push(new Entity(dimension.dimensionName, entityName, label));
-                    } else {
-                        MAIN.entityList[dimension.dimensionName][entityName] = false;
-                    }
-                });
-
-                // Set new entity list
-                dimension.entities = newEntities;
-
-                // Update visualization and interface right away
-                MAIN.applyOLAP();
-            });
-
-            // Pause rendering in background
-            WEBGL.stopRendering();
-
-            // Show the popup
-            $("#id_modal").modal();
-
-            // Remove when finished
-            modal.on('hidden.bs.modal', function (e) {
-                modal.remove();
-
-                // Resume rendering again
-                WEBGL.resumeRendering();
-            });
-
+            INTERFACE.popupEntitySelection(dimension);
         });
 
         // Add event for removing the dimension
@@ -508,6 +439,8 @@ var INTERFACE = new function () {
             console.log("EVENT:", e);
             alert("DROP! " + e);
             e.preventDefault();
+
+            // TODO  jquery -> .insertAfter()
 
         });
 
@@ -810,6 +743,180 @@ var INTERFACE = new function () {
 
         // Show the popup
         $('#id_resultModal').modal();
+
+        // Remove when finished
+        modal.on('hidden.bs.modal', function (e) {
+            modal.remove();
+
+            // Resume rendering again
+            WEBGL.resumeRendering();
+        });
+    };
+
+    /**
+     * Shows a modal for entitySelection of a given dimension
+     * @param {Dimension} dimension the dimension containing the entities
+     */
+    this.popupEntitySelection = function (dimension) {
+        // Add popup to the body
+        var modal = $(TEMPLATES.MODAL_DIMENSION_TEMPLATE.replace("__label__", dimension.label));
+        $("body").append(modal);
+
+        var buttonArea = $("#id_entityModalNavigation");
+
+        // Add easy access buttons
+        var SelectAllButton = $('<button class="btn btn-default btn-sm">All</button>');
+        var SelectNoneButton = $('<button class="btn btn-default btn-sm">None</button>');
+        var SelectInvertButton = $('<button class="btn btn-default btn-sm">Invert</button>');
+        var SelectResetButton = $('<button class="btn btn-default btn-sm">Reset</button>');
+        var SelectPrevButton = $('<button class="btn btn-default btn-sm"><span class="glyphicon glyphicon-menu-up"></span> Previous ' + INTERFACE.NUM_ENTITIES + '</button>');
+        var SelectNextButton = $('<button class="btn btn-default btn-sm"><span class="glyphicon glyphicon-menu-down"></span> Next ' + INTERFACE.NUM_ENTITIES + '</button>');
+        buttonArea.append(SelectAllButton);
+        buttonArea.append(SelectNoneButton);
+        buttonArea.append(SelectInvertButton);
+        buttonArea.append(SelectResetButton);
+        buttonArea.append(SelectPrevButton);
+        buttonArea.append(SelectNextButton);
+
+        // Add all entities to the popup body
+        $.each(MAIN.entityList[dimension.dimensionName].list, function (index, entity) {
+
+            // TODO nicht ganz bootstrap konform (row missing)
+            var btnGroup = $('<div class="btn-group col-md-4 col-xs-12 entity-button" data-toggle="buttons"></div> ');
+            var label = $('<label class="btn btn-default btn-xs ' + (MAIN.entityList[dimension.dimensionName][entity.entityName] ? 'active' : '') + '" title="' + entity.label + '"></label>');
+            var button = $('<input type="checkbox" autocomplete="off"' + (MAIN.entityList[dimension.dimensionName][entity.entityName] ? 'checked' : '') + ' data-entity-name="' + entity.entityName + '" data-entity-label="' + entity.label + '">');
+
+            // Combine the checkbox and add
+            label.append(button);
+            label.append(document.createTextNode(entity.label)); // escaping TODO überall
+            btnGroup.append(label);
+            $("#id_entityModalBody").append(btnGroup);
+            $("#id_entityModalBody").append(" ");
+        });
+
+        // Set max modal height
+        $("#id_entityModalBody").css("max-height", $(window).height() - 230 + "px");
+        $("#id_entityModalBody").css("overflow-y", "scroll");
+
+        // Accept action of popup
+        $("#id_entityModalOkay").on("click", function (e) {
+
+            // Apply selected entities
+            var newEntities = [];
+            $("input[data-entity-name]").each(function () {
+                var entityName = $(this).data('entity-name');
+                var label = $(this).data('entity-label');
+                if ($(this).prop("checked")) {
+                    MAIN.entityList[dimension.dimensionName][entityName] = true;
+                    newEntities.push(new Entity(dimension.dimensionName, entityName, label));
+                } else {
+                    MAIN.entityList[dimension.dimensionName][entityName] = false;
+                }
+            });
+
+            // Set new entity list
+            dimension.entities = newEntities;
+
+            // Update visualization and interface right away
+            MAIN.applyOLAP();
+        });
+
+        // Select all entities
+        SelectAllButton.on("click", function (e) {
+            $("input[data-entity-name]").each(function (i, element) {
+                $(element).prop("checked", true);
+                $(element).parent().addClass("active");
+            });
+            // TODO much warning, many entity
+        });
+
+        // Deselect all entities
+        SelectNoneButton.on("click", function (e) {
+            $("input[data-entity-name]").each(function (i, element) {
+                $(element).prop("checked", false);
+                $(element).parent().removeClass("active");
+            });
+            // TODO disable apply
+        });
+
+        // Select all entities
+        SelectInvertButton.on("click", function (e) {
+            $("input[data-entity-name]").each(function (i, element) {
+                if ($(element).prop("checked")) {
+                    $(element).prop("checked", false);
+                    $(element).parent().removeClass("active");
+                } else {
+                    $(element).prop("checked", true);
+                    $(element).parent().addClass("active");
+                }
+            });
+        });
+
+        // Select previous 10 entities (before first selected)
+        SelectPrevButton.on("click", function (e) {
+            var lowestIndex = 0;
+            $("input[data-entity-name]").each(function (i, element) {
+                if ($(element).prop("checked")) {
+                    lowestIndex = i;
+                    return false;
+                }
+            });
+            var start = Math.max(0, lowestIndex - INTERFACE.NUM_ENTITIES);
+            var end = Math.min(start + INTERFACE.NUM_ENTITIES, $("input[data-entity-name]").length);
+            $("input[data-entity-name]").each(function (i, element) {
+                $(element).prop("checked", false);
+                $(element).parent().removeClass("active");
+            });
+            $("input[data-entity-name]").slice(start, end).each(function (i, element) {
+                $(element).prop("checked", true);
+                $(element).parent().addClass("active");
+            });
+        });
+
+        // Select next 10 entities (after last selected)
+        SelectNextButton.on("click", function (e) {
+            var highestIndex = 0;
+            $("input[data-entity-name]").each(function (i, element) {
+                if ($(element).prop("checked")) {
+                    highestIndex = i + 1;
+                }
+            });
+            var start = Math.max(0, Math.min($("input[data-entity-name]").length - INTERFACE.NUM_ENTITIES, highestIndex));
+            var end = start + INTERFACE.NUM_ENTITIES;
+            $("input[data-entity-name]").each(function (i, element) {
+                $(element).prop("checked", false);
+                $(element).parent().removeClass("active");
+            });
+            $("input[data-entity-name]").slice(start, end).each(function (i, element) {
+                $(element).prop("checked", true);
+                $(element).parent().addClass("active");
+            });
+        });
+
+        // Select the first 10 entities again
+        SelectResetButton.on("click", function (e) {
+            $("input[data-entity-name]").each(function (i, element) {
+                if (i < INTERFACE.NUM_ENTITIES) {
+                    $(element).prop("checked", true);
+                    $(element).parent().addClass("active");
+                } else {
+                    $(element).prop("checked", false);
+                    $(element).parent().removeClass("active");
+                }
+            });
+        });
+
+        // Disable prev, next buttons if not enough entities
+        if (MAIN.entityList[dimension.dimensionName].list.length <= INTERFACE.NUM_ENTITIES) {
+            SelectPrevButton.prop("disabled", true);
+            SelectNextButton.prop("disabled", true);
+        }
+
+        // Pause rendering in background
+        WEBGL.stopRendering();
+
+        // Show the popup
+        $("#id_entityModal").modal();
 
         // Remove when finished
         modal.on('hidden.bs.modal', function (e) {

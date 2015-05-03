@@ -531,14 +531,20 @@ var MAIN = new function () {
     // For initial fix to avoid huge results...
     this.getFirstEntities = function (dimensionName, maxCount) {
         var list = [];
-        for (var i = 0; i < maxCount; i++) {
-            var entity = MAIN.entityList[dimensionName].list[i];
-            if (entity === undefined) {
-                break;
+
+        // Reset all entities to unselected
+        $.each(MAIN.entityList[dimensionName].list, function (i, entity) {
+            MAIN.entityList[dimensionName][entity.entityName] = false;
+        });
+
+        // Get the first (10)
+        $.each(MAIN.entityList[dimensionName].list, function (i, entity) {
+            if (i === maxCount) {
+                return false;
             }
             list.push(entity);
-            MAIN.entityList[dimensionName][entity.entityName] = true; // boolean to see if checked
-        }
+            MAIN.entityList[dimensionName][entity.entityName] = true; // mark as selected
+        });
         return list;
     };
 
@@ -916,7 +922,7 @@ var MAIN = new function () {
                     entity.position = counter;
                     counter++;
                 });
-                counter++; // 1 field to separate groups
+                counter++; // 1 field gap to separate groups
             } else {
                 // Go deeper!
                 $.each(entityList, function (index, entity) {
