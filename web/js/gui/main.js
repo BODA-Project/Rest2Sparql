@@ -54,6 +54,14 @@ var MAIN = new function () {
         {type: "bigger", label: ">"},
         {type: "bigger_or_eq", label: ">="}
     ];
+    this.AGGREGATIONS = [
+        {type: "count", label: "Count"},
+        {type: "sum", label: "Sum up"},
+        {type: "min", label: "Min"},
+        {type: "max", label: "Max"},
+        {type: "avg", label: "Average"},
+        {type: "sample", label: "Random Sample"}
+    ];
 
     // Globas vars
     this.ID = "";
@@ -69,6 +77,7 @@ var MAIN = new function () {
 
 
     // All possible dimensions and measures
+    this.availableCubes = [];
     this.availableDimensions = [];
     this.availableMeasures = [];
 
@@ -80,11 +89,13 @@ var MAIN = new function () {
     this.filters = [];       // Type: Filter
 
     // Undo, Redo
-    this.undoStack = []; // TODO
-    this.redoStack = []; // TODO
+    this.undoStack = [];
+    this.redoStack = [];
+    this.currentState; // TODO kommt nach neuer olap operation in den undo stack
 
     this.tempSelection = {}; // Temprary selection of dimensions' entities (to be accepted on button click)
-    // TEMP: z.b.: tempSelection[dimensionName][entityName] = true;
+
+    // TODO dann bei ACCEPT: foreach dimension in xyzDimensions -> tempSelection[dim][...]
 
     // TODO For visual selection of labels / entities (not needed anymore?)
     this.labelMap = {};
@@ -95,8 +106,8 @@ var MAIN = new function () {
 
     // Initialization
     $(document).ready(function () {
-        this.init();
-    }.bind(this));
+        MAIN.init();
+    });
 
     // Tries to log in a given ID
     this.loginUser = function (id) {
@@ -106,7 +117,6 @@ var MAIN = new function () {
         });
 
         requestHash.done(function (hash) {
-
             console.log(id + ", HASH = " + hash); // TEST
 
             // Also check if given user has any cubes
@@ -138,8 +148,8 @@ var MAIN = new function () {
                     return;
                 } else {
                     // Accept and save ID + Hash and let the user continue...
-                    this.ID = id;
-                    this.HASH = hash;
+                    MAIN.ID = id;
+                    MAIN.HASH = hash;
                     $.cookie('ID', id, {expires: 7}); // Keep cookie 7 days
 
                     // Close the login popup
@@ -150,9 +160,9 @@ var MAIN = new function () {
 
                 }
 
-            }.bind(this));
+            });
 
-        }.bind(this));
+        });
 
     };
 
@@ -166,6 +176,9 @@ var MAIN = new function () {
             $.removeCookie('ID');
 
             // Reset configuration
+            MAIN.availableCubes = [];
+            MAIN.availableDimensions = [];
+            MAIN.availableMeasures = [];
             MAIN.currentCube = "";
             MAIN.xDimensions = [];
             MAIN.xDimensions = [];
@@ -174,7 +187,9 @@ var MAIN = new function () {
             MAIN.filters = [];
             MAIN.undoStack = [];
             MAIN.redoStack = [];
+            MAIN.currentState = undefined;
             MAIN.entityList = {};
+            MAIN.tempSelection = {};
             MAIN.entityMap = {};
 
             // Reset interface
@@ -206,7 +221,7 @@ var MAIN = new function () {
         if ($.cookie("ID") === undefined) {
             INTERFACE.popupLogin(); // Show login prompt
         } else {
-            this.loginUser($.cookie("ID"));
+            MAIN.loginUser($.cookie("ID"));
         }
 
         // Setup THREE.JS components
@@ -247,19 +262,21 @@ var MAIN = new function () {
 
             // Stop and notify if no results
             if (results.length === 0) {
+
                 alert("No results for the given query."); // TODO schönes popup? + default loading screen oder letztes ergebnis zeigen (webGL)
+                // TODO automatisch undo?
                 return;
             }
 
             // Reset the entity map
-            this.entityMap = {};
+            MAIN.entityMap = {};
 
             // Look for actually used entities (saved in entityMap)
             $.each(results, function (index, result) {
-                addToEntityMap(this.xDimensions, result);
-                addToEntityMap(this.yDimensions, result);
-                addToEntityMap(this.zDimensions, result);
-            }.bind(this));
+                addToEntityMap(MAIN.xDimensions, result);
+                addToEntityMap(MAIN.yDimensions, result);
+                addToEntityMap(MAIN.zDimensions, result);
+            });
 
             // Help function to sort one (stacked) axis of the entityMap
             var sortEntities = function (map, dimensionList, depth) {
@@ -267,32 +284,38 @@ var MAIN = new function () {
                     var dimension = dimensionList[depth];
                     var dimensionName = dimension.dimensionName;
                     if (map === null) {
-                        map = this.entityMap; // Start with the axis root
+                        map = MAIN.entityMap; // Start with the axis root
                     }
                     map[dimensionName].sort(labelCompare); // Sort by labels
+
+                    // Reverse Y entities (top to bottom)
+                    if (dimensionList === MAIN.yDimensions) {
+                        map[dimensionName].reverse();
+                    }
+
                     $.each(map[dimensionName], function (j, entity) {
                         sortEntities(entity, dimensionList, depth + 1); // Recursion
                     });
                 }
-            }.bind(this);
+            };
 
             // Sort the whole entityMap recursively
-            sortEntities(null, this.xDimensions, 0);
-            sortEntities(null, this.yDimensions, 0);
-            sortEntities(null, this.zDimensions, 0);
+            sortEntities(null, MAIN.xDimensions, 0);
+            sortEntities(null, MAIN.yDimensions, 0);
+            sortEntities(null, MAIN.zDimensions, 0);
 
             // Assign coordinates to entities
-            assignCoordinates(this.xDimensions);
-            assignCoordinates(this.yDimensions);
-            assignCoordinates(this.zDimensions);
+            assignCoordinates(MAIN.xDimensions);
+            assignCoordinates(MAIN.yDimensions);
+            assignCoordinates(MAIN.zDimensions);
 
             // Find the hightest and lowest measures for a colored ratio
             var highestMeasures = {};
             var lowestMeasures = {};
             $.each(results, function (index1, result) {
-                $.each(this.measures, function (index2, measure) {
+                $.each(MAIN.measures, function (index2, measure) {
                     var measureName = measure.measureName;
-                    var measureValue = this.getMeasureValueFromJson(result, measure);
+                    var measureValue = MAIN.getMeasureValueFromJson(result, measure);
 
                     // TEMP fix for API error
                     if (measureValue === null) {
@@ -304,8 +327,8 @@ var MAIN = new function () {
                     var currentLowest = lowestMeasures[measureName];
                     highestMeasures[measureName] = (currentHighest === undefined || currentHighest < measureValue) ? measureValue : currentHighest;
                     lowestMeasures[measureName] = (currentLowest === undefined || currentLowest > measureValue) ? measureValue : currentLowest;
-                }.bind(this));
-            }.bind(this));
+                });
+            });
 
 
             // Remove the current loading screen and reset the scene
@@ -317,10 +340,10 @@ var MAIN = new function () {
                 // Get the value and relative ratio of each measure
                 var ratios = [];
                 var values = [];
-                $.each(this.measures, function (index2, measure) {
+                $.each(MAIN.measures, function (index2, measure) {
                     var highestMeasure = highestMeasures[measure.measureName];
                     var lowestMeasure = lowestMeasures[measure.measureName];
-                    var measureValue = this.getMeasureValueFromJson(result, measure);
+                    var measureValue = MAIN.getMeasureValueFromJson(result, measure);
 
                     // TEMP fix for API error
                     if (measureValue === null) {
@@ -332,7 +355,7 @@ var MAIN = new function () {
 
                     // TEST Logarithmic value (log10) TODO setting ein aus
 //                    ratios[index2] = Math.log((ratios[index2] * 9) + 1) / Math.log(10);
-                }.bind(this));
+                });
 
                 // TEMP fix for API error
                 if (values.length === 0) {
@@ -346,18 +369,18 @@ var MAIN = new function () {
                 var cube = WEBGL.addCube(coordinates, values, ratios); // TODO custom colors?
                 cube.result = result; // Temporarly save the result to the cube
                 INTERFACE.addCubeListeners(cube); // add click and hover events
-            }.bind(this));
+            });
 
 
             // Draw (stacked) entity labels around the result-cubes
-            insertEntityLabels(this.xDimensions, "x");
-            insertEntityLabels(this.yDimensions, "y");
-            insertEntityLabels(this.zDimensions, "z");
+            insertEntityLabels(MAIN.xDimensions, "x");
+            insertEntityLabels(MAIN.yDimensions, "y");
+            insertEntityLabels(MAIN.zDimensions, "z");
 
             // Draw (stacked) dimension + axis labels
-            insertDimensionLabels(this.xDimensions, "x");
-            insertDimensionLabels(this.yDimensions, "y");
-            insertDimensionLabels(this.zDimensions, "z");
+            insertDimensionLabels(MAIN.xDimensions, "x");
+            insertDimensionLabels(MAIN.yDimensions, "y");
+            insertDimensionLabels(MAIN.zDimensions, "z");
 
             // Add references to label sprites for each cube
             assignLabelsToCubes();
@@ -377,63 +400,21 @@ var MAIN = new function () {
             WEBGL.addGrid();
 
             // DEBUG:
-            console.log("sorted entityMap: ", this.entityMap);
             console.log("lowest measure: ", lowestMeasures, ", highest: ", highestMeasures, ", #results: ", results.length);
 
-        }.bind(this));
-
-    };
-
-
-    // TODO Select a given entity for the <fix> part of the next query
-    this.toggleSelectEntity = function (entity) {
-
-        // TODO find entities dimension in the x,y,z lists and add new entity object / remove old one
-
-        console.log(entityList);
-
-        // TEST only X for now
-        $.each(this.xDimensions, function (index, dimension) {
-
-            if (dimension.dimensionName === entity.dimensionName) {
-
-                if (entityList[dimension.dimensionName][entity.entityName]) {
-                    $.each(dimension.entities, function (index1, entity1) {
-                        if (entity.entityName === entity1.entityName) {
-                            dimension.entities.splice(index1, 1); // TODO anders rum (hier wird ein bestimmtes ja rausgelöscht) daher -> in separate liste und bei accept diese bevorzugen
-                            return false; // break each
-                        }
-                    });
-                } else {
-                    // add entity to <fix> selection
-                    dimension.entities.push(entity); // drin is es eh schon, lieber erst bei accept die xyzDimensions ändern + request senden
-//                dimension.entities.
-                }
-            }
-
-            // Switch selection (boolean)
-            // TODO Cancel funtion bedenken! -> remember for undo
-
-            console.log(dimension);
-
-            entityList[dimension.dimensionName][entity.entityName] = !entityList[dimension.dimensionName][entity.entityName];
-
-//            console.log(element);
         });
 
-        console.log(xDimensions);
-
     };
 
 
-
-
-    // TODO: guided forward to next panel + info panels below ->>> Bootstrap POPOVER-BOTTOM entfernen mit ".popover('destroy')"
+    /**
+     * Load the list of available cubes and fill the lists accordingly
+     */
     this.loadCubeList = function () {
 
         // Make the request
-        var url = TEMPLATES.CUBE_URL.replace("__id__", this.ID);
-        url = url.replace("__hash__", this.HASH);
+        var url = TEMPLATES.CUBE_URL.replace("__id__", MAIN.ID);
+        url = url.replace("__hash__", MAIN.HASH);
         var request = $.ajax({
             url: url,
             headers: {
@@ -450,7 +431,7 @@ var MAIN = new function () {
                 alert(content); // TODO popupError(...)
                 return;
             }
-            var results = obj.results.bindings; // array
+            var results = obj.results.bindings;
             if (results.length === 0) {
                 return;
             }
@@ -459,17 +440,18 @@ var MAIN = new function () {
             results.sort(function (a, b) {
                 return alphanumCase(a.LABEL.value, b.LABEL.value);
             });
-
-            INTERFACE.initCubeList(results);
+            MAIN.parseCubes(results);
+            INTERFACE.initCubeList(results); // create HTML list
         });
-
     };
 
-    // Loads the list of dimensions for a given cube
+    /**
+     * Load the list of available dimensions for a cube and fill the lists accordingly
+     */
     this.loadDimensionList = function () {
-        var url = TEMPLATES.DIMENSION_URL.replace("__cube__", this.currentCube);
-        url = url.replace("__id__", this.ID);
-        url = url.replace("__hash__", this.HASH);
+        var url = TEMPLATES.DIMENSION_URL.replace("__cube__", MAIN.currentCube);
+        url = url.replace("__id__", MAIN.ID);
+        url = url.replace("__hash__", MAIN.HASH);
 
         var request = $.ajax({
             url: url,
@@ -486,19 +468,19 @@ var MAIN = new function () {
             results.sort(function (a, b) {
                 return alphanumCase(a.LABEL.value, b.LABEL.value);
             });
-
-//            MAIN.parseDimensions(results); // TODO
-            INTERFACE.initDimensionLists(results); // TODO use availableDimensions
+            MAIN.parseDimensions(results);
+            INTERFACE.initDimensionLists(); // create HTML lists
         });
-
     };
 
 
-    // Loads the list of measures for a given cube
+    /**
+     * Load the list of available measures for a cube and fill the lists accordingly
+     */
     this.loadMeasureList = function () {
-        var url = TEMPLATES.MEASURE_URL.replace("__cube__", this.currentCube);
-        url = url.replace("__id__", this.ID);
-        url = url.replace("__hash__", this.HASH);
+        var url = TEMPLATES.MEASURE_URL.replace("__cube__", MAIN.currentCube);
+        url = url.replace("__id__", MAIN.ID);
+        url = url.replace("__hash__", MAIN.HASH);
 
         var request = $.ajax({
             url: url,
@@ -515,18 +497,16 @@ var MAIN = new function () {
             results.sort(function (a, b) {
                 return alphanumCase(a.LABEL.value, b.LABEL.value);
             });
-
             MAIN.parseMeasures(results);
-            INTERFACE.initMeasureList(results); // TODO use availableMeasures
+            INTERFACE.initMeasureList(); // create HTML list
         });
-
     };
 
     // Loads the list of possible entities for a given dimension (dimension URI).
     this.queryEntityList = function (dimensionName) {
-        var url = TEMPLATES.ENTITY_URL.replace("__cube__", this.currentCube);
-        url = url.replace("__id__", this.ID);
-        url = url.replace("__hash__", this.HASH);
+        var url = TEMPLATES.ENTITY_URL.replace("__cube__", MAIN.currentCube);
+        url = url.replace("__id__", MAIN.ID);
+        url = url.replace("__hash__", MAIN.HASH);
         url = url.replace("__dimension__", dimensionName);
         var list = [];
         var request = $.ajax({
@@ -549,38 +529,78 @@ var MAIN = new function () {
     };
 
     // For initial fix to avoid huge results...
-    this.getFirstEntities = function (entitiyList, dimensionName, maxCount) {
+    this.getFirstEntities = function (dimensionName, maxCount) {
         var list = [];
         for (var i = 0; i < maxCount; i++) {
-            var entity = entitiyList[dimensionName][i];
+            var entity = MAIN.entityList[dimensionName].list[i];
             if (entity === undefined) {
                 break;
             }
             list.push(entity);
-            entitiyList[dimensionName][entity.entityName] = true; // TODO: boolean to see if checked
+            MAIN.entityList[dimensionName][entity.entityName] = true; // boolean to see if checked
         }
         return list;
     };
 
+    // Applies on-screen selection of entities if given
+    this.applyTempSelection = function () {
 
+        // Add dimensions
+        var setEntities = function (index, dimension) {
+            var tempEntityList = MAIN.tempSelection[dimension.dimensionName];
+            if (tempEntityList && tempEntityList.length > 0) {
 
-    // ...
-    this.selectEntity = function (entity) {
-        // TODO: zur FIX liste hinzufügen, sidebar -> badge updaten (x / y), entsprechende threejs-objecte highlighten!
+                // Update the list of selected entities
+                dimension.entities = tempEntityList;
+
+                // Unselect all entities first
+                $.each(MAIN.entityList[dimension.dimensionName].list, function (i, entity) {
+                    MAIN.entityList[dimension.dimensionName][entity.entityName] = false;
+                });
+                // Set all entities from temp list to selected
+                $.each(tempEntityList, function (i, entity) {
+                    MAIN.entityList[dimension.dimensionName][entity.entityName] = true;
+                });
+            }
+
+            // Update the badges on the accoring button
+//            INTERFACE.updateBadge(dimensionName); // TODO mit selektor $(".btn-group[data-dimension-name='+dimName+'] .badge"); #####
+
+        };
+        $.each(MAIN.xDimensions, setEntities);
+        $.each(MAIN.yDimensions, setEntities);
+        $.each(MAIN.zDimensions, setEntities);
+
+        // Set temp selection to be empty again for following OLAP steps
+        MAIN.tempSelection = {};
     };
 
-    // ...
-    this.applyOLAP = function () {
+    /**
+     * ...
+     * @param {boolean} isUndo if true, no undo state will be saved
+     */
+    this.applyOLAP = function (isUndo) {
 
-        // TODO apply button enabled only on change -> listener for all buttons...
+        // Save undo step
+        // TODO hier is schon zu spät, xyzDimension ist schon geändert
+        if (!isUndo) {
+            MAIN.saveUndoState();
+        }
 
-        // TODO update whole UI (labels of buttons, button states...)
+        // Visualize the cube
+        var url = MAIN.createRequestURL();
+        MAIN.visualize(url);
 
-        var url = this.createRequestURL();
-        this.visualize(url);
+        // Update the configuration buttons (Dimensions, Measures, ...)
+        INTERFACE.updateConfigButtons();
+
+        // TODO Update the rest of the interface (Apply, Cancel, Undo, ...)
+        INTERFACE.updateNavigation();
 
         // DEBUG url
-        console.log("REQUEST:", url);
+        console.log("REQUEST URL", url);
+//        console.log("UNDO STACK:", MAIN.undoStack);
+//        console.log("REDO STACK:", MAIN.redoStack);
     };
 
 
@@ -589,9 +609,9 @@ var MAIN = new function () {
     this.createRequestURL = function () {
 
         var url = TEMPLATES.EXECUTE_URL;
-        url = url.replace("__id__", this.ID);
-        url = url.replace("__hash__", this.HASH);
-        url = url.replace("__cube__", this.currentCube);
+        url = url.replace("__id__", MAIN.ID);
+        url = url.replace("__hash__", MAIN.HASH);
+        url = url.replace("__cube__", MAIN.currentCube);
 
         // Add dimensions
         function addDim(index, dimension) {
@@ -604,8 +624,8 @@ var MAIN = new function () {
                 tmp = TEMPLATES.DIMENSION_PART_URL.replace("__dimension__", dimension.dimensionName);
             }
 
-            // Add fix option if entities were selected
-            if (dimension.entities.length > 0) {
+            // Add fix option if entities were explicitly selected
+            if (dimension.entities.length !== MAIN.entityList[dimension.dimensionName].list.length) {
                 var tmp2 = "";
                 $.each(dimension.entities, function (index, entity) {
                     tmp2 += entity.entityName + ",";
@@ -615,12 +635,12 @@ var MAIN = new function () {
             }
             url += tmp;
         }
-        $.each(this.xDimensions, addDim);
-        $.each(this.yDimensions, addDim);
-        $.each(this.zDimensions, addDim);
+        $.each(MAIN.xDimensions, addDim);
+        $.each(MAIN.yDimensions, addDim);
+        $.each(MAIN.zDimensions, addDim);
 
         // Add measures
-        $.each(this.measures, function (index, measure) {
+        $.each(MAIN.measures, function (index, measure) {
             url += TEMPLATES.MEASURE_PART_URL
                     .replace("__measure__", measure.measureName)
                     .replace("__agg__", measure.agg);
@@ -641,9 +661,10 @@ var MAIN = new function () {
 
     // Returns the numerical value of a given measure of a json result
     this.getMeasureValueFromJson = function (result, measure) {
-//        console.log(result);
+
+        // TODO nur 1 measure möglich? kein "V_NAME_2_AGG" o.ä.
         if (result["V_NAME_AGG"]) {
-            return parseFloat(result["V_NAME_AGG"].value); // TODO so stehts im json von rest2sparql, was wenn mehrere measures?
+            return parseFloat(result["V_NAME_AGG"].value);
         } else {
             return null;
         }
@@ -659,7 +680,7 @@ var MAIN = new function () {
             $.each(result, function (key, val) {
                 if (val.value === dimension.dimensionName) {
                     entityName = "DRILL"; // TODO entity name??? leer lassen?
-                    label = "ROLLUP: " + dimension.entities.length;// TODO entity name suchen + tooltip aller beteiligter entities
+                    label = "(" + dimension.entities.length + ") " + dimension.label;// TODO entity name suchen + tooltip aller beteiligter entities
                     return false;
                 }
             });
@@ -677,7 +698,24 @@ var MAIN = new function () {
         return new Entity(dimension.dimensionName, entityName, label);
     };
 
-    // Add results to available measures
+    /**
+     * Add results to available cubes
+     */
+    this.parseCubes = function (results) {
+        MAIN.availableCubes = [];
+
+        // Iterate through available measures
+        $.each(results, function (index, element) {
+            var cubeName = element.CUBE_NAME.value;
+            var comment = element.COMMENT.value;
+            var label = element.LABEL.value;
+            MAIN.availableCubes.push(new Cube(cubeName, comment, label));
+        });
+    };
+
+    /**
+     * Add results to available measures
+     */
     this.parseMeasures = function (results) {
         MAIN.availableMeasures = [];
 
@@ -685,20 +723,104 @@ var MAIN = new function () {
         $.each(results, function (index, element) {
             var measureName = element.MEASURE_NAME.value;
             var label = element.LABEL.value;
-            MAIN.availableMeasures.push(new Measure(measureName, label, "SUM"));
+            MAIN.availableMeasures.push(new Measure(measureName, label));
         });
     };
 
-    // Add results to available measures
+    /**
+     * Add results to available dimensions
+     */
     this.parseDimensions = function (results) {
         MAIN.availableDimensions = [];
 
         // Iterate through available dimensions
-        $.each(results, function (index, element) { // TODO
-//            var measureName = element.MEASURE_NAME.value;
-//            var label = element.LABEL.value;
-//            MAIN.availableDimensions.push(new Dimension(...));
+        $.each(results, function (index, element) {
+            var dimensionName = element.DIMENSION_NAME.value;
+            var label = element.LABEL.value;
+            MAIN.availableDimensions.push(new Dimension(dimensionName, label));
         });
+    };
+
+
+
+    /**
+     * Create a deep copy of the the current state to undo or redo later
+     */
+    this.createState = function () {
+        MAIN.redoStack = []; // New user interaction, clear redo stack
+        var state = {};
+        state.xDimensions = MAIN.xDimensions;
+        state.yDimensions = MAIN.yDimensions;
+        state.zDimensions = MAIN.zDimensions;
+        state.measures = MAIN.measures;
+        state.filters = MAIN.filters;
+        state.entityList = MAIN.entityList;
+        return JSON.parse(JSON.stringify(state)); // deep clone
+    };
+
+    /**
+     * Load a saved undo or redo state
+     */
+    this.loadState = function (state) {
+        var stateCopy = JSON.parse(JSON.stringify(state));
+        MAIN.xDimensions = stateCopy.xDimensions;
+        MAIN.yDimensions = stateCopy.yDimensions;
+        MAIN.zDimensions = stateCopy.zDimensions;
+        MAIN.measures = stateCopy.measures;
+        MAIN.filters = stateCopy.filters;
+        MAIN.entityList = stateCopy.entityList;
+    };
+
+    /**
+     * Create and save a undo state from user interaction
+     */
+    this.saveUndoState = function () {
+
+        // Save previous state to undo stack
+        if (MAIN.currentState) {
+            MAIN.undoStack.push(MAIN.currentState);
+        }
+
+        // Save new current state
+        MAIN.currentState = MAIN.createState(true);
+    };
+
+    /**
+     * Undo the last operation and update interface
+     */
+    this.undo = function () {
+        if (MAIN.undoStack.length === 0) {
+            return;
+        }
+
+        // add current state to redo stack
+        MAIN.redoStack.push(MAIN.currentState);
+
+        // Load the previous state
+        MAIN.currentState = MAIN.undoStack.pop();
+        MAIN.loadState(MAIN.currentState);
+
+        // Visualize undone state
+        MAIN.applyOLAP(true);
+    };
+
+    /**
+     * Redo the last undone operation and update interface
+     */
+    this.redo = function () {
+        if (MAIN.redoStack.length === 0) {
+            return;
+        }
+
+        // add current state to undo stack
+        MAIN.undoStack.push(MAIN.currentState);
+
+        // Load the following state
+        MAIN.currentState = MAIN.redoStack.pop();
+        MAIN.loadState(MAIN.currentState);
+
+        // Visualize redone state
+        MAIN.applyOLAP(true);
     };
 
     // HELP FUNCTIONS ==========================================================
@@ -719,7 +841,6 @@ var MAIN = new function () {
             return; // No dimension in this axis
         }
         var dimensionName = dimensionList[0].dimensionName;
-        var entityList = this.entityMap[dimensionName];
 
         // Count only entities of the last dimension (recursively)
         var iterateEntities = function (entityList, depth) {
@@ -764,8 +885,8 @@ var MAIN = new function () {
                 });
             }
         };
-        iterateEntities(entityList, 0);
-    }.bind(this);
+        iterateEntities(MAIN.entityMap[dimensionName], 0);
+    };
 
 
     // Iterates through dimension of a given axis and adds labels
@@ -775,7 +896,7 @@ var MAIN = new function () {
             var label = WEBGL.addDimensionLabel(axis, dimension, row, dimensionList.length);
             INTERFACE.addDimensionLabelListener(label, dimension); // TODO #########
         });
-    }.bind(this);
+    };
 
 
     // Assign positions to last entities in the entityMap
@@ -785,7 +906,7 @@ var MAIN = new function () {
         }
         var counter = 0;
         var dimensionName = dimensionList[0].dimensionName;
-        var entityList = this.entityMap[dimensionName];
+        var entityList = MAIN.entityMap[dimensionName];
 
         // Count only entities of the last dimension (recursively)
         var countLast = function (entityList, depth) {
@@ -806,7 +927,7 @@ var MAIN = new function () {
             }
         };
         countLast(entityList, 0);
-    }.bind(this);
+    };
 
 
     // Calculates coordinates for a given result by using the entityMap (for stacked dimensions)
@@ -818,46 +939,46 @@ var MAIN = new function () {
                 return 0; // No dimension in this axis
             }
             var dimension = dimensionList[0];
-            var entityName = this.getEntityFromJson(result, dimension).entityName;
-            var currentEntity = this.entityMap[dimension.dimensionName][entityName]; // Entity from tree
+            var entityName = MAIN.getEntityFromJson(result, dimension).entityName;
+            var currentEntity = MAIN.entityMap[dimension.dimensionName][entityName]; // Entity from tree
             for (var i = 1; i < dimensionList.length; i++) {
                 var nextDimension = dimensionList[i];
-                var nextEntityName = this.getEntityFromJson(result, nextDimension).entityName;
+                var nextEntityName = MAIN.getEntityFromJson(result, nextDimension).entityName;
                 currentEntity = currentEntity[nextDimension.dimensionName][nextEntityName];
             }
             return currentEntity.position;
-        }.bind(this);
+        };
 
         // Fill xyz coordinates
         var coordinates = [];
-        coordinates[0] = getAxisPos(this.xDimensions, result);
-        coordinates[1] = getAxisPos(this.yDimensions, result);
-        coordinates[2] = getAxisPos(this.zDimensions, result);
+        coordinates[0] = getAxisPos(MAIN.xDimensions, result);
+        coordinates[1] = getAxisPos(MAIN.yDimensions, result);
+        coordinates[2] = getAxisPos(MAIN.zDimensions, result);
 
         return coordinates;
 
-    }.bind(this);
+    };
 
     // Help function to build the entityMap (with a tree of entities)
     var addToEntityMap = function (dimensionList, result) {
         if (dimensionList.length > 0) {
             var dimension = dimensionList[0]; // start at first dimension
-            var entity = this.getEntityFromJson(result, dimension);
-            if (!this.entityMap[dimension.dimensionName]) {
-                this.entityMap[dimension.dimensionName] = []; // Init a list for this dimension
+            var entity = MAIN.getEntityFromJson(result, dimension);
+            if (!MAIN.entityMap[dimension.dimensionName]) {
+                MAIN.entityMap[dimension.dimensionName] = []; // Init a list for this dimension
             }
 
             // Only add same entity once at the same object
-            if (this.entityMap[dimension.dimensionName][entity.entityName] === undefined) {
-                this.entityMap[dimension.dimensionName][entity.entityName] = entity; // for fast access
-                this.entityMap[dimension.dimensionName].push(entity); // for sorting
+            if (MAIN.entityMap[dimension.dimensionName][entity.entityName] === undefined) {
+                MAIN.entityMap[dimension.dimensionName][entity.entityName] = entity; // for fast access
+                MAIN.entityMap[dimension.dimensionName].push(entity); // for sorting
             }
 
             // Stack following dimensions of the same axis on each entity
-            var currentEntity = this.entityMap[dimension.dimensionName][entity.entityName];
+            var currentEntity = MAIN.entityMap[dimension.dimensionName][entity.entityName];
             for (var i = 1; i < dimensionList.length; i++) {
                 var nextDimension = dimensionList[i];
-                var nextEntity = this.getEntityFromJson(result, nextDimension);
+                var nextEntity = MAIN.getEntityFromJson(result, nextDimension);
                 if (!currentEntity[nextDimension.dimensionName]) {
                     currentEntity[nextDimension.dimensionName] = []; // Init a list for this following dimension (directly to the entity)
                 }
@@ -870,7 +991,7 @@ var MAIN = new function () {
                 currentEntity = currentEntity[nextDimension.dimensionName][nextEntity.entityName];
             }
         }
-    }.bind(this);
+    };
 
 
     // Assigns all matching label sprites to each cube
@@ -882,17 +1003,17 @@ var MAIN = new function () {
                 return; // No dimension in this axis
             }
             var dimension = dimensionList[0];
-            var entityName = this.getEntityFromJson(cube.result, dimension).entityName;
-            var currentEntity = this.entityMap[dimension.dimensionName][entityName]; // Entity from tree
+            var entityName = MAIN.getEntityFromJson(cube.result, dimension).entityName;
+            var currentEntity = MAIN.entityMap[dimension.dimensionName][entityName]; // Entity from tree
             cube.sprites.push(currentEntity.sprite); // add label to list
             for (var i = 1; i < dimensionList.length; i++) {
                 var nextDimension = dimensionList[i];
-                var nextEntityName = this.getEntityFromJson(cube.result, nextDimension).entityName;
+                var nextEntityName = MAIN.getEntityFromJson(cube.result, nextDimension).entityName;
                 ;
                 currentEntity = currentEntity[nextDimension.dimensionName][nextEntityName];
                 cube.sprites.push(currentEntity.sprite); // add label to list
             }
-        }.bind(this);
+        };
         $.each(WEBGL.scene.children, function (index, cube) {
 
             // Skip non-cubes
@@ -902,14 +1023,14 @@ var MAIN = new function () {
             cube.sprites = [];
 
             // Fill xyz WebGL labels
-            assign(this.xDimensions, cube);
-            assign(this.yDimensions, cube);
-            assign(this.zDimensions, cube);
+            assign(MAIN.xDimensions, cube);
+            assign(MAIN.yDimensions, cube);
+            assign(MAIN.zDimensions, cube);
 
             // Forget result
             cube.result = undefined;
-        }.bind(this));
-    }.bind(this);
+        });
+    };
 
     // Assigns all matching label sprites to each label sprite
     var assignLabelsToLabels = function () {
@@ -929,8 +1050,8 @@ var MAIN = new function () {
                     labelSprite1.sprites.push(labelSprite2); // Add same entity sprite (including itself)
                 }
             });
-        }.bind(this));
-    }.bind(this);
+        });
+    };
 
 
     // String extensions
