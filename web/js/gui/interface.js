@@ -349,6 +349,11 @@ var INTERFACE = new function () {
         button.append(text);
         button.append(badge);
 
+        // Set badge color to show grouping (rollup)
+        if (dimension.rollup) {
+            badge.addClass("ms-1");
+        }
+
         // Reuse already configured dimension entities
         var badgeNum;
         if (dimension.entities) {
@@ -407,10 +412,12 @@ var INTERFACE = new function () {
             if (dimension.rollup) {
                 drillItem.find(".glyphicon").removeClass("glyphicon-check");
                 drillItem.find(".glyphicon").addClass("glyphicon-unchecked");
+                badge.removeClass("ms-1");
                 console.log("DRILLED DOWN", dimension);
             } else {
                 drillItem.find(".glyphicon").removeClass("glyphicon-unchecked");
                 drillItem.find(".glyphicon").addClass("glyphicon-check");
+                badge.addClass("ms-1");
                 console.log("ROLLED UP", dimension);
             }
             dimension.rollup = !dimension.rollup;

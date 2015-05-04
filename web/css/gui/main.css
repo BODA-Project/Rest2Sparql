@@ -57,7 +57,7 @@ a.side-glyph:hover {
 }
 
 .btn-default .badge {
-    background-color: #808080;
+    background-color: rgba(0, 0, 0, 0.5);
 }
 
 .badge.ms-1 {
