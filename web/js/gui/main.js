@@ -31,6 +31,7 @@ function Entity(dimensionName, entityName, label) {
     this.entityName = entityName;       // e.g. http://code-research.eu/resource/Entity-1b7500d2-6e12-42f0-a006-f38ae763418f
     this.label = label;                 // e.g. Netherlands
     this.position;                      // x, y or z coordinate (to be set later)
+    this.rollupLabels;                  // to be set later (list of entities' labels)
 }
 
 // Filter class, for measures
@@ -47,33 +48,43 @@ var MAIN = new function () {
 
     // Constants
     this.RELATIONS = [
-        {type: "smaller", label: "<"},
-        {type: "smaller_or_eq", label: "<="},
-        {type: "eq", label: "=="},
-        {type: "not_eq", label: "!="},
-        {type: "bigger", label: ">"},
-        {type: "bigger_or_eq", label: ">="}
+        {type: "smaller", label: "<", tooltip: "Smaller"},
+        {type: "smaller_or_eq", label: "<=", tooltip: "Smaller or Equal"},
+        {type: "eq", label: "==", tooltip: "Equal"},
+        {type: "not_eq", label: "!=", tooltip: "Not Equal"},
+        {type: "bigger", label: ">", tooltip: "Bigger"},
+        {type: "bigger_or_eq", label: ">=", tooltip: "Bigger or Equal"}
     ];
     this.AGGREGATIONS = [
         {type: "count", label: "Count"},
         {type: "sum", label: "Sum up"},
-        {type: "min", label: "Min"},
-        {type: "max", label: "Max"},
+        {type: "min", label: "Minimum"},
+        {type: "max", label: "Maximum"},
         {type: "avg", label: "Average"},
         {type: "sample", label: "Random Sample"}
     ];
+    this.COLORS = [
+        "#ea5f5f",
+        "#ddac42",
+        "#42ca45",
+        "#4fccc2",
+        "#6098d8",
+        "#8a7dd9",
+        "#d871b5",
+        "#aaaaaa"
+    ];
+
+    this.SCALE_LOG = 0;
+    this.SCALE_LINEAR = 1;
 
     // Globas vars
     this.ID = "";
     this.HASH = "";
     this.currentCube = "";
-    this.entityList = {}; // Contains all entities of all dimensions (and their selected status)
-
-
-    // TODO
-    this.currentColor = "#5080c0";
+    this.currentColor = this.COLORS[4];
     this.currentAGG = "sum";
-    this.currentScale = "linear"; // log or linear
+    this.currentScale = this.SCALE_LINEAR; // log or linear
+    this.entityList = {}; // Contains all entities of all dimensions (and their selected status)
 
 
     // All possible dimensions and measures
@@ -233,7 +244,7 @@ var MAIN = new function () {
 
         // Disable certain input to begin with
         INTERFACE.disableInputInitially();
-        INTERFACE.enableTooltips();
+        INTERFACE.initTooltips();
     };
 
 
@@ -264,7 +275,7 @@ var MAIN = new function () {
             if (results.length === 0) {
 
                 alert("No results for the given query."); // TODO schönes popup? + default loading screen oder letztes ergebnis zeigen (webGL)
-                // TODO automatisch undo?
+                // TODO automatisch undo? -> nein
                 return;
             }
 
@@ -353,8 +364,10 @@ var MAIN = new function () {
                     ratios[index2] = Math.max(1, (measureValue - lowestMeasure)) / Math.max(1, (highestMeasure - lowestMeasure));
                     values[index2] = measureValue;
 
-                    // TEST Logarithmic value (log10) TODO setting ein aus
-//                    ratios[index2] = Math.log((ratios[index2] * 9) + 1) / Math.log(10);
+                    // Logarithmic value (log10)
+                    if (MAIN.currentScale === MAIN.SCALE_LOG) {
+                        ratios[index2] = Math.log((ratios[index2] * 9) + 1) / Math.log(10);
+                    }
                 });
 
                 // TEMP fix for API error
@@ -368,6 +381,7 @@ var MAIN = new function () {
                 // Create and add a new result-cube
                 var cube = WEBGL.addCube(coordinates, values, ratios); // TODO custom colors?
                 cube.result = result; // Temporarly save the result to the cube
+                MAIN.addCubeData(cube, result);
                 INTERFACE.addCubeListeners(cube); // add click and hover events
             });
 
@@ -588,7 +602,6 @@ var MAIN = new function () {
     this.applyOLAP = function (isUndo) {
 
         // Save undo step
-        // TODO hier is schon zu spät, xyzDimension ist schon geändert
         if (!isUndo) {
             MAIN.saveUndoState();
         }
@@ -607,6 +620,10 @@ var MAIN = new function () {
         console.log("REQUEST URL", url);
 //        console.log("UNDO STACK:", MAIN.undoStack);
 //        console.log("REDO STACK:", MAIN.redoStack);
+
+        // Set temp selection to be empty again for following OLAP steps
+        MAIN.tempSelection = {};
+
     };
 
 
@@ -649,7 +666,8 @@ var MAIN = new function () {
         $.each(MAIN.measures, function (index, measure) {
             url += TEMPLATES.MEASURE_PART_URL
                     .replace("__measure__", measure.measureName)
-                    .replace("__agg__", measure.agg);
+                    .replace("__agg__", MAIN.currentAGG); // Only 1 measure
+//                    .replace("__agg__", measure.agg);
         });
 
         // Add filters
@@ -678,6 +696,7 @@ var MAIN = new function () {
 
     // Returns a generated entity of a given dimension from a json result
     this.getEntityFromJson = function (result, dimension) {
+        var entity;
         var entityName = "";
         var label = "";
 
@@ -685,9 +704,15 @@ var MAIN = new function () {
             // Generate a custom Entity from multiple ones since the dimension was grouped (rolled up)
             $.each(result, function (key, val) {
                 if (val.value === dimension.dimensionName) {
-                    entityName = "DRILL"; // TODO entity name??? leer lassen?
-                    label = "(" + dimension.entities.length + ") " + dimension.label;// TODO entity name suchen + tooltip aller beteiligter entities
-                    return false;
+
+                    var entityName = "DRILL"; // TODO entity name??? leer lassen?
+                    var label = "(" + dimension.entities.length + ") " + dimension.label; // TODO: ok?
+                    entity = new Entity(dimension.dimensionName, entityName, label);
+                    entity.rollupLabels = [];
+                    $.each(dimension.entities, function (i, subEntity) {
+                        entity.rollupLabels.push(subEntity.label);
+                    });
+                    return false; // break
                 }
             });
         } else {
@@ -696,16 +721,34 @@ var MAIN = new function () {
                 if (val.value === dimension.dimensionName) {
                     entityName = result[key.replace("_AGG", "")].value;
                     label = result[key.replace("E_NAME", "L_NAME")].value;
-                    return false;
+                    entity = new Entity(dimension.dimensionName, entityName, label);
+                    return false; // break
                 }
             });
         }
+        return entity;
+    };
 
-        return new Entity(dimension.dimensionName, entityName, label);
+    /**
+     * Adds dimension and entity data to a cube
+     *
+     * @param {Mesh} cube
+     * @param {json} result
+     */
+    this.addCubeData = function (cube, result) {
+        var addData = function (i, dimension) {
+            var entity = MAIN.getEntityFromJson(result, dimension);
+            cube[entity.dimensionName] = entity.entityName;
+        };
+        $.each(MAIN.xDimensions, addData);
+        $.each(MAIN.yDimensions, addData);
+        $.each(MAIN.zDimensions, addData);
     };
 
     /**
      * Add results to available cubes
+     *
+     * @param {json} results json result containing cubes
      */
     this.parseCubes = function (results) {
         MAIN.availableCubes = [];
@@ -721,6 +764,7 @@ var MAIN = new function () {
 
     /**
      * Add results to available measures
+     * @param {json} results json result containing measures
      */
     this.parseMeasures = function (results) {
         MAIN.availableMeasures = [];
@@ -735,6 +779,7 @@ var MAIN = new function () {
 
     /**
      * Add results to available dimensions
+     * @param {json} results json result containing dimensions
      */
     this.parseDimensions = function (results) {
         MAIN.availableDimensions = [];
@@ -1076,12 +1121,6 @@ var MAIN = new function () {
             return this.indexOf(str, this.length - str.length) !== -1;
         };
     }
-
-    // Returns a string like 71.003.345 (adds points and comma)
-    this.formatNumber = function (num) {
-        // TODO
-        return num;
-    };
 
 };
 

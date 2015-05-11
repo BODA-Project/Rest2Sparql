@@ -35,20 +35,37 @@ var INTERFACE = new function () {
         $("#id_redoButton").on('click', MAIN.redo);
         $("#id_undoButton").on('click', MAIN.undo);
 
+        // ...TODO
+
+        // Options / Settings
+        $("#id_aggItem").on('click', INTERFACE.popupMeasureAgg);
+        $("#id_colorItem").on('click', INTERFACE.popupMeasureColor);
+        $("#id_scaleItem").on('click', INTERFACE.toggleScale);
+
+        // Merge button
+//        $("#id_mergeButton").on('click', TODO);
+
         // Side bar TODO: cancel-button, + onchange -> update -> disable/enable
+        $("#id_cancelButton").on('click', function (e) {
+            e.preventDefault();
+            alert("TODO: Cancel");
+        });
+
         $("#id_applyButton").on('click', function (e) {
             e.preventDefault();
             MAIN.applyTempSelection(); // apply on-screen selection if given
             MAIN.applyOLAP(); // apply and visualize
         });
 
-        // ...TODO
-
         // Filter area
         $("#id_filterPlus").on('click', function (e) {
             e.preventDefault();
             INTERFACE.popupMeasureFilter();
         });
+
+        // Info icon tooltips
+
+
 
         // Resize visualization on browser resize
         $(window).on('resize', WEBGL.resizeVizualisation.bind(WEBGL));
@@ -221,13 +238,11 @@ var INTERFACE = new function () {
         });
 
         aggItem.on("click", function (e) {
-//            TODO
-            alert("TODO: AGG POPUP");
+            INTERFACE.popupMeasureAgg();
         });
 
         colorItem.on("click", function (e) {
-//            TODO
-            alert("TODO: COLOR PICKER");
+            INTERFACE.popupMeasureColor();
         });
 
 
@@ -235,7 +250,6 @@ var INTERFACE = new function () {
 
     // TODO "addMeasureButton" erstmal nicht benutzt, da bug (?) in API und nur 1 measure möglich
     // Adds a measure button and its menu after the measure was selected.
-    // TODO: measure kann manipuliert werden (agg setzen)!!!
     this.addMeasureButton = function (measure) {
         var plusButton = $("#id_measurePlus");
         var buttonArea = $("#id_measureButtonArea");
@@ -351,7 +365,7 @@ var INTERFACE = new function () {
 
         // Set badge color to show grouping (rollup)
         if (dimension.rollup) {
-            badge.addClass("ms-1");
+            badge.css("background-color", MAIN.currentColor);
         }
 
         // Reuse already configured dimension entities
@@ -434,7 +448,7 @@ var INTERFACE = new function () {
         // TODO Add drag and rop functionality to the button#####################
 
 
-        // TODO
+        // TODO button = dropzone + .insertAfter()
 
 
         button.attr("draggable", "true");
@@ -478,7 +492,7 @@ var INTERFACE = new function () {
                 var entity = MAIN.getEntityFromJson(cube.result, dimension);
                 dimensions.push({
                     dimension: dimension.label,
-                    entity: entity.label
+                    entity: entity.label // TODO rollupLabels
                 });
             });
         };
@@ -533,32 +547,41 @@ var INTERFACE = new function () {
 
         label.toggled = false;
 
+        // TODO: if label.entity.rollupLabels -> kein / anderes onclick
+
+
         label.onmouseover = function () {
-            if (!label.toggled) {
-                label.toBold();
-            }
-            // TODO show tooltip if too long label string
-            // TODO show pre-selected cubes matching the label for later selection (or a big slice around them)
+            // TODO show tooltip if too long label string or if zoomed out far
+//            TODO: WEBGL.showTooltip(label.tooltip) // bzw label.entity.rollupLabels?
+
+            $.each(label.sprites, function (i, sprite) {
+//                sprite.showSelection();
+                sprite.showRow(); // Show surrounding cube
+            });
+
 
         };
         label.onmouseout = function () {
-            if (!label.toggled) {
-                label.toNormal();
-            }
-            // TODO hide ...
+            $.each(label.sprites, function (i, sprite) {
+                sprite.hideRow();
+            });
         };
         label.onclick = function () {
 
             // TODO rollup-label darf nicht selektiert werden (oder stattdessen dimension-menu zeigen?)
 
+//            if (label.entity.rollupLabels) {
+//            } else {
+//            }
+
             if (!label.toggled) {
 
                 $.each(label.sprites, function (i, sprite) {
-                    sprite.showSelection();
+                    label.toSelected(); // highlight color
                     sprite.toggled = true;
                 });
 
-                // Create list if first entity
+                // Create selection list if first entity
                 if (!MAIN.tempSelection[dimensionName]) {
                     MAIN.tempSelection[dimensionName] = [];
                 }
@@ -569,9 +592,12 @@ var INTERFACE = new function () {
                     MAIN.tempSelection[dimensionName].push(label.entity);
                 }
 
+                // Update hilighting of selected cubes
+                WEBGL.highlightSelectedCubes();
+
             } else {
                 $.each(label.sprites, function (i, sprite) {
-                    sprite.hideSelection();
+                    label.toNormal();
                     sprite.toggled = false;
                 });
 
@@ -580,29 +606,25 @@ var INTERFACE = new function () {
                 if (index !== -1) {
                     MAIN.tempSelection[dimensionName].splice(index, 1);
                 }
+
+                // Update hilighting of selected cubes
+                WEBGL.highlightSelectedCubes();
+
             }
 //            console.log("TempSelection", MAIN.tempSelection)
         };
 
-        label.showSelection = function () {
-            label.toSelected(); // highlight color
+        label.showRow = function () {
+            if (!label.toggled) {
+                label.toSelected(); // highlight color
+            }
             WEBGL.addSelectionCube(label);
-
-            // TEST (X) Transparency
-
-//            $.each(WEBGL.scene.children, function (i,obj){
-//               if(obj.position.x === label.position.x && obj.material){
-//                   obj.material.transparent = true;
-//                   obj.material.opacity = 0.25;
-//               }
-//            });
-
-
-
         };
 
-        label.hideSelection = function () {
-            label.toNormal(); // highlight color // TODO: to previous?
+        label.hideRow = function () {
+            if (!label.toggled) {
+                label.toNormal();
+            }
             WEBGL.removeSelectionCube(label);
         };
 
@@ -629,15 +651,36 @@ var INTERFACE = new function () {
 
     };
 
+    // Toggles the measure scale between linear to logarithmic
+    this.toggleScale = function (e) {
+        if (MAIN.currentScale === MAIN.SCALE_LINEAR) {
+            MAIN.currentScale = MAIN.SCALE_LOG;
+            $("#id_scaleItem span").removeClass("glyphicon-unchecked");
+            $("#id_scaleItem span").addClass("glyphicon-check");
+        } else {
+            MAIN.currentScale = MAIN.SCALE_LINEAR;
+            $("#id_scaleItem span").removeClass("glyphicon-check");
+            $("#id_scaleItem span").addClass("glyphicon-unchecked");
+        }
+        // TODO update viz (cubes / D3) without an olap step (so no undo redo) or (olap as undo)
+        MAIN.applyOLAP(true);
+    };
+
+
     // Enables tooltips and popovers for certain panels
-    this.enableTooltips = function () {
+    this.initTooltips = function () {
+
+        // add the tooltip / popover content
+        $("#id_infoCube").attr('data-content', "TODO CUBE TEXT");
+        $("#id_infoDimension").attr('data-content', "TODO DIMENSION TEXT");
+        $("#id_infoMeasure").attr('data-content', "TODO MEASURE TEXT");
+        $("#id_infoFilter").attr('data-content', "TODO FILTER TEXT");
+
         // add tooltips
-//        $('[data-toggle="tooltip"]').tooltip();
+        $('[data-toggle="tooltip"]').tooltip();
 
         // add popovers
-        $(function () {
-            $('[data-toggle="popover"]').popover();
-        });
+        $('[data-toggle="popover"]').popover();
     };
 
     // Shows a login popup to enter a user ID.
@@ -714,6 +757,127 @@ var INTERFACE = new function () {
         });
     };
 
+    /**
+     * Shows a popup for changing the measure aggregation
+     * @param {Measure} measure currently not used since only 1 measure is possible
+     */
+    this.popupMeasureAgg = function (measure) {
+        var modal = $("#id_aggModal"); // TODO template instead...
+        $("body").append(modal);
+        var modalAggBody = $("#id_aggModalBody");
+
+        // Create a button for each aggregation type
+        modalAggBody.empty();
+        var buttonGroup = $('<div class="btn-group">');
+        $.each(MAIN.AGGREGATIONS, function (i, aggregation) {
+            var button = $('<button class="btn btn-default" type="button"></button>');
+            button.text(aggregation.label);
+            buttonGroup.append(button);
+            if (MAIN.currentAGG === aggregation.type) {
+                button.addClass("active");
+            }
+            button.on("click", function (e) {
+                e.preventDefault();
+
+                // Apply the new aggregation
+                MAIN.currentAGG = aggregation.type;
+                if (measure) {
+                    measure.agg = aggregation.type; // Possible if multiple measures
+                }
+
+                // Hide the popup
+                modal.modal("hide");
+
+                // Update visualization and interface right away
+                MAIN.applyOLAP();
+            });
+        });
+        modalAggBody.append(buttonGroup);
+
+        // Pause rendering in background
+        WEBGL.stopRendering();
+
+        // Show the popup
+        modal.modal();
+
+        // Resume visualization when finished
+        modal.off('hidden.bs.modal');
+        modal.on('hidden.bs.modal', function (e) {
+            // Resume rendering again
+            WEBGL.resumeRendering();
+        });
+    };
+
+    // Shows a popup for changing the measure aggregation
+    this.popupMeasureColor = function () {
+        var modal = $("#id_colorModal"); // TODO template instead...
+        $("body").append(modal);
+        var modalAggBody = $("#id_colorModalBody");
+
+        var shadeColor = function (hex, lum) {
+            hex = String(hex).replace(/[^0-9a-f]/gi, '');
+            if (hex.length < 6) {
+                hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+            }
+            lum = lum || 0;
+            var rgb = "#", c, i;
+            for (i = 0; i < 3; i++) {
+                c = parseInt(hex.substr(i * 2, 2), 16);
+                c = Math.round(Math.min(Math.max(0, c + (c * lum)), 255)).toString(16);
+                rgb += ("00" + c).substr(c.length);
+            }
+            return rgb;
+        };
+
+        // Create a button for each color type
+        modalAggBody.empty();
+        var buttonGroup = $('<div class="btn-group">');
+        $.each(MAIN.COLORS, function (i, color) {
+            var button = $('<button class="btn btn-default" type="button"></button>');
+            button.html("&nbsp;");
+
+            var borderColor = shadeColor(color, -0.25);
+            var brightColor = shadeColor(color, 0.15);
+
+            button.css("background", "linear-gradient(" + brightColor + "," + color + ")");
+            button.css("border-color", borderColor);
+            button.css("width", "60px");
+            buttonGroup.append(button);
+            if (MAIN.currentColor === color) {
+                button.css("color", "white");
+                button.css("text-shadow", "0px 1px 0px rgba(0, 0, 0, 0.5)");
+                button.html("<span class='glyphicon glyphicon-ok'></span>");
+            }
+            button.on("click", function (e) {
+                e.preventDefault();
+
+                // Apply the new aggregation
+                MAIN.currentColor = color;
+
+                // Hide the popup
+                modal.modal("hide");
+
+                // TODO update viz (cubes / D3) without an olap step (so no undo redo) or (olap as undo)
+                MAIN.applyOLAP(true);
+            });
+        });
+        modalAggBody.append(buttonGroup);
+
+        // Pause rendering in background
+        WEBGL.stopRendering();
+
+        // Show the popup
+        modal.modal();
+
+        // Resume visualization when finished
+        modal.off('hidden.bs.modal');
+        modal.on('hidden.bs.modal', function (e) {
+            // Resume rendering again
+            WEBGL.resumeRendering();
+        });
+    };
+
+
     // Shows a popup of a result
     this.popupResult = function (dimensions, measures) {
 
@@ -740,7 +904,7 @@ var INTERFACE = new function () {
         $.each(measures, function (i, measure) {
             var row = $("<tr>");
             row.append("<td>" + measure.measure + "</td>");
-            row.append("<td><b>" + measure.value + "</b></td>");
+            row.append("<td><b>" + INTERFACE.formatNumber(measure.value, 4) + "</b></td>");
             table.append(row);
         });
         modalBody.append(table);
@@ -775,13 +939,13 @@ var INTERFACE = new function () {
         var SelectAllButton = $('<button class="btn btn-default btn-sm">All</button>');
         var SelectNoneButton = $('<button class="btn btn-default btn-sm">None</button>');
         var SelectInvertButton = $('<button class="btn btn-default btn-sm">Invert</button>');
-        var SelectResetButton = $('<button class="btn btn-default btn-sm">Reset</button>');
+        var SelectDefaultButton = $('<button class="btn btn-default btn-sm">Default</button>');
         var SelectPrevButton = $('<button class="btn btn-default btn-sm"><span class="glyphicon glyphicon-menu-up"></span> Previous ' + INTERFACE.NUM_ENTITIES + '</button>');
         var SelectNextButton = $('<button class="btn btn-default btn-sm"><span class="glyphicon glyphicon-menu-down"></span> Next ' + INTERFACE.NUM_ENTITIES + '</button>');
         buttonArea.append(SelectAllButton);
         buttonArea.append(SelectNoneButton);
         buttonArea.append(SelectInvertButton);
-        buttonArea.append(SelectResetButton);
+        buttonArea.append(SelectDefaultButton);
         buttonArea.append(SelectPrevButton);
         buttonArea.append(SelectNextButton);
 
@@ -901,7 +1065,7 @@ var INTERFACE = new function () {
         });
 
         // Select the first 10 entities again
-        SelectResetButton.on("click", function (e) {
+        SelectDefaultButton.on("click", function (e) {
             $("input[data-entity-name]").each(function (i, element) {
                 if (i < INTERFACE.NUM_ENTITIES) {
                     $(element).prop("checked", true);
@@ -948,7 +1112,7 @@ var INTERFACE = new function () {
         var modalRelationButton = $("#id_filterRelationButton");
         var modalRelationList = $("#id_filterRelationList");
         var modalInput = $("#id_filterValue");
-        var modalAcceptButton = $("#id_filterOkay");
+        var modalAcceptButton = $("#id_filterModalOkay");
 
         // Filter variables
         var filterMeasure = MAIN.availableMeasures[0];
@@ -960,11 +1124,12 @@ var INTERFACE = new function () {
             filterMeasure = filter.measure;
             filterRelation = filter.relation;
             filterValue = filter.value;
-            modalAcceptButton.text("Change Filter");
+//            modalAcceptButton.text("Change Filter");
+            modal.find(".modal-title").text("Change Filter");
         } else if (measure !== undefined) {
             var filterMeasure = measure; // Set first measure by default
         } else {
-            modalAcceptButton.text("Add Filter");
+//            modalAcceptButton.text("Add Filter");
         }
         modalInput.val(filterValue);
 
@@ -1089,7 +1254,7 @@ var INTERFACE = new function () {
         // Show the popup
         modal.modal();
 
-        // Remove when finished
+        // Resume visualization when finished
         modal.off('hidden.bs.modal');
         modal.on('hidden.bs.modal', function (e) {
             // Resume rendering again
@@ -1199,7 +1364,8 @@ var INTERFACE = new function () {
      */
     this.reinsertMeasureButtons = function () {
         var measure = MAIN.measures[0];
-        var agg = measure.agg.toUpperCase();
+        var agg = measure.agg.toUpperCase(); // Possible if multiple measures
+        agg = MAIN.currentAGG.toUpperCase();
 
         // TODO nur 1 measure, keine buttons
 //        $.each(MAIN.measures, function (i, measure) {
@@ -1210,7 +1376,8 @@ var INTERFACE = new function () {
         $("#id_measureButton").empty();
         $("#id_measureButton").append("<span class=cube-button-text>" + measure.label + "</span>");
         var badge = $('<span class="badge"></span>');
-        badge.addClass("ms-1"); // TODO different badge colors
+        badge.css("background-color", MAIN.currentColor);
+//        badge.addClass("ms-1"); // TODO different badge colors
 
         // TODO auslesen von MAIN.currentAGG? #######################################
         badge.text(agg);
@@ -1427,6 +1594,18 @@ var INTERFACE = new function () {
         return relationLabel;
     };
 
+    // Gets the label version of a aggregation (e.g. "avg": "Average")
+    var getAggregationLabel = function (aggType) {
+        var aggLabel;
+        $.each(MAIN.AGGREGATIONS, function (i, aggregation) {
+            if (aggregation.type === aggType) {
+                aggLabel = aggregation.label;
+                return false;
+            }
+        });
+        return aggLabel;
+    };
+
     // Help function...
     var isSelectedDimension = function (dimensionName) {
         var result = false;
@@ -1467,6 +1646,16 @@ var INTERFACE = new function () {
                 }, blinkDuration * 1000);
             }, blinkDuration * 1000);
         }, blinkDuration * 1000);
+    };
+
+
+    // Returns a string like 71.003.345 (adds points and comma)
+    this.formatNumber = function (num, nrDigits) {
+        // round numbers to 2 digits
+        // TODO oft "x.66666666667"
+        num = Math.round(num * nrDigits * 10) / (nrDigits * 10);
+        // TODO add dots for thousand-steps
+        return num;
     };
 
     // Creates a random unique ID for HTML elements

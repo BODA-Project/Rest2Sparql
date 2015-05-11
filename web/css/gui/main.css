@@ -23,6 +23,11 @@ body {
     }
 }
 
+/* Dropdown visible */
+.navbar-collapse.in {
+    overflow-y: visible;
+}
+
 /* Glyphicons */
 a.side-glyph {
     position: relative;
@@ -58,11 +63,6 @@ a.side-glyph:hover {
 
 .btn-default .badge {
     background-color: rgba(0, 0, 0, 0.5);
-}
-
-.badge.ms-1 {
-    background-color: #428ED5;
-    /* TODO more colors? */
 }
 
 @media(min-width:768px) {

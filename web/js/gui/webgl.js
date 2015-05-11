@@ -1,4 +1,4 @@
-/* global THREE, INTERFACE, Infinity */
+/* global THREE, INTERFACE, Infinity, MAIN */
 
 // Namespace for Three.js and WebGL code for visualization
 
@@ -9,7 +9,7 @@ var WEBGL = new function () {
 //    this.SPRITE_LENGTH = 6;
     this.SPRITE_LENGTH = 4.7;
     this.SPRITE_HEIGHT_DIMENSION = 1.2;
-    this.COLOR_SELECTION = 0xff2020;
+    this.COLOR_SELECTION = 0x404040;
     this.COLOR_LOWEST = 0xe0e0e0; // Almost white
     this.COLOR_HIGHEST = 0x6098D8; // Dark blue TODO custom color?
     this.COLOR_WHITE = new THREE.Color(0xffffff);
@@ -91,7 +91,57 @@ var WEBGL = new function () {
         cube.outline = new THREE.EdgesHelper(cube);
         cube.outline.material.color.set(cube.lineColor);
         cube.outline.material.linewidth = 3;
+        cube.outline.material.transparent = true;
+        cube.outline.material.opacity = cube.material.opacity;
         WEBGL.scene.add(cube.outline);
+    };
+
+    /**
+     * Highlights all cubes matching the current tempSelection and hides others
+     */
+    this.highlightSelectedCubes = function () {
+        var checkDimension = function (dimension, cube) {
+            var dN = dimension.dimensionName;
+            if (MAIN.tempSelection[dN] && MAIN.tempSelection[dN].length > 0) {
+                var result = false;
+                $.each(MAIN.tempSelection[dN], function (i, entity) {
+                    if (cube[dN] === entity.entityName) {
+                        result = true;
+                        return false; // break
+                    }
+                });
+                return result;
+            } else {
+                return true; // no restriction in this dimension
+            }
+        };
+
+        $.each(WEBGL.scene.children, function (i, cube) {
+            if (!cube.geometry || cube.geometry.type !== "BoxGeometry") {
+                return true; // Skip non cubes
+            }
+            var selected = true;
+
+            // Check for all given dimensions
+            $.each(MAIN.xDimensions, function (i, dimension) {
+                selected = selected && checkDimension(dimension, cube);
+            });
+            $.each(MAIN.yDimensions, function (i, dimension) {
+                selected = selected && checkDimension(dimension, cube);
+            });
+            $.each(MAIN.zDimensions, function (i, dimension) {
+                selected = selected && checkDimension(dimension, cube);
+            });
+
+            // Apply opacity
+            if (selected) {
+                cube.material.transparent = false; // TODO buggy graphics
+                cube.material.opacity = 1;
+            } else {
+                cube.material.transparent = true;
+                cube.material.opacity = 0.15;
+            }
+        });
     };
 
     // Resets a highlighted cube to its normal state
@@ -140,7 +190,8 @@ var WEBGL = new function () {
 //        material.opacity = 1.0;
 
         var colorLowest = new THREE.Color(WEBGL.COLOR_LOWEST);
-        var colorHighest = new THREE.Color(WEBGL.COLOR_HIGHEST);
+        var colorHighest = new THREE.Color(MAIN.currentColor);
+//        var colorHighest = new THREE.Color(WEBGL.COLOR_HIGHEST);
 
         var resultColor = colorLowest.multiplyScalar(1 - ratio).add(colorHighest.multiplyScalar(ratio));
 
@@ -158,8 +209,6 @@ var WEBGL = new function () {
         $.each(WEBGL.totalSize, function (i, size) {
             WEBGL.totalSize[i] = (coordinates[i] + 1 > size) ? coordinates[i] + 1 : size;
         });
-
-        // TODO alle helpercube grids mergen! / selber machen
 
         // TEST: Lines around every cube
 //        var cube2 = new THREE.EdgesHelper(cube);
@@ -255,6 +304,11 @@ var WEBGL = new function () {
 
     // Adds three grids to each ground of the visualization with the known total size
     this.addGrid = function () {
+
+        var hasX = MAIN.xDimensions.length > 0;
+        var hasY = MAIN.yDimensions.length > 0;
+        var hasZ = MAIN.zDimensions.length > 0;
+
         var sizeX = WEBGL.totalSize[0];
         var sizeY = WEBGL.totalSize[1];
         var sizeZ = WEBGL.totalSize[2];
@@ -267,28 +321,34 @@ var WEBGL = new function () {
             opacity: 0.15
         });
 
-        // Bottom grid (X,Z)
-        for (var x = 0; x <= sizeX; x++) {
-            gridGeometry.vertices.push(new THREE.Vector3(x, 0, 0), new THREE.Vector3(x, 0, sizeZ));
-        }
-        for (var z = 0; z <= sizeZ; z++) {
-            gridGeometry.vertices.push(new THREE.Vector3(0, 0, z), new THREE.Vector3(sizeX, 0, z));
+        // Back grid (X,Y)
+        if (hasX && hasY) {
+            for (var x = 0; x <= sizeX; x++) {
+                gridGeometry.vertices.push(new THREE.Vector3(x, 0, 0), new THREE.Vector3(x, sizeY, 0));
+            }
+            for (var y = 0; y <= sizeY; y++) {
+                gridGeometry.vertices.push(new THREE.Vector3(0, y, 0), new THREE.Vector3(sizeX, y, 0));
+            }
         }
 
-        // Back grid (X,Y)
-        for (var x = 0; x <= sizeX; x++) {
-            gridGeometry.vertices.push(new THREE.Vector3(x, 0, 0), new THREE.Vector3(x, sizeY, 0));
-        }
-        for (var y = 1; y <= sizeY; y++) {
-            gridGeometry.vertices.push(new THREE.Vector3(0, y, 0), new THREE.Vector3(sizeX, y, 0));
+        // Bottom grid (X,Z)
+        if (hasX && hasZ) {
+            for (var x = 0; x <= sizeX; x++) {
+                gridGeometry.vertices.push(new THREE.Vector3(x, 0, 0), new THREE.Vector3(x, 0, sizeZ));
+            }
+            for (var z = 0; z <= sizeZ; z++) {
+                gridGeometry.vertices.push(new THREE.Vector3(0, 0, z), new THREE.Vector3(sizeX, 0, z));
+            }
         }
 
         // Side grid (Y,Z)
-        for (var y = 1; y <= sizeY; y++) {
-            gridGeometry.vertices.push(new THREE.Vector3(sizeX, y, 0), new THREE.Vector3(sizeX, y, sizeZ));
-        }
-        for (var z = 1; z <= sizeZ; z++) {
-            gridGeometry.vertices.push(new THREE.Vector3(sizeX, 0, z), new THREE.Vector3(sizeX, sizeY, z));
+        if (hasY && hasZ) {
+            for (var y = 0; y <= sizeY; y++) {
+                gridGeometry.vertices.push(new THREE.Vector3(sizeX, y, 0), new THREE.Vector3(sizeX, y, sizeZ));
+            }
+            for (var z = 0; z <= sizeZ; z++) {
+                gridGeometry.vertices.push(new THREE.Vector3(sizeX, 0, z), new THREE.Vector3(sizeX, sizeY, z));
+            }
         }
 
         var lines = new THREE.Line(gridGeometry, material, THREE.LinePieces);
@@ -386,7 +446,7 @@ var WEBGL = new function () {
 
 
     // Creates an entity label with different drawing modes (bold, normal, ...)
-    this.createEntityLabel = function (text) {
+    this.createEntityLabel = function (text) { // TODO übergeben: entity mit liste (bei rollup)
         var size = 30;
         var abbrSign = '\u2026'; // a single char "..." sign
 
@@ -419,6 +479,8 @@ var WEBGL = new function () {
         var texture = new THREE.Texture(canvas);
         texture.needsUpdate = true;
         texture.minFilter = THREE.LinearFilter;
+        texture.magFilter = THREE.LinearFilter;
+//        texture.anisotropy = WEBGL.renderer.getMaxAnisotropy();
 
         var material = new THREE.MeshBasicMaterial({
             map: texture,
@@ -454,7 +516,7 @@ var WEBGL = new function () {
             texture.needsUpdate = true;
         };
 
-        mesh.tooltip = text;
+        mesh.tooltip = text; // TODO bei rollup: über rollupLabels iterieren
 //        console.log(mesh)
 
         return mesh;
@@ -559,7 +621,8 @@ var WEBGL = new function () {
 
         // Compute a background color
         var colorLowest = new THREE.Color(WEBGL.COLOR_LOWEST);
-        var colorHighest = new THREE.Color(WEBGL.COLOR_HIGHEST);
+        var colorHighest = new THREE.Color(MAIN.currentColor);
+//        var colorHighest = new THREE.Color(WEBGL.COLOR_HIGHEST);
         var backgroundColor = colorLowest.multiplyScalar(1 - ratio).add(colorHighest.multiplyScalar(ratio));
 
         // TODO (evtl) method to change background color to a given value

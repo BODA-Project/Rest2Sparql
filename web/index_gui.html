@@ -42,8 +42,18 @@
                         <span class="glyphicon glyphicon-chevron-left"></span> Undo</button>
                     <button type="button" class="btn btn-default btn-sm navbar-btn" id="id_redoButton">
                         <span class="glyphicon glyphicon-chevron-right"></span> Redo</button>
-                    <button type="button" class="btn btn-default btn-sm navbar-btn" id="id_optionsButton">
-                        <span class="glyphicon glyphicon glyphicon-cog"></span> Options...</button>
+
+                    <div class="btn-group dropdown">
+                        <button type="button" class="btn btn-default btn-sm dropdown-toggle" id="id_optionsButton" data-toggle="dropdown">
+                            <span class="glyphicon glyphicon glyphicon-cog"></span> Options <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu" role="menu">
+                            <li role="presentation"><a role="menuitem" tabindex="-1" id="id_aggItem" href="#">Aggregation</a></li>
+                            <li role="presentation"><a role="menuitem" tabindex="-1" id="id_colorItem" href="#">Measure Color</a></li>
+                            <li role="presentation"><a role="menuitem" tabindex="-1" id="id_scaleItem" href="#"><span class="glyphicon glyphicon-unchecked"></span> Logarithmic Scale</a></li>
+                        </ul>
+                    </div>
+
                     <button type="button" class="btn btn-default btn-sm navbar-btn" id="id_mergeButton">
                         <span class="glyphicon glyphicon-link"></span> Merge...</button>
                     <button type="button" class="btn btn-default btn-sm navbar-btn" id="id_changeUserButton">
@@ -58,7 +68,7 @@
                 <div class="panel panel-default" id="id_cubePanel">
                     <div class="panel-heading">
                         <h3 class="panel-title">Cube
-                            <a href="#" class="side-glyph" id="id_infoCube"><span class="glyphicon glyphicon-info-sign"></span></a>
+                            <a class="side-glyph" id="id_infoCube" tabindex="0" role="button" data-toggle="popover" data-trigger="focus" title="Cube Selection" data-content="TEXT TODO"><span class="glyphicon glyphicon-info-sign"></span></a>
                         </h3>
                     </div>
                     <div class="panel-body">
@@ -80,7 +90,7 @@
                 <div class="panel panel-default fade" id="id_dimensionPanel" data-toggle="popover" data-trigger="manual" data-content="Please choose one or more dimensions." data-placement="bottom">
                     <div class="panel-heading">
                         <h3 class="panel-title">Dimensions
-                            <a href="#" class="side-glyph" id="id_infoDimension"><span class="glyphicon glyphicon-info-sign"></span></a>
+                            <a class="side-glyph" id="id_infoDimension" tabindex="0" role="button" data-toggle="popover" data-trigger="focus" title="Dimensions" data-content="TEXT TODO"><span class="glyphicon glyphicon-info-sign"></span></a>
                         </h3>
                         <!--<span class="glyphicon glyphicon-info-sign"></span>-->
                     </div>
@@ -163,7 +173,7 @@
                 <div class="panel panel-default fade" id="id_measurePanel" data-toggle="popover" data-trigger="manual" data-content="Please choose one or more measures (1-2?)." data-placement="bottom">
                     <div class="panel-heading">
                         <h3 class="panel-title">Measure
-                            <a href="#" class="side-glyph" id="id_infoMeasure"><span class="glyphicon glyphicon-info-sign"></span></a>
+                            <a class="side-glyph" id="id_infoMeasure" tabindex="0" role="button" data-toggle="popover" data-trigger="focus" title="Measures" data-content="TEXT TODO"><span class="glyphicon glyphicon-info-sign"></span></a>
                         </h3>
                     </div>
                     <div class="panel-body">
@@ -214,7 +224,7 @@
                 <div class="panel panel-default fade" id="id_filterPanel">
                     <div class="panel-heading">
                         <h3 class="panel-title">Filters
-                            <a href="#" class="side-glyph" id="id_infoFilter"><span class="glyphicon glyphicon-info-sign"></span></a>
+                            <a class="side-glyph" id="id_infoFilter" tabindex="0" role="button" data-toggle="popover" data-trigger="focus" title="Filters" data-content="TEXT TODO"><span class="glyphicon glyphicon-info-sign"></span></a>
                         </h3>
                     </div>
                     <div class="panel-body">
@@ -357,7 +367,41 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                        <button type="button" class="btn btn-primary" id="id_filterOkay">Add Filter</button>
+                        <button type="button" class="btn btn-primary" id="id_filterModalOkay">Apply</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Aggreagation Modal (hidden by default) -->
+        <div class="modal fade" id="id_aggModal">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title">Change Aggregation</h4>
+                    </div>
+                    <div class="modal-body" id="id_aggModalBody">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Color Modal (hidden by default) -->
+        <div class="modal fade fade" id="id_colorModal">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title">Change Measure Color</h4>
+                    </div>
+                    <div class="modal-body" id="id_colorModalBody">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
                     </div>
                 </div>
             </div>
