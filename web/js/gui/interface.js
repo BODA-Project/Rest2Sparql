@@ -9,6 +9,7 @@ var INTERFACE = new function () {
     // For interaction with 3D objects
     this.mouseDown = {};
     this.mousePressed = false;
+    this.mousePosition = {}; // absolute mouse position
 
     // ...
     this.disableInputInitially = function () {
@@ -551,8 +552,12 @@ var INTERFACE = new function () {
 
 
         label.onmouseover = function () {
-            // TODO show tooltip if too long label string or if zoomed out far
-//            TODO: WEBGL.showTooltip(label.tooltip) // bzw label.entity.rollupLabels?
+
+            // TODO only if distance to camera >= 10 (?) or if label.entity.rollupLabels
+//            var distance = WEBGL.computeDistance(label);
+//            if (distance > 10 || label.entity.rollupLabels) {
+            INTERFACE.showTooltip(label);
+//            }
 
             $.each(label.sprites, function (i, sprite) {
 //                sprite.showSelection();
@@ -562,9 +567,15 @@ var INTERFACE = new function () {
 
         };
         label.onmouseout = function () {
+
+            INTERFACE.hideTooltip(label);
+
             $.each(label.sprites, function (i, sprite) {
                 sprite.hideRow();
             });
+
+            // TODO hide tooltips if given
+
         };
         label.onclick = function () {
 
@@ -1424,6 +1435,47 @@ var INTERFACE = new function () {
 
     };
 
+    /**
+     * Shows a custom tooltip with a given text
+     *
+     * @param {type} label the webgl label
+     */
+    this.showTooltip = function (label) {
+        var pos = WEBGL.toScreenPosition(label);
+        var text = "";
+        if (label.entity.rollupLabels) {
+            $.each(label.entity.rollupLabels, function (i, label) {
+                text += label + ", ";
+            });
+            text = text.substring(0, text.length - 2); // remove last comma
+        } else {
+            text = label.entity.label;
+        }
+
+        label.tooltip = $("<div class='hiddenTooltip'></div>");
+        label.tooltip.attr("title", text);
+//        label.tooltip.attr("data-placement", "left"); // TODO wenn Y oder Z label -> placement LEFT
+        label.tooltip.css("left", pos.x);
+        label.tooltip.css("top", pos.y);
+
+        $("body").append(label.tooltip);
+        label.tooltip.tooltip('show');
+        label.tooltip.css("display", "none"); // hide secret element
+    };
+
+    /**
+     * Hide a given custom tooltip
+     *
+     * @param {type} label the text to display
+     */
+    this.hideTooltip = function (label) {
+        if (!label.tooltip) {
+            return;
+        }
+        label.tooltip.tooltip('hide');
+        label.tooltip.remove();
+    };
+
     // Updates the mouse position for webGL event handling
     // TODO: für mobile geräte: auch/nur bei click-event?
     this.onCanvasMouseMove = function (event) {
@@ -1441,6 +1493,8 @@ var INTERFACE = new function () {
         var node = $(WEBGL.renderer.domElement);
         var x = event.pageX - node.position().left;
         var y = event.pageY - node.position().top;
+        INTERFACE.mousePosition.x = event.pageX;
+        INTERFACE.mousePosition.y = event.pageY;
         WEBGL.mousePosition.x = (x / node.width()) * 2 - 1;
         WEBGL.mousePosition.y = -(y / node.height()) * 2 + 1;
     };

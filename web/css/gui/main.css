@@ -10,11 +10,33 @@ body {
     margin-bottom: 0;
     box-shadow: none;
     border: none;
-
 }
 
 .navbar-right {
     margin-right: 15px;
+}
+
+.hiddenTooltip {
+    width: 1px;
+    height: 1px;
+    position: absolute;
+}
+
+/*Hover through tooltips*/
+.tooltip.fade {
+    pointer-events: none;
+}
+
+.tooltip-inner {
+    background-color: rgba(0, 0, 0, 0.75);
+}
+
+.tooltip.top .tooltip-arrow {
+    border-top-color: rgba(0, 0, 0, 0.75);
+}
+
+.tooltip.left .tooltip-arrow {
+    border-left-color: rgba(0, 0, 0, 0.75);
 }
 
 @media(min-width:768px) {

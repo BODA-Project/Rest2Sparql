@@ -117,7 +117,7 @@ var WEBGL = new function () {
         };
 
         $.each(WEBGL.scene.children, function (i, cube) {
-            if (!cube.geometry || cube.geometry.type !== "BoxGeometry") {
+            if (cube.name !== "resultCube") {
                 return true; // Skip non cubes
             }
             var selected = true;
@@ -215,6 +215,9 @@ var WEBGL = new function () {
 //        cube2.material.color.set(resultColor);
 //        cube2.material.linewidth = 2;
 //        WEBGL.scene.add(cube2);
+
+        // Add a name to identify these cubes later
+        cube.name = "resultCube";
 
         return cube;
 
@@ -516,7 +519,6 @@ var WEBGL = new function () {
             texture.needsUpdate = true;
         };
 
-        mesh.tooltip = text; // TODO bei rollup: über rollupLabels iterieren
 //        console.log(mesh)
 
         return mesh;
@@ -600,7 +602,6 @@ var WEBGL = new function () {
             texture.needsUpdate = true;
         };
 
-        mesh.tooltip = text;
 //        console.log(mesh)
 
         return mesh;
@@ -788,6 +789,12 @@ var WEBGL = new function () {
             $.each(intersections, function (index, obj) {
                 if (obj.object.onmouseover !== undefined) {
 
+                    // only hover the same object once
+                    if (obj.object === WEBGL.intersected) {
+                        hitSomething = true;
+                        return false;
+                    }
+
                     // leave previous object
                     if (WEBGL.intersected && WEBGL.intersected.onmouseout !== undefined) {
                         WEBGL.intersected.onmouseout();
@@ -839,6 +846,22 @@ var WEBGL = new function () {
 
     // HELP FUNCTIONS ==========================================================
 
+    this.toScreenPosition = function (obj) {
+        var canvasPosition = $(WEBGL.renderer.domElement).offset();
+        var vector = new THREE.Vector3();
+        var widthHalf = 0.5 * WEBGL.renderer.context.canvas.width;
+        var heightHalf = 0.5 * WEBGL.renderer.context.canvas.height;
+        obj.updateMatrixWorld();
+        vector.setFromMatrixPosition(obj.matrixWorld);
+        vector.project(WEBGL.camera);
+        vector.x = (vector.x * widthHalf) + widthHalf;
+        vector.y = -(vector.y * heightHalf) + heightHalf;
+        var pos = {
+            x: canvasPosition.left + vector.x,
+            y: canvasPosition.top + vector.y
+        };
+        return pos;
+    };
 
     var degToRad = function (deg) {
         return deg * Math.PI / 180;
