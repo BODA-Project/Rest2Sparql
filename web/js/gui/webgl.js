@@ -135,11 +135,12 @@ var WEBGL = new function () {
 
             // Apply opacity
             if (selected) {
-                cube.material.transparent = false; // TODO buggy graphics
+                cube.material.transparent = false;
                 cube.material.opacity = 1;
+                // TODO add edges to selected cubes (and remove below)
             } else {
                 cube.material.transparent = true;
-                cube.material.opacity = 0.15;
+                cube.material.opacity = 0.25;
             }
         });
     };

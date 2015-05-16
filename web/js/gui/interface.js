@@ -15,7 +15,7 @@ var INTERFACE = new function () {
     this.disableInputInitially = function () {
 
         // Disable navigation input initially and set conditions of usage
-        $("#id_cubePanel button").attr("disabled", "disabled");
+        $("#id_cubeButton").attr("disabled", "disabled");
         $("#id_dimensionPanel button").attr("disabled", "disabled");
         $("#id_measurePanel button").attr("disabled", "disabled");
         $("#id_filterPanel button").attr("disabled", "disabled");
@@ -23,6 +23,7 @@ var INTERFACE = new function () {
         $("#id_applyButton").attr("disabled", "disabled");
         $("#id_undoButton").attr("disabled", "disabled");
         $("#id_redoButton").attr("disabled", "disabled");
+        $("#id_optionsButton").attr("disabled", "disabled");
         $("#id_mergeButton").attr("disabled", "disabled");
     };
 
@@ -80,7 +81,7 @@ var INTERFACE = new function () {
         flashHTMLNode($("#id_cubePanel"));
 
         // enable cube selection
-        $("#id_cubePanel button").removeAttr("disabled");
+        $("#id_cubeButton").removeAttr("disabled");
 
         // still disable other actions
         $("#id_cancelButton").attr("disabled", "disabled");
@@ -88,6 +89,7 @@ var INTERFACE = new function () {
 
         $("#id_undoButton").attr("disabled", "disabled");
         $("#id_redoButton").attr("disabled", "disabled");
+        $("#id_optionsButton").attr("disabled", "disabled");
         $("#id_mergeButton").attr("disabled", "disabled");
 
         // TODO info icons sind unsichtbar ABER klickbar
@@ -167,6 +169,7 @@ var INTERFACE = new function () {
 
                 $("#id_undoButton").removeAttr("disabled"); // TODO erst wenn undo stack nicht leer -> immer prüfen!
                 $("#id_redoButton").removeAttr("disabled");
+                $("#id_optionsButton").removeAttr("disabled");
                 $("#id_mergeButton").removeAttr("disabled");
 
                 // Disable the selected cube from list (and re-enable all others)
@@ -578,51 +581,49 @@ var INTERFACE = new function () {
 
         };
         label.onclick = function () {
-
-            // TODO rollup-label darf nicht selektiert werden (oder stattdessen dimension-menu zeigen?)
-
-//            if (label.entity.rollupLabels) {
-//            } else {
-//            }
-
-            if (!label.toggled) {
-
-                $.each(label.sprites, function (i, sprite) {
-                    label.toSelected(); // highlight color
-                    sprite.toggled = true;
-                });
-
-                // Create selection list if first entity
-                if (!MAIN.tempSelection[dimensionName]) {
-                    MAIN.tempSelection[dimensionName] = [];
-                }
-
-                // Add entity to temp selected list (only once)
-                var index = MAIN.tempSelection[dimensionName].indexOf(label.entity);
-                if (index === -1) {
-                    MAIN.tempSelection[dimensionName].push(label.entity);
-                }
-
-                // Update hilighting of selected cubes
-                WEBGL.highlightSelectedCubes();
-
+            if (label.entity.rollupLabels) {
+                // TODO rollup-label darf nicht selektiert werden (oder stattdessen dimension-menu zeigen?)
             } else {
-                $.each(label.sprites, function (i, sprite) {
-                    label.toNormal();
-                    sprite.toggled = false;
-                });
+                if (!label.toggled) {
 
-                // Delete entity from temp selected list
-                var index = MAIN.tempSelection[dimensionName].indexOf(label.entity);
-                if (index !== -1) {
-                    MAIN.tempSelection[dimensionName].splice(index, 1);
+                    $.each(label.sprites, function (i, sprite) {
+                        label.toSelected(); // highlight color
+                        sprite.toggled = true;
+                    });
+
+                    // Create selection list if first entity
+                    if (!MAIN.tempSelection[dimensionName]) {
+                        MAIN.tempSelection[dimensionName] = [];
+                    }
+
+                    // Add entity to temp selected list (only once)
+                    var index = getIndexOfEntity(MAIN.tempSelection[dimensionName], label.entity);
+                    if (index === -1) {
+                        MAIN.tempSelection[dimensionName].push(label.entity);
+                    }
+
+                    // Update hilighting of selected cubes
+                    WEBGL.highlightSelectedCubes();
+
+                } else {
+                    $.each(label.sprites, function (i, sprite) {
+                        label.toNormal();
+                        sprite.toggled = false;
+                    });
+
+                    // Delete entity from temp selected list
+                    var index = getIndexOfEntity(MAIN.tempSelection[dimensionName], label.entity);
+                    if (index !== -1) {
+                        MAIN.tempSelection[dimensionName].splice(index, 1);
+                    }
+
+                    // Update hilighting of selected cubes
+                    WEBGL.highlightSelectedCubes();
+
                 }
-
-                // Update hilighting of selected cubes
-                WEBGL.highlightSelectedCubes();
-
-            }
 //            console.log("TempSelection", MAIN.tempSelection)
+            }
+
         };
 
         label.showRow = function () {
@@ -637,6 +638,18 @@ var INTERFACE = new function () {
                 label.toNormal();
             }
             WEBGL.removeSelectionCube(label);
+        };
+
+        // help function
+        var getIndexOfEntity = function (list, entity) {
+            var index = -1;
+            $.each(list, function (i, e) {
+                if (e.entityName === entity.entityName) {
+                    index = i;
+                    return false; // break
+                }
+            });
+            return index;
         };
 
     };

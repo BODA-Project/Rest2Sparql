@@ -203,6 +203,9 @@ var MAIN = new function () {
             MAIN.tempSelection = {};
             MAIN.entityMap = {};
 
+            // Reset buttons to initial behaviour
+            INTERFACE.disableInputInitially();
+
             // Reset interface
             INTERFACE.clearCubes();
             INTERFACE.clearDimensions();
