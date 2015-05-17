@@ -439,11 +439,24 @@ var WEBGL = new function () {
 
         // TODO better view / distance / panning view?
 
-        var distance = Math.max(WEBGL.totalSize[0], WEBGL.totalSize[1], WEBGL.totalSize[2]);
-        WEBGL.camera.position.x = -WEBGL.totalSize[0] - 5;
-        WEBGL.camera.position.y = WEBGL.totalSize[1] + 5;
-        WEBGL.camera.position.z = WEBGL.totalSize[2] + distance * 2; // TODO how far away?
-        WEBGL.controls.target = new THREE.Vector3(WEBGL.totalSize[0] / 2, WEBGL.totalSize[1] / 2, WEBGL.totalSize[2] / 2);
+        var x = WEBGL.totalSize[0];
+        var y = WEBGL.totalSize[1];
+        var z = WEBGL.totalSize[2];
+
+        // Horizontal ratio
+        var hRatio = x / (x + z);
+        var vRatio = ((x * (z / (z + y))) + (z * (x / (x + y)))) / (x + z);
+
+        // TODO vector + angle + distance?
+
+        WEBGL.camera.position.x = 1.5 * (x / 2 - z);
+        WEBGL.camera.position.y = 1.0 * (y / 2 + y);
+        WEBGL.camera.position.z = 1.5 * (z / 2 + x);
+
+        WEBGL.controls.target = new THREE.Vector3(
+                (WEBGL.totalSize[0] - 1) / 2,
+                (WEBGL.totalSize[1] - 1) / 2,
+                (WEBGL.totalSize[2] - 1) / 2);
         WEBGL.controls.update();
     };
 

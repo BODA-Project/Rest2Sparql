@@ -57,7 +57,7 @@ var MAIN = new function () {
     ];
     this.AGGREGATIONS = [
         {type: "count", label: "Count"},
-        {type: "sum", label: "Sum up"},
+        {type: "sum", label: "Sum"},
         {type: "min", label: "Minimum"},
         {type: "max", label: "Maximum"},
         {type: "avg", label: "Average"},
@@ -404,11 +404,6 @@ var MAIN = new function () {
 
             // Add references to label sprites of the same entity for each label
             assignLabelsToLabels();
-
-
-            // TODO iterate through xyzDimensions + entityMap
-            // TODO INTERFACE.js -> labels onclick und co.
-
 
             // Update the camera and center point of the visualization
             WEBGL.updateCenterPoint(); // TODO auch labels dazuzählen!!! #######################
@@ -1080,9 +1075,6 @@ var MAIN = new function () {
             assign(MAIN.xDimensions, cube);
             assign(MAIN.yDimensions, cube);
             assign(MAIN.zDimensions, cube);
-
-            // Forget result
-            cube.result = undefined;
         });
     };
 

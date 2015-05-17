@@ -465,32 +465,45 @@ var INTERFACE = new function () {
         });
 
         // Enable disable items according to status
-        var isFirstDimension = true; // TODO
-        var isLastDimension = true; // TODO
-        // TODO: if first item -> moveUpItem.addClass("disabled");
-        // TODO: if last item -> moveDownItem.addClass("disabled");
+        var isFirstDimension = dimensions.indexOf(dimension) === 0;
+        var isLastDimension = dimensions.indexOf(dimension) === dimensions.length - 1;
+        if (isFirstDimension) {
+            moveUpItem.addClass("disabled");
+        }
+        if (isLastDimension) {
+            moveDownItem.addClass("disabled");
+        }
 
         // Move Up / Down items
         moveUpItem.on("click", function (e) {
             e.preventDefault();
             if (isFirstDimension) {
-                return;
+                return; // Already first item
             }
+            // See drag drop code to move buttons (not needed, instant apply)
 
-            // TODO insertBefore...
-            // TODO swap in MAIN.xyzDimensions
+            // Swap dimension with the one above
+            var index = dimensions.indexOf(dimension);
+            dimensions.splice(index, 1);
+            dimensions.splice(index - 1, 0, dimension);
 
-
+            // Apply and visualize right away
+            MAIN.applyOLAP();
         });
         moveDownItem.on("click", function (e) {
             e.preventDefault();
             if (isLastDimension) {
-                return;
+                return; // Already last item
             }
+            // See drag drop code to move buttons (not needed, instant apply)
 
-            // TODO insertAfter...
-            // TODO swap in MAIN.xyzDimensions
+            // Swap dimension with the one below
+            var index = dimensions.indexOf(dimension);
+            dimensions.splice(index, 1);
+            dimensions.splice(index + 1, 0, dimension);
 
+            // Apply and visualize right away
+            MAIN.applyOLAP();
         });
 
         // Add drag and drop functionality
@@ -500,7 +513,11 @@ var INTERFACE = new function () {
             revert: true,
             zIndex: 9999,
             cursor: "move",
-            containment: "#id_dimensionPanel .panel-body"
+            containment: "#id_dimensionPanel .panel-body",
+            stop: function (event, ui) {
+                var draggedButton = ui.helper;
+                draggedButton.css("width", ""); // bugfix
+            }
         });
 
         // Make the button also a droparea
@@ -588,38 +605,9 @@ var INTERFACE = new function () {
          * cube.result;
          */
 
-        var collectDimensions = function (dimensionList) {
-            $.each(dimensionList, function (i, dimension) {
-                var entity = MAIN.getEntityFromJson(cube.result, dimension);
-                dimensions.push({
-                    dimension: dimension.label,
-                    entity: entity.label // TODO rollupLabels
-                });
-            });
-        };
-        var collectMeasures = function (measureList) {
-            $.each(measureList, function (i, measure) {
-                var value = MAIN.getMeasureValueFromJson(cube.result, measure);
-                measures.push({
-                    measure: measure.label,
-                    value: value
-                });
-            });
-        };
-
-        // Gather dimension details from all axis
-        var dimensions = [];
-        collectDimensions(MAIN.xDimensions);
-        collectDimensions(MAIN.yDimensions);
-        collectDimensions(MAIN.zDimensions);
-
-        // Gather measure informations
-        var measures = [];
-        collectMeasures(MAIN.measures);
-
         // Add click and hover events
         cube.onclick = function () {
-            INTERFACE.popupResult(dimensions, measures);
+            INTERFACE.popupResult(cube.result);
         };
         cube.onmouseover = function () {
             WEBGL.highlightCube(cube);
@@ -1000,8 +988,48 @@ var INTERFACE = new function () {
 
 
     // Shows a popup of a result
-    this.popupResult = function (dimensions, measures) {
+    this.popupResult = function (result) {
 
+        // Gather dimension details from all axis
+        var dimensions = [];
+        var collectDimensions = function (dimensionList) {
+            $.each(dimensionList, function (i, dimension) {
+                if (dimension.rollup) {
+                    var entities = [];
+                    $.each(dimension.entities, function (i, entity) {
+                        entities.push(entity.label);
+                    });
+                    dimensions.push({
+                        dimension: dimension.label,
+                        entities: entities
+                    });
+                } else {
+                    var entity = MAIN.getEntityFromJson(result, dimension);
+                    dimensions.push({
+                        dimension: dimension.label,
+                        entity: entity.label
+                    });
+                }
+            });
+        };
+        collectDimensions(MAIN.xDimensions);
+        collectDimensions(MAIN.yDimensions);
+        collectDimensions(MAIN.zDimensions);
+
+        // Gather measure informations
+        var measures = [];
+        var collectMeasures = function (measureList) {
+            $.each(measureList, function (i, measure) {
+                var value = MAIN.getMeasureValueFromJson(result, measure);
+                measures.push({
+                    measure: measure.label,
+                    value: value
+                });
+            });
+        };
+        collectMeasures(MAIN.measures);
+
+        // Build the modal
         var modal = $(TEMPLATES.MODAL_RESULT_TEMPLATE);
         $("body").append(modal);
         var modalBody = $("#id_resultModalBody");
@@ -1013,7 +1041,20 @@ var INTERFACE = new function () {
         $.each(dimensions, function (i, dimension) {
             var row = $("<tr>");
             row.append("<td>" + dimension.dimension + "</td>");
-            row.append("<td><b>" + dimension.entity + "</b></td>");
+
+            // Collect all entities when rollup
+            if (dimension.entities) {
+                var cell = $("<td><b></b></td>");
+                $.each(dimension.entities, function (i, entity) {
+                    cell.children("b").append(entity);
+                    if (i < dimension.entities.length - 1) {
+                        cell.children("b").append(", ");
+                    }
+                });
+                row.append(cell);
+            } else {
+                row.append("<td><b>" + dimension.entity + "</b></td>");
+            }
             table.append(row);
         });
         modalBody.append(table);
@@ -1024,10 +1065,24 @@ var INTERFACE = new function () {
         table.addClass("table table-bordered table-striped");
         $.each(measures, function (i, measure) {
             var row = $("<tr>");
-            row.append("<td>" + measure.measure + "</td>");
+            row.append("<td>" + measure.measure + " (" + getAggregationLabel(MAIN.currentAGG) + ")</td>");
             row.append("<td><b>" + INTERFACE.formatNumber(measure.value, 4) + "</b></td>");
             table.append(row);
         });
+        modalBody.append(table);
+
+        // Add the filter data
+        if (MAIN.filters.length > 0) {
+            modalBody.append("<h4>Filters</h4>");
+            var table = $("<table>");
+            table.addClass("table table-bordered table-striped");
+            $.each(MAIN.filters, function (i, filter) {
+                var row = $("<tr>");
+                row.append("<td>" + filter.measure.label + "</td>");
+                row.append("<td><b>" + getRelationLabel(filter.relation) + " " + INTERFACE.formatNumber(filter.value, 4) + "</b></td>");
+                table.append(row);
+            });
+        }
         modalBody.append(table);
 
         // Pause rendering in background
