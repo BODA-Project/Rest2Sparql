@@ -27,7 +27,7 @@ body {
     pointer-events: none;
 }
 
-.tooltip-inner {
+/*.tooltip-inner {
     background-color: rgba(0, 0, 0, 0.85);
 }
 
@@ -37,6 +37,16 @@ body {
 
 .tooltip.left .tooltip-arrow {
     border-left-color: rgba(0, 0, 0, 0.85);
+}*/
+
+/*DRAG & DROP*/
+.btn-group.hovered > .btn {
+    background: linear-gradient(#d0d0d0, #b0b0b0);
+    border-color: #808080;
+}
+
+.btn-group.ui-draggable-dragging > .btn {
+    opacity: 0.75;
 }
 
 @media(min-width:768px) {
@@ -74,6 +84,13 @@ a.side-glyph:hover {
     color: #a0a0a0;
 }
 
+/* Plus buttons */
+#id_xPlus,
+#id_yPlus,
+#id_zPlus {
+    width: 100%;
+}
+
 /* badges in buttons */
 .btn .badge {
     font-size: 10px;
@@ -87,32 +104,52 @@ a.side-glyph:hover {
     background-color: rgba(0, 0, 0, 0.5);
 }
 
-@media(min-width:768px) {
+/*@media(min-width:768px) {*/
 
-    /* button size in panels */
-    .panel-body button .cube-button-text {
-        max-width: 200px;
-        text-overflow: ellipsis;
-        overflow: hidden;
-    }
-
-    /* button size in panels */
-    .panel-body a .button-text,
-    .panel-body button .button-text{
-        max-width: 130px;
-        text-overflow: ellipsis;
-        overflow: hidden;
-    }
-
-    /* button size in panels */
-    .panel-body a .filter-button-text,
-    .panel-body button .filter-button-text {
-        max-width: 110px;
-        text-overflow: ellipsis;
-        overflow: hidden;
-    }
-
+/* button size in cube panel */
+.panel-body button .cube-button-text {
+    max-width: 200px;
+    text-overflow: ellipsis;
+    overflow: hidden;
 }
+
+/* button size in panels */
+.panel-body a .button-text,
+.panel-body button .button-text{
+    max-width: 130px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+/* button size in filter panel */
+.panel-body a .filter-button-text,
+.panel-body button .filter-button-text {
+    max-width: 110px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+/*dimension button size*/
+[data-dimension-name] {
+    width: 100%;
+}
+[data-dimension-name] a,
+[data-dimension-name] button {
+    width: 100%;
+}
+
+/* badges in dimension buttons */
+[data-dimension-name] .badge {
+    float: right;
+    margin-top: 2px;
+}
+
+/* text in dimension buttons */
+[data-dimension-name] .button-text {
+    float: left;
+    padding-right: 0;
+}
+/*}*/
 
 /* button size in panels (all screen sizes) */
 .panel-body a .button-text,

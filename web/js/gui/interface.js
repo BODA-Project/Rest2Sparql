@@ -358,8 +358,10 @@ var INTERFACE = new function () {
         var menu = $('<ul class="dropdown-menu" role="menu"></ul>');
         var filterItem = $('<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Select Entities...</a></li>');
         var drillItem = $('<li role="presentation"><a role="menuitem" tabindex="-1" href="#"><span class="' + rollupIcon + '"></span> Combine Entities</a></li>');
-
         var dividerItem = $('<li role="presentation" class="divider"></li>');
+        var moveUpItem = $('<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Move Up</a></li>');
+        var moveDownItem = $('<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Move Down</a></li>');
+        var dividerItem2 = $('<li role="presentation" class="divider"></li>');
         var removeItem = $('<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Remove</a></li>');
 
         // Combine button and list
@@ -385,6 +387,9 @@ var INTERFACE = new function () {
         menu.append(filterItem);
         menu.append(drillItem);
         menu.append(dividerItem);
+        menu.append(moveUpItem);
+        menu.append(moveDownItem);
+        menu.append(dividerItem2);
         menu.append(removeItem);
         btnGroup.append(menu);
 
@@ -392,13 +397,26 @@ var INTERFACE = new function () {
         buttonArea.append(" ");
         buttonArea.append(plusButton); // Move plus to end
 
+        // TODO: tooltip if text too long
+
+        // Set max width after setting badge
+        text.css("max-width", (192 - badge.outerWidth()));
+        text.css("text-overflow", "ellipsis");
+        text.css("overflow", "hidden");
+
+        // Save dimension and dimensionList to the button
+        btnGroup.data("dimension", dimension);
+        btnGroup.data("dimensionList", dimensions);
+
         // Popup a modal for entity selection
         filterItem.on("click", function (e) {
+            e.preventDefault();
             INTERFACE.popupEntitySelection(dimension);
         });
 
         // Add event for removing the dimension
         removeItem.on("click", function (e) {
+            e.preventDefault();
 
             // TODO disable if last remaining dimension!
 
@@ -426,6 +444,7 @@ var INTERFACE = new function () {
 
         // TEMP for rollup test
         drillItem.on("click", function (e) {
+            e.preventDefault();
 
             if (dimension.rollup) {
                 drillItem.find(".glyphicon").removeClass("glyphicon-check");
@@ -445,40 +464,118 @@ var INTERFACE = new function () {
 
         });
 
+        // Enable disable items according to status
+        var isFirstDimension = true; // TODO
+        var isLastDimension = true; // TODO
+        // TODO: if first item -> moveUpItem.addClass("disabled");
+        // TODO: if last item -> moveDownItem.addClass("disabled");
 
-
-
-
-        // TODO Add drag and rop functionality to the button#####################
-
-
-        // TODO button = dropzone + .insertAfter()
-
-
-        button.attr("draggable", "true");
-        button.on("dragstart", function (e) {
-            console.log("EVENT:", e);
-        });
-
-        buttonArea.on("drop", function (e) {
-            console.log("EVENT:", e);
-            alert("DROP! " + e);
+        // Move Up / Down items
+        moveUpItem.on("click", function (e) {
             e.preventDefault();
+            if (isFirstDimension) {
+                return;
+            }
 
-            // TODO  jquery -> .insertAfter()
+            // TODO insertBefore...
+            // TODO swap in MAIN.xyzDimensions
+
 
         });
-
-        buttonArea.on("dragover", function (e) {
-            console.log("EVENT:", e);
-            e.stopPropagation();
+        moveDownItem.on("click", function (e) {
             e.preventDefault();
-            e.dataTransfer.dropEffect = 'copy';
+            if (isLastDimension) {
+                return;
+            }
+
+            // TODO insertAfter...
+            // TODO swap in MAIN.xyzDimensions
+
         });
 
+        // Add drag and drop functionality
+        // Make button dragable
+        btnGroup.draggable({
+            distance: 5,
+            revert: true,
+            zIndex: 9999,
+            cursor: "move",
+            containment: "#id_dimensionPanel .panel-body"
+        });
 
+        // Make the button also a droparea
+        btnGroup.droppable({
+            drop: function (event, ui) {
+                event.preventDefault();
+                event.stopPropagation();
 
+                console.log("DROPPED", event, ui);
 
+                var draggedButton = ui.draggable;
+
+                // Only for changed positions
+                if (draggedButton[0] !== btnGroup.prev()[0]) {
+
+                    // No need to move buttons, they are recreated after each olap step
+//                    draggedButton.insertBefore(btnGroup);
+//                    draggedButton.css("top", 0);
+//                    draggedButton.css("left", 0);
+//                    draggedButton.css("width", "");
+
+                    var originalDimensionList = draggedButton.data("dimensionList");
+                    var droppedDimension = draggedButton.data("dimension");
+
+                    // Remove dimension from the original list
+                    var oldIndex = originalDimensionList.indexOf(droppedDimension);
+                    originalDimensionList.splice(oldIndex, 1);
+
+                    // and insert dimension right before the button's dimension
+                    var index = dimensions.indexOf(dimension);
+                    dimensions.splice(index, 0, droppedDimension);
+
+                    // Apply and visualize right away
+                    MAIN.applyOLAP();
+                }
+            },
+            accept: 'div.btn-group[data-dimension-name]',
+            hoverClass: 'hovered'
+        });
+
+        // Make the plus button a droparea
+        plusButton.droppable({
+            drop: function (event, ui) {
+                event.preventDefault();
+                event.stopPropagation();
+
+                console.log("DROPPED", event, ui);
+
+                var draggedButton = ui.draggable;
+
+                if (draggedButton[0] !== plusButton.prev()[0]) {
+
+                    // No need to move buttons, they are recreated after each olap step
+//                    draggedButton.insertBefore(plusButton);
+//                    draggedButton.css("top", 0);
+//                    draggedButton.css("left", 0);
+//                    draggedButton.css("width", "");
+
+                    var originalDimensionList = draggedButton.data("dimensionList");
+                    var droppedDimension = draggedButton.data("dimension");
+
+                    // Remove dimension from the original list
+                    var oldIndex = originalDimensionList.indexOf(droppedDimension);
+                    originalDimensionList.splice(oldIndex, 1);
+
+                    // and insert dimension at the end of the list
+                    dimensions.push(droppedDimension);
+
+                    // Apply and visualize right away
+                    MAIN.applyOLAP();
+                }
+            },
+            accept: 'div.btn-group[data-dimension-name]',
+            hoverClass: 'hovered'
+        });
 
     };
 
