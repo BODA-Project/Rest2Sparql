@@ -142,6 +142,7 @@ var INTERFACE = new function () {
                 MAIN.undoStack = [];
                 MAIN.redoStack = [];
                 MAIN.currentState = undefined;
+                MAIN.resultCache = {};
 
                 // Set button and cube title and tooltip
                 $("#id_cubeButton").empty();
@@ -512,7 +513,7 @@ var INTERFACE = new function () {
             distance: 5,
             revert: true,
             zIndex: 9999,
-            cursor: "move",
+//            cursor: "move",
             containment: "#id_dimensionPanel .panel-body",
             stop: function (event, ui) {
                 var draggedButton = ui.helper;
@@ -771,8 +772,9 @@ var INTERFACE = new function () {
             $("#id_scaleItem span").removeClass("glyphicon-check");
             $("#id_scaleItem span").addClass("glyphicon-unchecked");
         }
-        // TODO update viz (cubes / D3) without an olap step (so no undo redo) or (olap as undo)
-        MAIN.applyOLAP(true);
+
+        // Visualize without an undo step or camera movement
+        MAIN.applyOLAP(true, true);
     };
 
 
@@ -966,8 +968,8 @@ var INTERFACE = new function () {
                 // Hide the popup
                 modal.modal("hide");
 
-                // TODO update viz (cubes / D3) without an olap step (so no undo redo) or (olap as undo)
-                MAIN.applyOLAP(true);
+                // Visualize without an undo step or camera movement
+                MAIN.applyOLAP(true, true);
             });
         });
         modalAggBody.append(buttonGroup);
@@ -1065,7 +1067,7 @@ var INTERFACE = new function () {
         table.addClass("table table-bordered table-striped");
         $.each(measures, function (i, measure) {
             var row = $("<tr>");
-            row.append("<td>" + measure.measure + " (" + getAggregationLabel(MAIN.currentAGG) + ")</td>");
+            row.append("<td>" + measure.measure + " <span style='font-weight:bold;color:" + MAIN.currentColor + ";'>(" + getAggregationLabel(MAIN.currentAGG) + ")</span></td>");
             row.append("<td><b>" + INTERFACE.formatNumber(measure.value, 4) + "</b></td>");
             table.append(row);
         });

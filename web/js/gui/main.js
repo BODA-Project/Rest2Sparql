@@ -114,6 +114,9 @@ var MAIN = new function () {
     // List of actually used entities (for the visualization only) with stacked dimensions in every entity (if more than one dimension / axis))
     this.entityMap = {};
 
+    // Cache olap results
+    this.resultCache = {}; // Map (url: content)
+
 
     // Initialization
     $(document).ready(function () {
@@ -202,6 +205,7 @@ var MAIN = new function () {
             MAIN.entityList = {};
             MAIN.tempSelection = {};
             MAIN.entityMap = {};
+            MAIN.resultCache = {};
 
             // Reset buttons to initial behaviour
             INTERFACE.disableInputInitially();
@@ -251,28 +255,17 @@ var MAIN = new function () {
     };
 
 
+    // TODO: method to create Model state (xyzDimensions, ...) from a given URL (for bookmarks)
+
 
     // Sends the given url and visualizes the results.
     // TODO: loading screen, error messages
-    this.visualize = function (url) {
+    this.visualize = function (url, stopCamera) {
 
-        // Show a loading screen while waiting
-        WEBGL.showLoadingScreen("Loading...");
-
-        var request = $.ajax({
-            url: url,
-            headers: {
-                accept: "application/sparql-results+json"
-            }
-        });
-
-        request.done(function (content) {
+        // Help function
+        var handleContent = function (content, stopCamera) {
             var obj = $.parseJSON(content);
             var results = obj.results.bindings;
-
-
-            // TODO bei rollup keine information über die summierten entities -> aus anfrage schließen -> benennen z.b. "2011, 2012, 2014", (pseudo Entity in die liste), evtl als "D_NAME_X_AGG"
-
 
             // Stop and notify if no results
             if (results.length === 0) {
@@ -406,7 +399,9 @@ var MAIN = new function () {
             assignLabelsToLabels();
 
             // Update the camera and center point of the visualization
-            WEBGL.updateCenterPoint(); // TODO auch labels dazuzählen!!! #######################
+            if (!stopCamera) {
+                WEBGL.updateCenterPoint(); // TODO auch labels dazuzählen!!! #######################
+            }
 
             // TODO Draw a grid for better orientation on the ground
             WEBGL.addGrid();
@@ -414,8 +409,29 @@ var MAIN = new function () {
             // DEBUG:
             console.log("lowest measure: ", lowestMeasures, ", highest: ", highestMeasures, ", #results: ", results.length);
 
-        });
+        };
 
+        // Prefer the already cached result if no "random sample" aggregation wanted
+        if (MAIN.resultCache[url] && !String(url).contains(",agg=<sample>")) {
+            handleContent(MAIN.resultCache[url], stopCamera);
+        } else {
+
+            // Show a loading screen while waiting
+            WEBGL.showLoadingScreen("Loading...");
+
+            // Make a new ajax call
+            var request = $.ajax({
+                url: url,
+                headers: {
+                    accept: "application/sparql-results+json"
+                }
+            });
+            request.done(function (content) {
+                // Save content to cache and visualize
+                MAIN.resultCache[url] = content;
+                handleContent(content, false);
+            });
+        }
     };
 
 
@@ -596,8 +612,9 @@ var MAIN = new function () {
     /**
      * ...
      * @param {boolean} isUndo if true, no undo state will be saved
+     * @param {boolean} stopCamera if true, the camera stays at its current position
      */
-    this.applyOLAP = function (isUndo) {
+    this.applyOLAP = function (isUndo, stopCamera) {
 
         // Save undo step
         if (!isUndo) {
@@ -606,7 +623,7 @@ var MAIN = new function () {
 
         // Visualize the cube
         var url = MAIN.createRequestURL();
-        MAIN.visualize(url);
+        MAIN.visualize(url, stopCamera);
 
         // Update the configuration buttons (Dimensions, Measures, ...)
         INTERFACE.updateConfigButtons();

@@ -32,6 +32,7 @@ var WEBGL = new function () {
     this.mousePosition = new THREE.Vector2(); // 2D position on canvas
     this.intersected;
 
+    // Total cube size
     this.totalSize = [0, 0, 0];
 
     // Starts the rendering process of three.js, goes infinitly. Call only once!
@@ -229,6 +230,9 @@ var WEBGL = new function () {
     this.addEntityLabel = function (axis, position, entity, row) { // TODO: rollup labels dürfen breiter sein... (nur wenn nicht untergeordnet?)
         var label = WEBGL.createEntityLabel(entity.label);
         label.axis = axis; // Save the axis which it belongs to
+
+        // TODO platzverschwendung?
+
         switch (axis) {
             case "x" :
                 // Position
