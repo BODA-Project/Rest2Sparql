@@ -86,7 +86,6 @@ var MAIN = new function () {
     this.currentScale = this.SCALE_LINEAR; // log or linear
     this.entityList = {}; // Contains all entities of all dimensions (and their selected status)
 
-
     // All possible dimensions and measures
     this.availableCubes = [];
     this.availableDimensions = [];
@@ -102,7 +101,7 @@ var MAIN = new function () {
     // Undo, Redo
     this.undoStack = [];
     this.redoStack = [];
-    this.currentState; // TODO kommt nach neuer olap operation in den undo stack
+    this.currentState;
 
     this.tempSelection = {}; // Temprary selection of dimensions' entities (to be accepted on button click)
 
@@ -116,6 +115,10 @@ var MAIN = new function () {
 
     // Cache olap results
     this.resultCache = {}; // Map (url: content)
+
+
+
+    // TODO: max-size of Undo / Redo / resultCache
 
 
     // Initialization
@@ -413,6 +416,9 @@ var MAIN = new function () {
 
         // Prefer the already cached result if no "random sample" aggregation wanted
         if (MAIN.resultCache[url] && !String(url).contains(",agg=<sample>")) {
+
+            // TODO niemals loadingscreen?
+
             handleContent(MAIN.resultCache[url], stopCamera);
         } else {
 
@@ -596,10 +602,6 @@ var MAIN = new function () {
                     MAIN.entityList[dimension.dimensionName][entity.entityName] = true;
                 });
             }
-
-            // Update the badges on the accoring button
-//            INTERFACE.updateBadge(dimensionName); // TODO mit selektor $(".btn-group[data-dimension-name='+dimName+'] .badge"); #####
-
         };
         $.each(MAIN.xDimensions, setEntities);
         $.each(MAIN.yDimensions, setEntities);
@@ -638,7 +640,28 @@ var MAIN = new function () {
 
         // Set temp selection to be empty again for following OLAP steps
         MAIN.tempSelection = {};
+    };
 
+    /**
+     * Cancel current on screen selection of entities.
+     */
+    this.cancelOLAP = function () {
+
+        // Reload current state
+        MAIN.loadState(MAIN.currentState);
+
+        // Discard on screen selection
+        MAIN.tempSelection = {};
+
+        // Visualize the cube (again)
+        var url = MAIN.createRequestURL();
+        MAIN.visualize(url, true);
+
+        // Update the configuration buttons (Dimensions, Measures, ...)
+        INTERFACE.updateConfigButtons();
+
+        // TODO Update the rest of the interface (Apply, Cancel, Undo, ...)
+        INTERFACE.updateNavigation();
     };
 
 

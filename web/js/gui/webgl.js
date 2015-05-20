@@ -330,7 +330,7 @@ var WEBGL = new function () {
         });
 
         // Back grid (X,Y)
-        if (hasX && hasY) {
+        if (hasX && hasY && (sizeX > 1 && sizeY > 1)) { // TODO nur wenn sizex > 1 oder sizey > 1
             for (var x = 0; x <= sizeX; x++) {
                 gridGeometry.vertices.push(new THREE.Vector3(x, 0, 0), new THREE.Vector3(x, sizeY, 0));
             }
@@ -340,7 +340,7 @@ var WEBGL = new function () {
         }
 
         // Bottom grid (X,Z)
-        if (hasX && hasZ) {
+        if (hasX && hasZ && (sizeX > 1 && sizeZ > 1)) {
             for (var x = 0; x <= sizeX; x++) {
                 gridGeometry.vertices.push(new THREE.Vector3(x, 0, 0), new THREE.Vector3(x, 0, sizeZ));
             }
@@ -350,7 +350,7 @@ var WEBGL = new function () {
         }
 
         // Side grid (Y,Z)
-        if (hasY && hasZ) {
+        if (hasY && hasZ && (sizeY > 1 && sizeZ > 1)) {
             for (var y = 0; y <= sizeY; y++) {
                 gridGeometry.vertices.push(new THREE.Vector3(sizeX, y, 0), new THREE.Vector3(sizeX, y, sizeZ));
             }
@@ -800,10 +800,10 @@ var WEBGL = new function () {
         // project mouse to 3d scene
         WEBGL.raycaster.setFromCamera(WEBGL.mousePosition, WEBGL.camera);
         var intersections = WEBGL.raycaster.intersectObjects(WEBGL.scene.children); // TODO erstmal so, inperformant aber geht
+        var hitSomething = false;
         if (intersections.length > 0) {
 
             // Hover through objects without hover events
-            var hitSomething = false;
             $.each(intersections, function (index, obj) {
                 if (obj.object.onmouseover !== undefined) {
 
@@ -839,7 +839,7 @@ var WEBGL = new function () {
             }
 
             // Forget last intersection
-            WEBGL.intersected = null;
+            WEBGL.intersected = undefined;
             WEBGL.renderer.domElement.style.cursor = 'auto'; // Set cursor to normal
         }
     };

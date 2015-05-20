@@ -50,7 +50,7 @@ var INTERFACE = new function () {
         // Side bar TODO: cancel-button, + onchange -> update -> disable/enable
         $("#id_cancelButton").on('click', function (e) {
             e.preventDefault();
-            alert("TODO: Cancel");
+            MAIN.cancelOLAP();
         });
 
         $("#id_applyButton").on('click', function (e) {
@@ -709,6 +709,9 @@ var INTERFACE = new function () {
                 }
 //            console.log("TempSelection", MAIN.tempSelection)
             }
+
+            // Update the navigation
+            INTERFACE.updateNavigation();
 
         };
 
@@ -1555,9 +1558,6 @@ var INTERFACE = new function () {
         $("#id_measureButton").append("<span class=cube-button-text>" + measure.label + "</span>");
         var badge = $('<span class="badge"></span>');
         badge.css("background-color", MAIN.currentColor);
-//        badge.addClass("ms-1"); // TODO different badge colors
-
-        // TODO auslesen von MAIN.currentAGG? #######################################
         badge.text(agg);
 
         $("#id_measureButton").append(badge);
@@ -1598,8 +1598,26 @@ var INTERFACE = new function () {
      */
     this.updateNavigation = function () {
 
-        // TODO
+        // Status of apply and accept button (for temp selection)
+        if ($.isEmptyObject(MAIN.tempSelection)) {
+            $("#id_applyButton").prop("disabled", true);
+            $("#id_cancelButton").prop("disabled", true);
+        } else {
+            $("#id_applyButton").prop("disabled", false);
+            $("#id_cancelButton").prop("disabled", false);
+        }
 
+        // Undo / Redo stack
+        if (MAIN.undoStack.length === 0) {
+            $("#id_undoButton").prop("disabled", true);
+        } else {
+            $("#id_undoButton").prop("disabled", false);
+        }
+        if (MAIN.redoStack.length === 0) {
+            $("#id_redoButton").prop("disabled", true);
+        } else {
+            $("#id_redoButton").prop("disabled", false);
+        }
     };
 
     /**
