@@ -50,6 +50,12 @@ var WEBGL = new function () {
 
         // check for hover events
         WEBGL.handleHover(); // TEMP better performance if only done when rendered
+
+        // TODO reset target point after panning
+//        WEBGL.controls.target = new THREE.Vector3(WEBGL.totalSize[0]/2,WEBGL.totalSize[1]/2,WEBGL.totalSize[2]/2);
+
+//        WEBGL.controls.panLeft(0.1)
+
     };
 
     // Stops rendering completely
@@ -226,18 +232,15 @@ var WEBGL = new function () {
     };
 
     // Adds a label which is placed depending on the given axis and position
-    // TODO know highest sprite length of a dimension (to not waste space)
-    this.addEntityLabel = function (axis, position, entity, row) { // TODO: rollup labels dürfen breiter sein... (nur wenn nicht untergeordnet?)
+    this.addEntityLabel = function (axis, position, entity, row) {
         var label = WEBGL.createEntityLabel(entity.label);
+        var offset = WEBGL.computeLabelOffset(MAIN[axis + "Dimensions"], row); // get offset from largest labels
         label.axis = axis; // Save the axis which it belongs to
-
-        // TODO platzverschwendung?
-
         switch (axis) {
             case "x" :
                 // Position
                 label.position.x = position;
-                label.position.y = (WEBGL.totalSize[1] + (label.labelWidth - 1) / 2 + row * WEBGL.SPRITE_LENGTH);
+                label.position.y = (WEBGL.totalSize[1] + (label.labelWidth - 1) / 2 + offset);
                 label.position.z = -0.5;
 
                 // Rotation
@@ -247,14 +250,14 @@ var WEBGL = new function () {
 
             case "y" :
                 // Position (needs no rotation)
-                label.position.x = -(label.labelWidth + 1) / 2 - row * WEBGL.SPRITE_LENGTH;
+                label.position.x = -(label.labelWidth + 1) / 2 - offset;
                 label.position.y = position;
                 label.position.z = -0.5;
                 break;
 
             case "z" :
                 // Position
-                label.position.x = -(label.labelWidth + 1) / 2 - row * WEBGL.SPRITE_LENGTH;
+                label.position.x = -(label.labelWidth + 1) / 2 - offset;
                 label.position.y = -0.5;
                 label.position.z = position;
 
@@ -267,9 +270,11 @@ var WEBGL = new function () {
     };
 
     // Adds a dimension label which is placed depending on the given axis
-    this.addDimensionLabel = function (axis, dimension, row, numDimensions) {
+    this.addDimensionLabel = function (axis, dimension, row) {
         var label = WEBGL.createDimensionLabel(dimension.label, axis);
-        var labelOffset = numDimensions * WEBGL.SPRITE_LENGTH + row * WEBGL.SPRITE_HEIGHT_DIMENSION; // EntityLabels + previous DimensionLabels
+        var dimensionList = MAIN[axis + "Dimensions"];
+        var entitiesOffset = WEBGL.computeLabelOffset(dimensionList, dimensionList.length); // get offset from largest labels
+        var labelOffset = entitiesOffset + row * WEBGL.SPRITE_HEIGHT_DIMENSION; // EntityLabels + previous DimensionLabels
         switch (axis) {
             case "x" :
                 // Position
@@ -329,8 +334,10 @@ var WEBGL = new function () {
             opacity: 0.15
         });
 
+        // TODO linien nur wenn nicht identische schon vorhanden...
+
         // Back grid (X,Y)
-        if (hasX && hasY && (sizeX > 1 && sizeY > 1)) { // TODO nur wenn sizex > 1 oder sizey > 1
+        if (hasX && hasY && (sizeX > 1 && sizeY > 1)) {
             for (var x = 0; x <= sizeX; x++) {
                 gridGeometry.vertices.push(new THREE.Vector3(x, 0, 0), new THREE.Vector3(x, sizeY, 0));
             }
@@ -461,6 +468,19 @@ var WEBGL = new function () {
                 (WEBGL.totalSize[0] - 1) / 2,
                 (WEBGL.totalSize[1] - 1) / 2,
                 (WEBGL.totalSize[2] - 1) / 2);
+        WEBGL.controls.update();
+    };
+
+    // Updates the controls according to configuration
+    this.updateControls = function () {
+
+        // TODO wenn 2D -> no rotate
+        // TODO wenn nahe genug -> no pan
+
+//        if()
+        WEBGL.controls.noPan = true;
+        WEBGL.controls.noRotate = true;
+
         WEBGL.controls.update();
     };
 
@@ -764,6 +784,7 @@ var WEBGL = new function () {
         WEBGL.controls.target = new THREE.Vector3(0, 0, 0);
         WEBGL.controls.autoRotate = true;
         WEBGL.controls.autoRotateSpeed = 5;
+        WEBGL.controls.noPan = true;
         WEBGL.controls.update();
 
         // Resume if webGL was paused
@@ -787,6 +808,7 @@ var WEBGL = new function () {
 
         // Reset controls
         WEBGL.controls.autoRotate = false;
+        WEBGL.controls.noPan = false;
     };
 
     // Executes hover events on threejs objects
@@ -861,6 +883,23 @@ var WEBGL = new function () {
         }
     };
 
+    /**
+     * ...
+     * @param {type} dimensionList
+     * @param {type} row
+     * @returns the computed total offset for the given row
+     */
+    this.computeLabelOffset = function (dimensionList, row) {
+        var offset = 0;
+        var lastIndex = dimensionList.length - 1;
+        for (var i = lastIndex; i > lastIndex - row; i--) {
+            var dimName = dimensionList[i].dimensionName;
+            if (MAIN.labelMap[dimName].maxWidth) {
+                offset += MAIN.labelMap[dimName].maxWidth;
+            }
+        }
+        return offset;
+    };
 
     // HELP FUNCTIONS ==========================================================
 

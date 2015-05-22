@@ -530,30 +530,27 @@ var INTERFACE = new function () {
                 console.log("DROPPED", event, ui);
 
                 var draggedButton = ui.draggable;
+                var originalDimensionList = draggedButton.data("dimensionList");
+                var droppedDimension = draggedButton.data("dimension");
 
-                // Only for changed positions
+                // Remove dimension from the original list
+                var oldIndex = originalDimensionList.indexOf(droppedDimension);
+                originalDimensionList.splice(oldIndex, 1);
+
+                // Moved up or down?
                 if (draggedButton[0] !== btnGroup.prev()[0]) {
-
-                    // No need to move buttons, they are recreated after each olap step
-//                    draggedButton.insertBefore(btnGroup);
-//                    draggedButton.css("top", 0);
-//                    draggedButton.css("left", 0);
-//                    draggedButton.css("width", "");
-
-                    var originalDimensionList = draggedButton.data("dimensionList");
-                    var droppedDimension = draggedButton.data("dimension");
-
-                    // Remove dimension from the original list
-                    var oldIndex = originalDimensionList.indexOf(droppedDimension);
-                    originalDimensionList.splice(oldIndex, 1);
-
-                    // and insert dimension right before the button's dimension
+                    // Insert dimension right before the button's dimension
                     var index = dimensions.indexOf(dimension);
                     dimensions.splice(index, 0, droppedDimension);
-
-                    // Apply and visualize right away
-                    MAIN.applyOLAP();
+                } else {
+                    // Drag down one step - Swap buttons
+                    // Insert dimension right after the button's dimension
+                    var index = dimensions.indexOf(dimension);
+                    dimensions.splice(index + 1, 0, droppedDimension);
                 }
+
+                // Apply and visualize right away
+                MAIN.applyOLAP();
             },
             accept: 'div.btn-group[data-dimension-name]',
             hoverClass: 'hovered'

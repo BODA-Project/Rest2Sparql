@@ -105,9 +105,7 @@ var MAIN = new function () {
 
     this.tempSelection = {}; // Temprary selection of dimensions' entities (to be accepted on button click)
 
-    // TODO dann bei ACCEPT: foreach dimension in xyzDimensions -> tempSelection[dim][...]
-
-    // TODO For visual selection of labels / entities (not needed anymore?)
+    // Dimension -> label list
     this.labelMap = {};
 
     // List of actually used entities (for the visualization only) with stacked dimensions in every entity (if more than one dimension / axis))
@@ -280,6 +278,7 @@ var MAIN = new function () {
 
             // Reset the entity map
             MAIN.entityMap = {};
+            MAIN.labelMap = {};
 
             // Look for actually used entities (saved in entityMap)
             $.each(results, function (index, result) {
@@ -403,7 +402,7 @@ var MAIN = new function () {
 
             // Update the camera and center point of the visualization
             if (!stopCamera) {
-                WEBGL.updateCenterPoint(); // TODO auch labels dazuzählen!!! #######################
+            WEBGL.updateCenterPoint(); // TODO auch labels dazuzählen!!! #######################
             }
 
             // TODO Draw a grid for better orientation on the ground
@@ -431,7 +430,7 @@ var MAIN = new function () {
                 headers: {
                     accept: "application/sparql-results+json"
                 }
-            });
+        });
             request.done(function (content) {
                 // Save content to cache and visualize
                 MAIN.resultCache[url] = content;
@@ -668,6 +667,11 @@ var MAIN = new function () {
 
     // Generates a request URL of the current data selection for the rest2sparql API.
     this.createRequestURL = function () {
+
+        // Check if at least one dimension is selected
+        if (MAIN.xDimensions.length === 0 && MAIN.yDimensions.length === 0 && MAIN.zDimensions.length === 0) {
+            return null;
+        }
 
         var url = TEMPLATES.EXECUTE_URL;
         url = url.replace("__id__", MAIN.ID);
@@ -940,6 +944,12 @@ var MAIN = new function () {
                 entityList.rightMost = entityList[entityList.length - 1].position;
                 entityList.avgPosition = (entityList.leftMost + entityList.rightMost) / 2;
 
+                // Init labelMap
+                if (MAIN.labelMap[entityList[0].dimensionName] === undefined) {
+                    MAIN.labelMap[entityList[0].dimensionName] = [];
+                    MAIN.labelMap[entityList[0].dimensionName].maxWidth = 0;
+                }
+
                 // Last dimension, get label positions and add them
                 $.each(entityList, function (index, entity) {
                     var position = entity.position;
@@ -947,7 +957,9 @@ var MAIN = new function () {
                     entity.sprite = label; // Save label to entity
                     label.selectionSize = 1;
                     label.entity = entity; // Save entity to label
-                    INTERFACE.addEntityLabelListeners(label); // TODO: dimension übergeben für selection?
+                    MAIN.labelMap[entity.dimensionName].push(label);
+                    MAIN.labelMap[entity.dimensionName].maxWidth = Math.max(label.labelWidth, MAIN.labelMap[entity.dimensionName].maxWidth);
+                    INTERFACE.addEntityLabelListeners(label);
                 });
             } else {
                 // Go deeper
@@ -962,6 +974,12 @@ var MAIN = new function () {
                 entityList.rightMost = entityList[entityList.length - 1][nextDimension.dimensionName].rightMost;
                 entityList.avgPosition = (entityList.leftMost + entityList.rightMost) / 2;
 
+                // Init labelMap
+                if (MAIN.labelMap[entityList[0].dimensionName] === undefined) {
+                    MAIN.labelMap[entityList[0].dimensionName] = [];
+                    MAIN.labelMap[entityList[0].dimensionName].maxWidth = 0;
+                }
+
                 // and add labels in the current row
                 $.each(entityList, function (index, entity) {
                     var nextList = entity[nextDimension.dimensionName];
@@ -970,7 +988,9 @@ var MAIN = new function () {
                     entity.sprite = label; // Save label to entity
                     label.selectionSize = nextList.rightMost - nextList.leftMost + 1;
                     label.entity = entity; // Save entity to label
-                    INTERFACE.addEntityLabelListeners(label); // TODO: dimension übergeben für selection?
+                    MAIN.labelMap[entity.dimensionName].push(label);
+                    MAIN.labelMap[entity.dimensionName].maxWidth = Math.max(label.labelWidth, MAIN.labelMap[entity.dimensionName].maxWidth);
+                    INTERFACE.addEntityLabelListeners(label);
                 });
             }
         };
@@ -982,7 +1002,7 @@ var MAIN = new function () {
     var insertDimensionLabels = function (dimensionList, axis) {
         $.each(dimensionList, function (index, dimension) {
             var row = dimensionList.length - index - 1;
-            var label = WEBGL.addDimensionLabel(axis, dimension, row, dimensionList.length);
+            var label = WEBGL.addDimensionLabel(axis, dimension, row);
             INTERFACE.addDimensionLabelListener(label, dimension); // TODO #########
         });
     };
