@@ -11,7 +11,6 @@ var WEBGL = new function () {
     this.SPRITE_HEIGHT_DIMENSION = 1.2;
     this.COLOR_SELECTION = 0x404040;
     this.COLOR_LOWEST = 0xe0e0e0; // Almost white
-    this.COLOR_HIGHEST = 0x6098D8; // Dark blue TODO custom color?
     this.COLOR_WHITE = new THREE.Color(0xffffff);
     this.COLOR_HIGHLIGHT = new THREE.Color(0xd8d8d8);
 
@@ -664,8 +663,6 @@ var WEBGL = new function () {
 //        var colorHighest = new THREE.Color(WEBGL.COLOR_HIGHEST);
         var backgroundColor = colorLowest.multiplyScalar(1 - ratio).add(colorHighest.multiplyScalar(ratio));
 
-        // TODO (evtl) method to change background color to a given value
-
         var fontSize = 20;
         var backgroundMargin = fontSize / 2;
         var canvas = document.createElement("canvas");
@@ -684,8 +681,7 @@ var WEBGL = new function () {
         context.fillStyle = "#" + backgroundColor.getHexString();
         context.fillRect(0, 0, canvas.width, canvas.height);
 
-
-        // TODO needed white font?
+        // Take white font if background too dark
         var lightness = backgroundColor.getHSL().l;
         if (lightness < 0.5) {
             var opacity = 0.25 + lightness;
@@ -694,7 +690,6 @@ var WEBGL = new function () {
             var opacity = 0.25 + (1 - lightness);
             context.fillStyle = "rgba(0,0,0," + opacity + ")";
         }
-
 
         context.fillText(text, canvas.width / 2, canvas.height / 2);
 
@@ -739,7 +734,7 @@ var WEBGL = new function () {
         $(WEBGL.renderer.domElement).on("click", INTERFACE.onCanvasMouseClick.bind(INTERFACE));
         $(WEBGL.renderer.domElement).on("mousedown", INTERFACE.onCanvasMouseDown.bind(INTERFACE));
 
-        // Start rendering TODO: für "loading-screen" ok -> rotierender cube
+        // Start rendering
         WEBGL.resizeVizualisation(); // initially
         WEBGL.animationRequest = requestAnimationFrame(WEBGL.render);
 
@@ -747,7 +742,6 @@ var WEBGL = new function () {
 
 
     // Shows a WebGL loading screen, containing a rotating cube with a given message for demonstration.
-    // TODO: fade-in / fade out
     this.showLoadingScreen = function (loadingMessage) {
 
         // Remove old vislualization first
@@ -821,7 +815,7 @@ var WEBGL = new function () {
 
         // project mouse to 3d scene
         WEBGL.raycaster.setFromCamera(WEBGL.mousePosition, WEBGL.camera);
-        var intersections = WEBGL.raycaster.intersectObjects(WEBGL.scene.children); // TODO erstmal so, inperformant aber geht
+        var intersections = WEBGL.raycaster.intersectObjects(WEBGL.scene.children);
         var hitSomething = false;
         if (intersections.length > 0) {
 
@@ -842,7 +836,7 @@ var WEBGL = new function () {
 
                     // hover the new object
                     obj.object.onmouseover();
-                    WEBGL.renderer.domElement.style.cursor = 'pointer'; // Set cursor to hand TODO only certain types (resut cubes, labels, ...)
+                    WEBGL.renderer.domElement.style.cursor = 'pointer'; // Set cursor to hand
                     WEBGL.intersected = obj.object; // Grab new intersection object
                     hitSomething = true;
                     return false;
@@ -871,9 +865,8 @@ var WEBGL = new function () {
 
         // project mouse to 3d scene
         WEBGL.raycaster.setFromCamera(WEBGL.mousePosition, WEBGL.camera);
-        var intersections = WEBGL.raycaster.intersectObjects(WEBGL.scene.children); // TODO erstmal so, inperformant aber geht
+        var intersections = WEBGL.raycaster.intersectObjects(WEBGL.scene.children);
         if (intersections.length > 0) {
-            // TODO: only if no disabled flag set (?)
             $.each(intersections, function (index, obj) {
                 if (obj.object.onclick !== undefined) {
                     obj.object.onclick();

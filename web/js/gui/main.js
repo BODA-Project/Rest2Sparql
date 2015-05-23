@@ -101,7 +101,7 @@ var MAIN = new function () {
     // Undo, Redo
     this.undoStack = [];
     this.redoStack = [];
-    this.currentState;
+    this.currentState; // JSON string
 
     this.tempSelection = {}; // Temprary selection of dimensions' entities (to be accepted on button click)
 
@@ -113,7 +113,6 @@ var MAIN = new function () {
 
     // Cache olap results
     this.resultCache = {}; // Map (url: content)
-
 
 
     // TODO: max-size of Undo / Redo / resultCache
@@ -271,8 +270,7 @@ var MAIN = new function () {
             // Stop and notify if no results
             if (results.length === 0) {
 
-                alert("No results for the given query."); // TODO schönes popup? + default loading screen oder letztes ergebnis zeigen (webGL)
-                // TODO automatisch undo? -> nein
+                alert("No results for the given query."); // TODO schönes popup
                 return;
             }
 
@@ -326,12 +324,11 @@ var MAIN = new function () {
                     var measureName = measure.measureName;
                     var measureValue = MAIN.getMeasureValueFromJson(result, measure);
 
-                    // TEMP fix for API error
+                    // TEMP Fix for API error
                     if (measureValue === null) {
                         return true; // skip this result
                     }
 
-                    // TODO: kann sein, dass gar kein measure im result drin steht... (API problem beim parsen von "-")
                     var currentHighest = highestMeasures[measureName];
                     var currentLowest = lowestMeasures[measureName];
                     highestMeasures[measureName] = (currentHighest === undefined || currentHighest < measureValue) ? measureValue : currentHighest;
@@ -377,7 +374,7 @@ var MAIN = new function () {
                 var coordinates = getCoordinates(result);
 
                 // Create and add a new result-cube
-                var cube = WEBGL.addCube(coordinates, values, ratios); // TODO custom colors?
+                var cube = WEBGL.addCube(coordinates, values, ratios);
                 cube.result = result; // Temporarly save the result to the cube
                 MAIN.addCubeData(cube, result);
                 INTERFACE.addCubeListeners(cube); // add click and hover events
@@ -405,7 +402,7 @@ var MAIN = new function () {
             WEBGL.updateCenterPoint(); // TODO auch labels dazuzählen!!! #######################
             }
 
-            // TODO Draw a grid for better orientation on the ground
+            // Draw a grid for better orientation
             WEBGL.addGrid();
 
             // DEBUG:
@@ -461,7 +458,7 @@ var MAIN = new function () {
             try {
                 obj = $.parseJSON(content);
             } catch (e) {
-                alert(content); // TODO popupError(...)
+                alert(content); // TODO popupErrorMessage(...)
                 return;
             }
             var results = obj.results.bindings;
@@ -629,7 +626,7 @@ var MAIN = new function () {
         // Update the configuration buttons (Dimensions, Measures, ...)
         INTERFACE.updateConfigButtons();
 
-        // TODO Update the rest of the interface (Apply, Cancel, Undo, ...)
+        // Update the rest of the interface (Apply, Cancel, Undo, ...)
         INTERFACE.updateNavigation();
 
         // DEBUG url
@@ -659,7 +656,7 @@ var MAIN = new function () {
         // Update the configuration buttons (Dimensions, Measures, ...)
         INTERFACE.updateConfigButtons();
 
-        // TODO Update the rest of the interface (Apply, Cancel, Undo, ...)
+        // Update the rest of the interface (Apply, Cancel, Undo, ...)
         INTERFACE.updateNavigation();
     };
 
@@ -747,8 +744,8 @@ var MAIN = new function () {
             $.each(result, function (key, val) {
                 if (val.value === dimension.dimensionName) {
 
-                    var entityName = "DRILL"; // TODO entity name??? leer lassen?
-                    var label = "(" + dimension.entities.length + ") " + dimension.label; // TODO: ok?
+                    var entityName = ""; // TODO entity name leer lassen?
+                    var label = "(" + dimension.entities.length + ") " + dimension.label; // TODO: (x) trennen für verschiedene Farben
                     entity = new Entity(dimension.dimensionName, entityName, label);
                     entity.rollupLabels = [];
                     $.each(dimension.entities, function (i, subEntity) {
@@ -848,14 +845,14 @@ var MAIN = new function () {
         state.measures = MAIN.measures;
         state.filters = MAIN.filters;
         state.entityList = MAIN.entityList;
-        return JSON.parse(JSON.stringify(state)); // deep clone
+        return JSON.stringify(state); // deep clone
     };
 
     /**
      * Load a saved undo or redo state
      */
     this.loadState = function (state) {
-        var stateCopy = JSON.parse(JSON.stringify(state));
+        var stateCopy = JSON.parse(state);
         MAIN.xDimensions = stateCopy.xDimensions;
         MAIN.yDimensions = stateCopy.yDimensions;
         MAIN.zDimensions = stateCopy.zDimensions;

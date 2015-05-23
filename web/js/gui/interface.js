@@ -33,11 +33,9 @@ var INTERFACE = new function () {
         // Top bar
         $("#id_changeUserButton").on('click', MAIN.logoutUser);
 
-        // TODO disable / enable -> undo / redo
+        // Undo / Redo
         $("#id_redoButton").on('click', MAIN.redo);
         $("#id_undoButton").on('click', MAIN.undo);
-
-        // ...TODO
 
         // Options / Settings
         $("#id_aggItem").on('click', INTERFACE.popupMeasureAgg);
@@ -47,7 +45,7 @@ var INTERFACE = new function () {
         // Merge button
 //        $("#id_mergeButton").on('click', TODO);
 
-        // Side bar TODO: cancel-button, + onchange -> update -> disable/enable
+        // Side bar
         $("#id_cancelButton").on('click', function (e) {
             e.preventDefault();
             MAIN.cancelOLAP();
@@ -65,7 +63,7 @@ var INTERFACE = new function () {
             INTERFACE.popupMeasureFilter();
         });
 
-        // Info icon tooltips
+        // TODO Info icon tooltips
 
 
 
@@ -164,7 +162,6 @@ var INTERFACE = new function () {
                 $("#id_filterPanel button").removeAttr("disabled");
                 $("#id_acceptArea").addClass("in");
 
-                // TODO immer prüfen, nur enabled wenn vorher action war
                 $("#id_cancelButton").removeAttr("disabled");
                 $("#id_applyButton").removeAttr("disabled");
 
@@ -276,7 +273,7 @@ var INTERFACE = new function () {
         btnGroup.append(button);
         button.append(text);
         button.append(badge);
-        badge.addClass("ms-1"); // TODO different badge colors
+        badge.addClass("ms-1"); // old color mode
         badge.text(agg);
         menu.append(aggItem);
         menu.append(colorItem);
@@ -289,13 +286,11 @@ var INTERFACE = new function () {
         buttonArea.append(plusButton); // Move plus to end
 
         aggItem.on("click", function (e) {
-//            TODO
-            alert("TODO");
+            //...
         });
 
         colorItem.on("click", function (e) {
-//            TODO color picker?
-            alert("TODO");
+            //...
         });
 
         // Add event for removing the measure
@@ -419,8 +414,6 @@ var INTERFACE = new function () {
         removeItem.on("click", function (e) {
             e.preventDefault();
 
-            // TODO disable if last remaining dimension!
-
             // Delete from selected list
             $.each(dimensions, function (index1, dimension1) {
                 if (dimension1.dimensionName === dimension.dimensionName) {
@@ -446,19 +439,10 @@ var INTERFACE = new function () {
         // TEMP for rollup test
         drillItem.on("click", function (e) {
             e.preventDefault();
-
-            if (dimension.rollup) {
-                drillItem.find(".glyphicon").removeClass("glyphicon-check");
-                drillItem.find(".glyphicon").addClass("glyphicon-unchecked");
-                badge.removeClass("ms-1");
-                console.log("DRILLED DOWN", dimension);
-            } else {
-                drillItem.find(".glyphicon").removeClass("glyphicon-unchecked");
-                drillItem.find(".glyphicon").addClass("glyphicon-check");
-                badge.addClass("ms-1");
-                console.log("ROLLED UP", dimension);
-            }
             dimension.rollup = !dimension.rollup;
+
+            // Apply on-screen selection if given
+            MAIN.applyTempSelection();
 
             // Update visualization and interface right away
             MAIN.applyOLAP();
@@ -567,13 +551,6 @@ var INTERFACE = new function () {
                 var draggedButton = ui.draggable;
 
                 if (draggedButton[0] !== plusButton.prev()[0]) {
-
-                    // No need to move buttons, they are recreated after each olap step
-//                    draggedButton.insertBefore(plusButton);
-//                    draggedButton.css("top", 0);
-//                    draggedButton.css("left", 0);
-//                    draggedButton.css("width", "");
-
                     var originalDimensionList = draggedButton.data("dimensionList");
                     var droppedDimension = draggedButton.data("dimension");
 
@@ -633,10 +610,6 @@ var INTERFACE = new function () {
         var dimensionName = label.entity.dimensionName;
 
         label.toggled = false;
-
-        // TODO: if label.entity.rollupLabels -> kein / anderes onclick
-
-
         label.onmouseover = function () {
 
             // TODO only if distance to camera >= 10 (?) or if label.entity.rollupLabels
@@ -654,14 +627,12 @@ var INTERFACE = new function () {
         };
         label.onmouseout = function () {
 
+            // Hide tooltips if given
             INTERFACE.hideTooltip(label);
 
             $.each(label.sprites, function (i, sprite) {
                 sprite.hideRow();
             });
-
-            // TODO hide tooltips if given
-
         };
         label.onclick = function () {
             if (label.entity.rollupLabels) {
@@ -873,7 +844,7 @@ var INTERFACE = new function () {
      * @param {Measure} measure currently not used since only 1 measure is possible
      */
     this.popupMeasureAgg = function (measure) {
-        var modal = $("#id_aggModal"); // TODO template instead...
+        var modal = $("#id_aggModal");
         $("body").append(modal);
         var modalAggBody = $("#id_aggModalBody");
 
@@ -921,7 +892,7 @@ var INTERFACE = new function () {
 
     // Shows a popup for changing the measure aggregation
     this.popupMeasureColor = function () {
-        var modal = $("#id_colorModal"); // TODO template instead...
+        var modal = $("#id_colorModal");
         $("body").append(modal);
         var modalAggBody = $("#id_colorModalBody");
 
@@ -1281,7 +1252,7 @@ var INTERFACE = new function () {
 
         /* measure, filter and buttonGroup are optional */
 
-        var modal = $("#id_filterModal"); // TODO template instead...
+        var modal = $("#id_filterModal");
         $("body").append(modal);
 
         var modalBody = $("#id_filterModalBody");
@@ -1302,12 +1273,9 @@ var INTERFACE = new function () {
             filterMeasure = filter.measure;
             filterRelation = filter.relation;
             filterValue = filter.value;
-//            modalAcceptButton.text("Change Filter");
             modal.find(".modal-title").text("Change Filter");
         } else if (measure !== undefined) {
             var filterMeasure = measure; // Set first measure by default
-        } else {
-//            modalAcceptButton.text("Add Filter");
         }
         modalInput.val(filterValue);
 
@@ -1492,25 +1460,6 @@ var INTERFACE = new function () {
             // Update visualization and interface right away
             MAIN.applyOLAP();
         });
-    };
-
-    // enables / disables the Apply button according to selected items
-    this.refreshApplyButton = function () {
-        // TODO: needed?
-    };
-
-    // Updates the whole interface (buttons, menus) according to the model data
-    this.updateInterface = function () {
-
-        // TODO
-
-        // TODO enable / disable: Undo, Redo, Accept, Cancel, (cubes dimensions, measures, filters, + menus ?)
-
-    };
-
-    // Undo all selected labels and disable Accept button
-    this.deselectAll = function () {
-        // TODO cancel?
     };
 
     /**
@@ -1713,11 +1662,29 @@ var INTERFACE = new function () {
         this.mouseDown.y = event.pageY - node.position().top;
     };
 
-    // Shows an error message popup
+    /**
+     * Shows an error message dialog
+     * @param {String} text
+     */
     this.popupErrorMessage = function (text) {
-
         // TODO modal (template) with error sign
+    };
 
+    /**
+     * Shows an info message dialog
+     * @param {String} text
+     */
+    this.popupInfoMessage = function (text) {
+        // TODO modal (template) with info sign
+    };
+
+    /**
+     * Shows an confirm message dialog
+     * @param {String} text
+     * @return {Boolean} true if the user accepted
+     */
+    this.popupConfirmMessage = function (text) {
+        // TODO modal (template) with question sign
     };
 
 
@@ -1750,15 +1717,11 @@ var INTERFACE = new function () {
                 if (isSelectedDimension(dimensionName)) {
                     return;
                 }
-                $('li[data-dimension-name="' + dimensionName + '"]').addClass("disabled");
 
                 // Get some pre-selected entities (first 10)
                 var entities = MAIN.getFirstEntities(dimensionName, INTERFACE.NUM_ENTITIES); // ...
                 var dimension = new Dimension(dimensionName, label, entities);
                 dimensions.push(dimension); // add it to the list of selected dimensions
-
-                // Add the dimension button with its menu and listeners
-                INTERFACE.addDimensionButton(dimension, axis, dimensions);
 
                 // Update visualization and interface right away (if user clicked manually)
                 if (e.originalEvent) {
