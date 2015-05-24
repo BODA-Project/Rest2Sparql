@@ -753,16 +753,16 @@ var INTERFACE = new function () {
     this.initTooltips = function () {
 
         // add the tooltip / popover content
-        $("#id_infoCube").attr('data-content', "TODO CUBE TEXT");
-        $("#id_infoDimension").attr('data-content', "TODO DIMENSION TEXT");
-        $("#id_infoMeasure").attr('data-content', "TODO MEASURE TEXT");
-        $("#id_infoFilter").attr('data-content', "TODO FILTER TEXT");
+        $("#id_infoCube").attr('data-content', TEMPLATES.HINT_CUBE);
+        $("#id_infoDimension").attr('data-content', TEMPLATES.HINT_DIMENSION);
+        $("#id_infoMeasure").attr('data-content', TEMPLATES.HINT_MEASURE);
+        $("#id_infoFilter").attr('data-content', TEMPLATES.HINT_FILTER);
 
         // add tooltips
-        $('[data-toggle="tooltip"]').tooltip();
+        $('[data-toggle="tooltip"]').tooltip(); // TODO oder alle mit "title" aktivieren?
 
         // add popovers
-        $('[data-toggle="popover"]').popover();
+        $('[data-toggle="popover"]').popover({container: 'body'});
     };
 
     // Shows a login popup to enter a user ID.
@@ -780,6 +780,9 @@ var INTERFACE = new function () {
         };
         $("#id_loginModalOkay").on("click", submitLogin);
         $('#id_loginModal form').on("submit", submitLogin);
+
+        // Stop background rendering
+        WEBGL.stopRendering();
 
         // Show the popup
         $('#id_loginModal').modal({
@@ -800,6 +803,9 @@ var INTERFACE = new function () {
         // Remove when finished
         modal.on('hidden.bs.modal', function (e) {
             modal.remove();
+
+            // Resume background rendering
+            WEBGL.resumeRendering();
         });
     };
 
@@ -824,6 +830,7 @@ var INTERFACE = new function () {
 
     // Pops up a blocking loading screen that is removed when all ajax calls are done
     this.popupWhileAjax = function (callback) {
+        WEBGL.stopRendering();
         INTERFACE.popupLoadingScreen("Processing...");
         $(document).ajaxStop(function () { // TODO problematisch: nach ajax fehler cube wechseln -> kaputt
             console.log("All ajax done");
@@ -1112,6 +1119,17 @@ var INTERFACE = new function () {
             btnGroup.append(label);
             $("#id_entityModalBody").append(btnGroup);
             $("#id_entityModalBody").append(" ");
+
+            // Add change listeners to enable or disable the accept button
+            button.on("change", function (e) {
+                $("input[data-entity-name]").each(function (i, elem) {
+                    $("#id_entityModalOkay").addClass("disabled");
+                    if ($(elem).prop("checked")) {
+                        $("#id_entityModalOkay").removeClass("disabled");
+                        return false; // break
+                    }
+                });
+            });
         });
 
         // Set max modal height
@@ -1147,6 +1165,10 @@ var INTERFACE = new function () {
                 $(element).prop("checked", true);
                 $(element).parent().addClass("active");
             });
+
+            // Enable apply button
+            $("#id_entityModalOkay").removeClass("disabled");
+
             // TODO much warning, many entity
         });
 
@@ -1156,10 +1178,12 @@ var INTERFACE = new function () {
                 $(element).prop("checked", false);
                 $(element).parent().removeClass("active");
             });
-            // TODO disable apply
+
+            // Disable apply button
+            $("#id_entityModalOkay").addClass("disabled");
         });
 
-        // Select all entities
+        // Invert selection of all entities
         SelectInvertButton.on("click", function (e) {
             $("input[data-entity-name]").each(function (i, element) {
                 if ($(element).prop("checked")) {
@@ -1168,6 +1192,15 @@ var INTERFACE = new function () {
                 } else {
                     $(element).prop("checked", true);
                     $(element).parent().addClass("active");
+                }
+            });
+
+            // Check if at least 1 entity selected
+            $("input[data-entity-name]").each(function (i, elem) {
+                $("#id_entityModalOkay").addClass("disabled");
+                if ($(elem).prop("checked")) {
+                    $("#id_entityModalOkay").removeClass("disabled");
+                    return false; // break
                 }
             });
         });
@@ -1191,6 +1224,9 @@ var INTERFACE = new function () {
                 $(element).prop("checked", true);
                 $(element).parent().addClass("active");
             });
+
+            // Enable apply button
+            $("#id_entityModalOkay").removeClass("disabled");
         });
 
         // Select next 10 entities (after last selected)
@@ -1211,6 +1247,9 @@ var INTERFACE = new function () {
                 $(element).prop("checked", true);
                 $(element).parent().addClass("active");
             });
+
+            // Enable apply button
+            $("#id_entityModalOkay").removeClass("disabled");
         });
 
         // Select the first 10 entities again
@@ -1224,6 +1263,9 @@ var INTERFACE = new function () {
                     $(element).parent().removeClass("active");
                 }
             });
+
+            // Enable apply button
+            $("#id_entityModalOkay").removeClass("disabled");
         });
 
         // Disable prev, next buttons if not enough entities
@@ -1231,6 +1273,9 @@ var INTERFACE = new function () {
             SelectPrevButton.prop("disabled", true);
             SelectNextButton.prop("disabled", true);
         }
+
+        // Disable apply button initially
+        $("#id_entityModalOkay").addClass("disabled");
 
         // Pause rendering in background
         WEBGL.stopRendering();
