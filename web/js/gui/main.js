@@ -1,4 +1,4 @@
-/* global THREE, WEBGL, INTERFACE, TEMPLATES */
+/* global THREE, WEBGL, INTERFACE, TEMPLATES, bootbox */
 // Custom script for the Rest2Sparql GUI
 
 // CLASSES =====================================================================
@@ -147,18 +147,20 @@ var MAIN = new function () {
                 try {
                     obj = $.parseJSON(content);
                 } catch (e) {
-                    alert("Error: " + content);
+                    bootbox.alert("Error: " + content);
                     return;
                 }
-                var results = obj.results.bindings; // array
+                var results = obj.results.bindings;
                 if (results.length === 0) {
-                    // TODO: schöner + "wrong ID?"
-                    alert("There are no Cubes belonging to User ID <" + id + ">.");
 
-                    // Bring up modal if not shown
-                    if ($("#id_loginModal").length !== 1) {
-                        INTERFACE.popupLogin();
-                    }
+                    // TODO escape überall
+                    bootbox.alert("There are no Cubes belonging to User ID &lt;" + id + "&gt;", function () {
+
+                        // Bring up modal if not shown
+                        if ($("#id_loginModal").length !== 1) {
+                            INTERFACE.popupLogin();
+                        }
+                    });
                     return;
                 } else {
                     // Accept and save ID + Hash and let the user continue...
@@ -175,60 +177,67 @@ var MAIN = new function () {
                 }
 
             });
-
+            requestCubes.fail(function (jqXHR, textStatus) {
+                bootbox.alert("Error: " + textStatus);
+            });
+        });
+        requestHash.fail(function (jqXHR, textStatus) {
+            bootbox.alert("Error: " + textStatus);
         });
 
     };
 
     // Drops current configuration and prompts a new login
     this.logoutUser = function () {
+        bootbox.confirm("Really log out?", function (result) {
+            if (result) {
+                MAIN.ID = "";
+                MAIN.HASH = "";
+                $.removeCookie('ID');
 
-        // TODO nice confirm popup
-        if (confirm("Really log out?")) {
-            MAIN.ID = "";
-            MAIN.HASH = "";
-            $.removeCookie('ID');
+                // Reset configuration
+                MAIN.availableCubes = [];
+                MAIN.availableDimensions = [];
+                MAIN.availableMeasures = [];
+                MAIN.currentCube = "";
+                MAIN.xDimensions = [];
+                MAIN.xDimensions = [];
+                MAIN.xDimensions = [];
+                MAIN.measures = [];
+                MAIN.filters = [];
+                MAIN.undoStack = [];
+                MAIN.redoStack = [];
+                MAIN.currentState = undefined;
+                MAIN.entityList = {};
+                MAIN.tempSelection = {};
+                MAIN.entityMap = {};
+                MAIN.resultCache = {};
 
-            // Reset configuration
-            MAIN.availableCubes = [];
-            MAIN.availableDimensions = [];
-            MAIN.availableMeasures = [];
-            MAIN.currentCube = "";
-            MAIN.xDimensions = [];
-            MAIN.xDimensions = [];
-            MAIN.xDimensions = [];
-            MAIN.measures = [];
-            MAIN.filters = [];
-            MAIN.undoStack = [];
-            MAIN.redoStack = [];
-            MAIN.currentState = undefined;
-            MAIN.entityList = {};
-            MAIN.tempSelection = {};
-            MAIN.entityMap = {};
-            MAIN.resultCache = {};
+                // Reset buttons to initial behaviour
+                INTERFACE.disableInputInitially();
 
-            // Reset buttons to initial behaviour
-            INTERFACE.disableInputInitially();
-
-            // Reset interface
-            INTERFACE.clearCubes();
-            INTERFACE.clearDimensions();
-            INTERFACE.clearFilters();
+                // Reset interface
+                INTERFACE.clearCubes();
+                INTERFACE.clearDimensions();
+                INTERFACE.clearFilters();
 //            INTERFACE.clearMeasures(); // only 1 measure
 
-            // Fade out panels
-            $("#id_dimensionPanel").removeClass("in");
-            $("#id_measurePanel").removeClass("in");
-            $("#id_filterPanel").removeClass("in");
-            $("#id_acceptArea").removeClass("in");
-            $("#id_pageTitle").text("Rest2Sparql");
+                // Fade out panels
+                $("#id_dimensionPanel").removeClass("in");
+                $("#id_measurePanel").removeClass("in");
+                $("#id_filterPanel").removeClass("in");
+                $("#id_acceptArea").removeClass("in");
+                $("#id_pageTitle").text("Rest2Sparql");
 
-            // Show default visualization
-            WEBGL.showLoadingScreen();
+                // Show default visualization
+                WEBGL.showLoadingScreen();
 
-            // Show login popup again
-            INTERFACE.popupLogin();
-        }
+                // Show login popup again
+                INTERFACE.popupLogin();
+            }
+        });
+
+
 
     };
 
@@ -270,7 +279,10 @@ var MAIN = new function () {
             // Stop and notify if no results
             if (results.length === 0) {
 
-                alert("No results for the given query."); // TODO schönes popup
+                // TODO texture for rotating cube "0 Results" statt popup
+                WEBGL.showLoadingScreen("0 Results");
+
+                bootbox.alert("No results for the given query.");
                 return;
             }
 
@@ -399,7 +411,7 @@ var MAIN = new function () {
 
             // Update the camera and center point of the visualization
             if (!stopCamera) {
-            WEBGL.updateCenterPoint(); // TODO auch labels dazuzählen!!! #######################
+                WEBGL.updateCenterPoint(); // TODO auch labels dazuzählen!!! #######################
             }
 
             // Draw a grid for better orientation
@@ -427,11 +439,14 @@ var MAIN = new function () {
                 headers: {
                     accept: "application/sparql-results+json"
                 }
-        });
+            });
             request.done(function (content) {
                 // Save content to cache and visualize
                 MAIN.resultCache[url] = content;
                 handleContent(content, false);
+            });
+            request.fail(function (jqXHR, textStatus) {
+                bootbox.alert("Error: " + textStatus);
             });
         }
     };
@@ -458,7 +473,7 @@ var MAIN = new function () {
             try {
                 obj = $.parseJSON(content);
             } catch (e) {
-                alert(content); // TODO popupErrorMessage(...)
+                bootbox.alert(content);
                 return;
             }
             var results = obj.results.bindings;
@@ -473,6 +488,11 @@ var MAIN = new function () {
             MAIN.parseCubes(results);
             INTERFACE.initCubeList(results); // create HTML list
         });
+        request.fail(function (jqXHR, textStatus) {
+            bootbox.alert("Error: " + textStatus);
+        });
+
+
     };
 
     /**
@@ -500,6 +520,9 @@ var MAIN = new function () {
             });
             MAIN.parseDimensions(results);
             INTERFACE.initDimensionLists(); // create HTML lists
+        });
+        request.fail(function (jqXHR, textStatus) {
+            bootbox.alert("Error: " + textStatus);
         });
     };
 
@@ -530,6 +553,9 @@ var MAIN = new function () {
             MAIN.parseMeasures(results);
             INTERFACE.initMeasureList(); // create HTML list
         });
+        request.fail(function (jqXHR, textStatus) {
+            bootbox.alert("Error: " + textStatus);
+        });
     };
 
     // Loads the list of possible entities for a given dimension (dimension URI).
@@ -554,6 +580,9 @@ var MAIN = new function () {
                 list.push(new Entity(dimensionName, entityName, label));
             });
             list.sort(labelCompare);
+        });
+        request.fail(function (jqXHR, textStatus) {
+            bootbox.alert("Error: " + textStatus);
         });
         return list;
     };
@@ -845,6 +874,7 @@ var MAIN = new function () {
         state.measures = MAIN.measures;
         state.filters = MAIN.filters;
         state.entityList = MAIN.entityList;
+        state.currentAGG = MAIN.currentAGG;
         return JSON.stringify(state); // deep clone
     };
 
@@ -859,6 +889,7 @@ var MAIN = new function () {
         MAIN.measures = stateCopy.measures;
         MAIN.filters = stateCopy.filters;
         MAIN.entityList = stateCopy.entityList;
+        MAIN.currentAGG = stateCopy.currentAGG;
     };
 
     /**

@@ -108,7 +108,7 @@ a.side-glyph:hover {
 
 /* button size in cube panel */
 .panel-body button .cube-button-text {
-    max-width: 200px;
+    max-width: 195px;
     text-overflow: ellipsis;
     overflow: hidden;
 }
@@ -125,6 +125,37 @@ a.side-glyph:hover {
 .panel-body a .filter-button-text,
 .panel-body button .filter-button-text {
     max-width: 110px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+
+/*cube button size*/
+#id_cubePanel .panel-body > .btn-group {
+    width: 100%;
+}
+
+#id_cubeButton {
+    width: 100%;
+}
+
+/* badges in dimension buttons */
+#id_cubeButton .caret {
+    float: right;
+    margin-top: 8px;
+    margin-left: 5px;
+}
+
+/* text in dimension buttons */
+#id_cubeButton .cube-button-text {
+    float: left;
+    padding-right: 0;
+}
+
+/* button size in measure panel */
+.panel-body a .measure-button-text,
+.panel-body button .measure-button-text {
+    max-width: 140px;
     text-overflow: ellipsis;
     overflow: hidden;
 }
@@ -149,6 +180,35 @@ a.side-glyph:hover {
     float: left;
     padding-right: 0;
 }
+
+/*dimension button size*/
+#id_measurePanel .panel-body > .btn-group {
+    width: 100%;
+}
+
+#id_measureButton {
+    width: 100%;
+}
+
+/* badges in dimension buttons */
+#id_measureButton .badge {
+    float: right;
+    margin-top: 2px;
+}
+
+/* carets in dimension buttons */
+#id_measureButton .caret {
+    float: right;
+    margin-top: 8px;
+    margin-left: 5px;
+}
+
+/* text in dimension buttons */
+#id_measureButton .measure-button-text {
+    float: left;
+    padding-right: 0;
+}
+
 /*}*/
 
 /* button size in panels (all screen sizes) */

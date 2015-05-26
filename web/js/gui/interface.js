@@ -4,7 +4,7 @@
 
 var INTERFACE = new function () {
 
-    this.NUM_ENTITIES = 15; // TODO: which ones? how many?
+    this.NUM_ENTITIES = 10; // TODO: which ones? how many?
 
     // For interaction with 3D objects
     this.mouseDown = {};
@@ -68,7 +68,8 @@ var INTERFACE = new function () {
 
 
         // Resize visualization on browser resize
-        $(window).on('resize', WEBGL.resizeVizualisation.bind(WEBGL));
+        $(window).on('resize', WEBGL.resizeVizualisation);
+        $(window).on('resize', INTERFACE.onScreenResize);
 
     };
 
@@ -344,21 +345,12 @@ var INTERFACE = new function () {
         var plusButton = $("#id_" + axis + "Plus");
         var buttonArea = $("#id_" + axis + "ButtonArea");
 
-        var rollupIcon = dimension.rollup ? "glyphicon glyphicon-check" : "glyphicon glyphicon-unchecked";
-
         // Rebuild a dimension button and its menu
         var btnGroup = $('<div class="btn-group" data-dimension-name="' + dimension.dimensionName + '"></div>');
         var button = $('<a class="btn dropdown-toggle btn-default btn-sm" type="button" data-toggle="dropdown"></a>');
         var text = $('<span class=button-text>' + dimension.label + '</span>');
         var badge = $('<span class="badge"></span>');
-        var menu = $('<ul class="dropdown-menu" role="menu"></ul>');
-        var filterItem = $('<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Select Entities...</a></li>');
-        var drillItem = $('<li role="presentation"><a role="menuitem" tabindex="-1" href="#"><span class="' + rollupIcon + '"></span> Combine Entities</a></li>');
-        var dividerItem = $('<li role="presentation" class="divider"></li>');
-        var moveUpItem = $('<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Move Up</a></li>');
-        var moveDownItem = $('<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Move Down</a></li>');
-        var dividerItem2 = $('<li role="presentation" class="divider"></li>');
-        var removeItem = $('<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Remove</a></li>');
+        var menu = INTERFACE.createDimensionMenu(dimension, dimensions);
 
         // Combine button and list
         btnGroup.append(button);
@@ -380,15 +372,7 @@ var INTERFACE = new function () {
         var numEntities = MAIN.entityList[dimension.dimensionName].list.length;
         badge.text(badgeNum + " / " + numEntities);
 
-        menu.append(filterItem);
-        menu.append(drillItem);
-        menu.append(dividerItem);
-        menu.append(moveUpItem);
-        menu.append(moveDownItem);
-        menu.append(dividerItem2);
-        menu.append(removeItem);
         btnGroup.append(menu);
-
         buttonArea.append(btnGroup);
         buttonArea.append(" ");
         buttonArea.append(plusButton); // Move plus to end
@@ -403,93 +387,6 @@ var INTERFACE = new function () {
         // Save dimension and dimensionList to the button
         btnGroup.data("dimension", dimension);
         btnGroup.data("dimensionList", dimensions);
-
-        // Popup a modal for entity selection
-        filterItem.on("click", function (e) {
-            e.preventDefault();
-            INTERFACE.popupEntitySelection(dimension);
-        });
-
-        // Add event for removing the dimension
-        removeItem.on("click", function (e) {
-            e.preventDefault();
-
-            // Delete from selected list
-            $.each(dimensions, function (index1, dimension1) {
-                if (dimension1.dimensionName === dimension.dimensionName) {
-                    dimensions.splice(index1, 1);
-                    return false;
-                }
-            });
-
-            // Remove HTML button and list
-            btnGroup.remove();
-
-            // Re-enable all axis dropdown items of this dimension
-            $('li[data-dimension-name="' + dimension.dimensionName + '"]').removeClass("disabled");
-
-            // Update visualization and interface right away
-            MAIN.applyOLAP();
-
-            // TODO: update UI and disable/enable accept+cancel button
-
-        });
-
-
-        // TEMP for rollup test
-        drillItem.on("click", function (e) {
-            e.preventDefault();
-            dimension.rollup = !dimension.rollup;
-
-            // Apply on-screen selection if given
-            MAIN.applyTempSelection();
-
-            // Update visualization and interface right away
-            MAIN.applyOLAP();
-
-        });
-
-        // Enable disable items according to status
-        var isFirstDimension = dimensions.indexOf(dimension) === 0;
-        var isLastDimension = dimensions.indexOf(dimension) === dimensions.length - 1;
-        if (isFirstDimension) {
-            moveUpItem.addClass("disabled");
-        }
-        if (isLastDimension) {
-            moveDownItem.addClass("disabled");
-        }
-
-        // Move Up / Down items
-        moveUpItem.on("click", function (e) {
-            e.preventDefault();
-            if (isFirstDimension) {
-                return; // Already first item
-            }
-            // See drag drop code to move buttons (not needed, instant apply)
-
-            // Swap dimension with the one above
-            var index = dimensions.indexOf(dimension);
-            dimensions.splice(index, 1);
-            dimensions.splice(index - 1, 0, dimension);
-
-            // Apply and visualize right away
-            MAIN.applyOLAP();
-        });
-        moveDownItem.on("click", function (e) {
-            e.preventDefault();
-            if (isLastDimension) {
-                return; // Already last item
-            }
-            // See drag drop code to move buttons (not needed, instant apply)
-
-            // Swap dimension with the one below
-            var index = dimensions.indexOf(dimension);
-            dimensions.splice(index, 1);
-            dimensions.splice(index + 1, 0, dimension);
-
-            // Apply and visualize right away
-            MAIN.applyOLAP();
-        });
 
         // Add drag and drop functionality
         // Make button dragable
@@ -570,6 +467,116 @@ var INTERFACE = new function () {
         });
 
     };
+
+    /**
+     * Creates and returns a dropdown menu for a given dimension.
+     *
+     * @param {Dimension} dimension
+     * @param {Array} dimensionList
+     * @returns the dropdown menu (bootstrap)
+     */
+    this.createDimensionMenu = function (dimension, dimensionList) {
+        var rollupIcon = dimension.rollup ? "glyphicon glyphicon-check" : "glyphicon glyphicon-unchecked";
+
+        var menu = $('<ul class="dropdown-menu" role="menu"></ul>');
+        var filterItem = $('<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Select Entities...</a></li>');
+        var drillItem = $('<li role="presentation"><a role="menuitem" tabindex="-1" href="#"><span class="' + rollupIcon + '"></span> Combine Entities</a></li>');
+        var dividerItem = $('<li role="presentation" class="divider"></li>');
+        var moveUpItem = $('<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Move Up</a></li>');
+        var moveDownItem = $('<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Move Down</a></li>');
+        var dividerItem2 = $('<li role="presentation" class="divider"></li>');
+        var removeItem = $('<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Remove</a></li>');
+
+        menu.append(filterItem);
+        menu.append(drillItem);
+        menu.append(dividerItem);
+        menu.append(moveUpItem);
+        menu.append(moveDownItem);
+        menu.append(dividerItem2);
+        menu.append(removeItem);
+
+        // Popup a modal for entity selection
+        filterItem.on("click", function (e) {
+            e.preventDefault();
+            INTERFACE.popupEntitySelection(dimension);
+        });
+
+        // Add event for removing the dimension
+        removeItem.on("click", function (e) {
+            e.preventDefault();
+
+            // Delete from selected list
+            $.each(dimensionList, function (index1, dimension1) {
+                if (dimension1.dimensionName === dimension.dimensionName) {
+                    dimensionList.splice(index1, 1);
+                    return false;
+                }
+            });
+
+            // Re-enable all axis dropdown items of this dimension
+            $('li[data-dimension-name="' + dimension.dimensionName + '"]').removeClass("disabled");
+
+            // Update visualization and interface right away
+            MAIN.applyOLAP();
+        });
+
+        // TEMP for rollup test
+        drillItem.on("click", function (e) {
+            e.preventDefault();
+            dimension.rollup = !dimension.rollup;
+
+            // Apply on-screen selection if given
+            MAIN.applyTempSelection();
+
+            // Update visualization and interface right away
+            MAIN.applyOLAP();
+        });
+
+        // Enable disable items according to status
+        var isFirstDimension = dimensionList.indexOf(dimension) === 0;
+        var isLastDimension = dimensionList.indexOf(dimension) === dimensionList.length - 1;
+        if (isFirstDimension) {
+            moveUpItem.addClass("disabled");
+        }
+        if (isLastDimension) {
+            moveDownItem.addClass("disabled");
+        }
+
+        // Move Up / Down items
+        moveUpItem.on("click", function (e) {
+            e.preventDefault();
+            if (isFirstDimension) {
+                return; // Already first item
+            }
+            // See drag drop code to move buttons (not needed, instant apply)
+
+            // Swap dimension with the one above
+            var index = dimensionList.indexOf(dimension);
+            dimensionList.splice(index, 1);
+            dimensionList.splice(index - 1, 0, dimension);
+
+            // Apply and visualize right away
+            MAIN.applyOLAP();
+        });
+        moveDownItem.on("click", function (e) {
+            e.preventDefault();
+            if (isLastDimension) {
+                return; // Already last item
+            }
+            // See drag drop code to move buttons (not needed, instant apply)
+
+            // Swap dimension with the one below
+            var index = dimensionList.indexOf(dimension);
+            dimensionList.splice(index, 1);
+            dimensionList.splice(index + 1, 0, dimension);
+
+            // Apply and visualize right away
+            MAIN.applyOLAP();
+        });
+
+        return menu;
+    };
+
 
     // Adds mouse events to a given result cube
     this.addCubeListeners = function (cube) {
@@ -726,9 +733,42 @@ var INTERFACE = new function () {
 //
 //        };
 //
-//        label.onclick = function () {
-//
-//        };
+        label.onclick = function () {
+
+            // Show a drop down menu
+
+            var pos = WEBGL.toScreenPosition(label);
+            var buttonGroup = $("div.btn-group[data-dimension-name='" + dimension.dimensionName + "']");
+            var dimensionList = buttonGroup.data("dimensionList");
+
+            var container = $("<div class='dropdown'></div>");
+            var toggle = $("<div class='dropdown-toggle' type='button' data-toggle='dropdown' aria-expanded='true'></div>");
+            var menu = INTERFACE.createDimensionMenu(dimension, dimensionList);
+
+            container.css("position", "absolute");
+            container.css("top", pos.y);
+            container.css("left", pos.x);
+
+            container.append(toggle);
+            container.append(menu);
+            $("body").append(container);
+
+            // Remove on hide
+//            container.on('hidden.bs.dropdown', function () {
+//                container.remove();
+//            });
+
+            // TODO geht noch nicht (bootstrap dropdown)
+
+//            container.addClass("open");
+
+//            toggle.dropdown(); // TEMP toggle the dropdown menu
+//            toggle.click()
+//            toggle.dropdown('toggle');
+//            container.dropdown('toggle');
+//            menu.dropdown('toggle');
+//            toggle.trigger('click.bs.dropdown');
+        };
 
     };
 
@@ -762,7 +802,7 @@ var INTERFACE = new function () {
         $('[data-toggle="tooltip"]').tooltip(); // TODO oder alle mit "title" aktivieren?
 
         // add popovers
-        $('[data-toggle="popover"]').popover({container: 'body'});
+        $('[data-toggle="popover"]').popover({container: 'body', placement: "auto right"});
     };
 
     // Shows a login popup to enter a user ID.
@@ -1546,13 +1586,13 @@ var INTERFACE = new function () {
 
         // Change the measure (dropdown) button
         $("#id_measureButton").empty();
-        $("#id_measureButton").append("<span class=cube-button-text>" + measure.label + "</span>");
+        $("#id_measureButton").append("<span class='measure-button-text'>" + measure.label + "</span>");
         var badge = $('<span class="badge"></span>');
         badge.css("background-color", MAIN.currentColor);
         badge.text(agg);
 
-        $("#id_measureButton").append(badge);
         $("#id_measureButton").append(" <span class='caret'></span>");
+        $("#id_measureButton").append(badge);
 
         // Disable the selected measure from list (and re-enable all others)
         $('[data-measure-name]').removeClass("disabled");
@@ -1707,31 +1747,12 @@ var INTERFACE = new function () {
         this.mouseDown.y = event.pageY - node.position().top;
     };
 
-    /**
-     * Shows an error message dialog
-     * @param {String} text
-     */
-    this.popupErrorMessage = function (text) {
-        // TODO modal (template) with error sign
+    // Handle screen resizing
+    this.onScreenResize = function (event) {
+//        if ($(window).width() < 768) {
+//            // Code here
+//        }
     };
-
-    /**
-     * Shows an info message dialog
-     * @param {String} text
-     */
-    this.popupInfoMessage = function (text) {
-        // TODO modal (template) with info sign
-    };
-
-    /**
-     * Shows an confirm message dialog
-     * @param {String} text
-     * @return {Boolean} true if the user accepted
-     */
-    this.popupConfirmMessage = function (text) {
-        // TODO modal (template) with question sign
-    };
-
 
     // HELP FUNCTIONS ==========================================================
 
@@ -1781,7 +1802,7 @@ var INTERFACE = new function () {
 
         // Reset cube selection button
         $("#id_cubeButton").empty();
-        $("#id_cubeButton").append("<span class=cube-button-text> Select Cube </span>");
+        $("#id_cubeButton").append("<span class='cube-button-text'> Select Cube </span>");
         $("#id_cubeButton").append("<span class='caret'></span>");
         $("#id_cubeButton").attr("title", ""); // tooltip
 
@@ -1874,20 +1895,14 @@ var INTERFACE = new function () {
 
     // Make a html note flash for users attention
     var flashHTMLNode = function (node) {
-        var boxShadow = "0px 0px 8px rgba(102, 175, 233, 0.75)";
+        var setting = "scale(1.05)";
         var blinkDuration = 0.5;
         node.css("transition", blinkDuration + "s all ease");
-        node.css("box-shadow", boxShadow);
+        node.css("transform", setting);
         setTimeout(function () {
-            node.css("box-shadow", "");
+            node.css("transform", "");
             setTimeout(function () {
-                node.css("box-shadow", boxShadow);
-                setTimeout(function () {
-                    node.css("box-shadow", "");
-                    setTimeout(function () {
-                        node.css("transition", "");
-                    }, blinkDuration * 1000);
-                }, blinkDuration * 1000);
+                node.css("transition", "");
             }, blinkDuration * 1000);
         }, blinkDuration * 1000);
     };

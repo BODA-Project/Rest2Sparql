@@ -70,14 +70,15 @@
                 <div class="panel panel-default" id="id_cubePanel">
                     <div class="panel-heading">
                         <h3 class="panel-title">Cube
-                            <a class="side-glyph" id="id_infoCube" tabindex="0" role="button" data-toggle="popover" data-trigger="focus" title="Cube Selection" data-content="TEXT TODO"><span class="glyphicon glyphicon-info-sign"></span></a>
+                            <a class="side-glyph" id="id_infoCube" tabindex="0" role="button" data-toggle="popover" data-trigger="focus" title="Cube Selection"><span class="glyphicon glyphicon-info-sign"></span></a>
                         </h3>
                     </div>
                     <div class="panel-body">
 
                         <div class="btn-group">
                             <button class="btn btn-default btn-sm dropdown-toggle" type="button" data-toggle="dropdown" id="id_cubeButton" disabled="disabled">
-                                Select Cube <span class="caret"></span>
+                                <span class='cube-button-text'> Select Cube </span>
+                                <span class="caret"></span>
                             </button>
                             <ul class="dropdown-menu" role="menu" id="id_cubeList">
                                 <!--<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Example Cube 1</a></li>-->
@@ -92,7 +93,7 @@
                 <div class="panel panel-default fade" id="id_dimensionPanel" data-toggle="popover" data-trigger="manual" data-content="Please choose one or more dimensions." data-placement="bottom">
                     <div class="panel-heading">
                         <h3 class="panel-title">Dimensions
-                            <a class="side-glyph" id="id_infoDimension" tabindex="0" role="button" data-toggle="popover" data-trigger="focus" title="Dimensions" data-content="TEXT TODO"><span class="glyphicon glyphicon-info-sign"></span></a>
+                            <a class="side-glyph" id="id_infoDimension" tabindex="0" role="button" data-toggle="popover" data-trigger="focus" title="Dimensions"><span class="glyphicon glyphicon-info-sign"></span></a>
                         </h3>
                         <!--<span class="glyphicon glyphicon-info-sign"></span>-->
                     </div>
@@ -175,14 +176,15 @@
                 <div class="panel panel-default fade" id="id_measurePanel" data-toggle="popover" data-trigger="manual" data-content="Please choose one or more measures (1-2?)." data-placement="bottom">
                     <div class="panel-heading">
                         <h3 class="panel-title">Measure
-                            <a class="side-glyph" id="id_infoMeasure" tabindex="0" role="button" data-toggle="popover" data-trigger="focus" title="Measures" data-content="TEXT TODO"><span class="glyphicon glyphicon-info-sign"></span></a>
+                            <a class="side-glyph" id="id_infoMeasure" tabindex="0" role="button" data-toggle="popover" data-trigger="focus" title="Measures"><span class="glyphicon glyphicon-info-sign"></span></a>
                         </h3>
                     </div>
                     <div class="panel-body">
 
                         <div class="btn-group">
                             <button class="btn btn-default btn-sm dropdown-toggle" type="button" data-toggle="dropdown" id="id_measureButton">
-                                Select Measure <span class="caret"></span>
+                                <span class='measure-button-text'>Select Measure</span>
+                                <span class="caret"></span>
                             </button>
                             <ul class="dropdown-menu" role="menu" id="id_measureList">
                                 <!--<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Example Measure 1</a></li>-->
@@ -226,7 +228,7 @@
                 <div class="panel panel-default fade" id="id_filterPanel">
                     <div class="panel-heading">
                         <h3 class="panel-title">Filters
-                            <a class="side-glyph" id="id_infoFilter" tabindex="0" role="button" data-toggle="popover" data-trigger="focus" title="Filters" data-content="TEXT TODO"><span class="glyphicon glyphicon-info-sign"></span></a>
+                            <a class="side-glyph" id="id_infoFilter" tabindex="0" role="button" data-toggle="popover" data-trigger="focus" title="Filters"><span class="glyphicon glyphicon-info-sign"></span></a>
                         </h3>
                     </div>
                     <div class="panel-body">
@@ -278,7 +280,7 @@
 
                 <div class="row">
                     <div class="col-lg-12">
-                        <h3 class="page-header" id="id_pageTitle">Rest2Sparql</h3> <!-- TODO: Title of cube -->
+                        <h3 class="page-header" id="id_pageTitle">Rest2Sparql</h3>
                     </div>
                 </div>
 
@@ -422,6 +424,7 @@
 
         <!-- Bootstrap -->
         <script src="js/bootstrap/bootstrap.min.js"></script>
+        <script src="js/bootstrap/bootbox.min.js"></script>
 
         <!-- THREE.js -->
         <script src="js/threejs/three.js"></script>

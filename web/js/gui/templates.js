@@ -34,6 +34,6 @@ var TEMPLATES = new function () {
     this.HINT_CUBE = "Select a dataset here. A default configuration of dimensions and measures will be loaded.";
     this.HINT_DIMENSION = "Assign dimensions to up to three axes. Use the plus icon to add dimensions and drag & drop to move them up or down. Select a dimension's entities to regulate the number of results.";
     this.HINT_MEASURE = "Select a measure to be displayed. High values will be closer to the currently selected main color.";
-    this.HINT_FILTER = "Add filters to downsize results. Note that filering is applied at observation level (before any aggregation).";
+    this.HINT_FILTER = "Add filters to downsize the number of results. Note that filering is applied at observation level (before any aggregation).";
     this.HINT_VIZ = "TODO?";
 };
