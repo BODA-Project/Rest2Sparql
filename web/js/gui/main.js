@@ -201,8 +201,8 @@ var MAIN = new function () {
                 MAIN.availableMeasures = [];
                 MAIN.currentCube = "";
                 MAIN.xDimensions = [];
-                MAIN.xDimensions = [];
-                MAIN.xDimensions = [];
+                MAIN.yDimensions = [];
+                MAIN.zDimensions = [];
                 MAIN.measures = [];
                 MAIN.filters = [];
                 MAIN.undoStack = [];
@@ -660,6 +660,11 @@ var MAIN = new function () {
 
         // DEBUG url
         console.log("REQUEST URL", url);
+
+        console.log("dimensions", MAIN.xDimensions,MAIN.yDimensions,MAIN.zDimensions);
+
+        console.log("MAIN.entityList",MAIN.entityList)
+
 //        console.log("UNDO STACK:", MAIN.undoStack);
 //        console.log("REDO STACK:", MAIN.redoStack);
 
@@ -903,7 +908,7 @@ var MAIN = new function () {
         }
 
         // Save new current state
-        MAIN.currentState = MAIN.createState(true);
+        MAIN.currentState = MAIN.createState();
     };
 
     /**

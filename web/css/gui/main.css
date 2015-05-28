@@ -6,6 +6,10 @@ body {
 
 /* Bootstrap overwrite */
 
+.viz-area .page-header {
+    margin-top: 30px;
+}
+
 .navbar {
     margin-bottom: 0;
     box-shadow: none;
@@ -121,6 +125,13 @@ a.side-glyph:hover {
     overflow: hidden;
 }
 
+/* button size in panels */
+.panel-body a .dimension-button-text,
+.panel-body button .dimension-button-text{
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
 /* button size in filter panel */
 .panel-body a .filter-button-text,
 .panel-body button .filter-button-text {
@@ -176,9 +187,16 @@ a.side-glyph:hover {
 }
 
 /* text in dimension buttons */
-[data-dimension-name] .button-text {
+[data-dimension-name] .dimension-button-text {
     float: left;
     padding-right: 0;
+}
+
+/* carets in measure buttons */
+[data-dimension-name] .caret {
+    float: right;
+    margin-top: 8px;
+    margin-left: 5px;
 }
 
 /*dimension button size*/
@@ -190,7 +208,7 @@ a.side-glyph:hover {
     width: 100%;
 }
 
-/* badges in dimension buttons */
+/* badges in measure buttons */
 #id_measureButton .badge {
     float: right;
     margin-top: 2px;
@@ -391,6 +409,17 @@ a.side-glyph:hover {
 .overlay-menu {
     z-index: 10;
     position: absolute;
+}
+
+/*Apply and Cancel area*/
+#id_acceptArea {
+    max-width: 400px;
+    display: inline-block;
+    margin-right: -20px;
+}
+
+.panel-footer.applyArea {
+    text-align: right;
 }
 
 /*

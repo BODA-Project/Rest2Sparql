@@ -36,6 +36,8 @@
                     <span class="icon-bar"></span>
                 </button>
                 <a class="navbar-brand" href="./">Rest2Sparql</a>
+
+                <!--<a class="navbar-text" href="./">Cube title</a>-->
             </div>
 
             <div class="collapse navbar-collapse">
@@ -261,14 +263,7 @@
 
                 <!-- CANCEL and ACCEPT / DRAW -->
 
-                <div class="btn-group btn-group-justified fade" role="group" id="id_acceptArea">
-                    <div class="btn-group" role="group">
-                        <button type="button" class="btn btn-default" id="id_cancelButton">Cancel</button>
-                    </div>
-                    <div class="btn-group" role="group">
-                        <button type="button" class="btn btn-primary" id="id_applyButton" data-toggle="tooltip" data-placement="right">Apply</button>
-                    </div>
-                </div>
+
 
             </div>
         </nav>
@@ -288,9 +283,18 @@
                     <!--<div style="position:relative;width:5px;height:5px;background-color:#ff0000" id="pointerID"></div>-->
                 </div>
 
-
             </div>
-            <div class="panel-footer">Some Footer links... <div id="OUTPUT"></div></div>
+
+            <div class="panel-footer applyArea">
+                <div class="btn-group btn-group-justified fade" role="group" id="id_acceptArea">
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-sm btn-default" id="id_cancelButton">Cancel</button>
+                    </div>
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-sm btn-primary" id="id_applyButton" data-toggle="tooltip" data-placement="right">Apply</button>
+                    </div>
+                </div>
+            </div>
         </div>
 
 

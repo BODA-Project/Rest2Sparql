@@ -337,6 +337,9 @@ var INTERFACE = new function () {
         INTERFACE.fillDimensionList("x", MAIN.xDimensions);
         INTERFACE.fillDimensionList("y", MAIN.yDimensions);
         INTERFACE.fillDimensionList("z", MAIN.zDimensions);
+
+        // Init dropzones for dimensions
+        INTERFACE.updateDropZones();
     };
 
     // Adds a dimension button and its menu after the measure was selected.
@@ -348,13 +351,15 @@ var INTERFACE = new function () {
         // Rebuild a dimension button and its menu
         var btnGroup = $('<div class="btn-group" data-dimension-name="' + dimension.dimensionName + '"></div>');
         var button = $('<a class="btn dropdown-toggle btn-default btn-sm" type="button" data-toggle="dropdown"></a>');
-        var text = $('<span class=button-text>' + dimension.label + '</span>');
+        var text = $('<span class="dimension-button-text">' + dimension.label + '</span>');
+        var caret = $('<span class="caret"></span>');
         var badge = $('<span class="badge"></span>');
         var menu = INTERFACE.createDimensionMenu(dimension, dimensions);
 
         // Combine button and list
         btnGroup.append(button);
         button.append(text);
+        button.append(caret);
         button.append(badge);
 
         // Set badge color to show grouping (rollup)
@@ -380,9 +385,7 @@ var INTERFACE = new function () {
         // TODO: tooltip if text too long
 
         // Set max width after setting badge
-        text.css("max-width", (192 - badge.outerWidth()));
-        text.css("text-overflow", "ellipsis");
-        text.css("overflow", "hidden");
+        text.css("max-width", (185 - badge.outerWidth() - caret.outerWidth()));
 
         // Save dimension and dimensionList to the button
         btnGroup.data("dimension", dimension);
@@ -407,8 +410,6 @@ var INTERFACE = new function () {
             drop: function (event, ui) {
                 event.preventDefault();
                 event.stopPropagation();
-
-                console.log("DROPPED", event, ui);
 
                 var draggedButton = ui.draggable;
                 var originalDimensionList = draggedButton.data("dimensionList");
@@ -436,34 +437,55 @@ var INTERFACE = new function () {
             accept: 'div.btn-group[data-dimension-name]',
             hoverClass: 'hovered'
         });
+    };
 
-        // Make the plus button a droparea
-        plusButton.droppable({
-            drop: function (event, ui) {
-                event.preventDefault();
-                event.stopPropagation();
+    /**
+     * Update the plus buttons drop zones for drag & drop
+     */
+    this.updateDropZones = function () {
+        $.each(["x", "y", "z"], function (i, axis) {
+            var plusButton = $("#id_" + axis + "Plus");
 
-                console.log("DROPPED", event, ui);
+            // Get according dimensionlist
+            var dimensionList;
+            switch (axis) {
+                case "x":
+                    dimensionList = MAIN.xDimensions;
+                    break;
+                case "y":
+                    dimensionList = MAIN.yDimensions;
+                    break;
+                case "z":
+                    dimensionList = MAIN.zDimensions;
+                    break;
+            }
 
-                var draggedButton = ui.draggable;
+            // Make the plus button a droparea / Refresh target dimensionlists
+            plusButton.droppable({
+                drop: function (event, ui) {
+                    event.preventDefault();
+                    event.stopPropagation();
 
-                if (draggedButton[0] !== plusButton.prev()[0]) {
+                    var draggedButton = ui.draggable;
                     var originalDimensionList = draggedButton.data("dimensionList");
                     var droppedDimension = draggedButton.data("dimension");
 
-                    // Remove dimension from the original list
-                    var oldIndex = originalDimensionList.indexOf(droppedDimension);
-                    originalDimensionList.splice(oldIndex, 1);
+                    if (draggedButton[0] !== plusButton.prev()[0]) {
 
-                    // and insert dimension at the end of the list
-                    dimensions.push(droppedDimension);
+                        // Remove dimension from the original list
+                        var oldIndex = originalDimensionList.indexOf(droppedDimension);
+                        originalDimensionList.splice(oldIndex, 1);
 
-                    // Apply and visualize right away
-                    MAIN.applyOLAP();
-                }
-            },
-            accept: 'div.btn-group[data-dimension-name]',
-            hoverClass: 'hovered'
+                        // and insert dimension at the end of the list
+                        dimensionList.push(droppedDimension);
+
+                        // Apply and visualize right away
+                        MAIN.applyOLAP();
+                    }
+                },
+                accept: 'div.btn-group[data-dimension-name]',
+                hoverClass: 'hovered'
+            });
         });
 
     };
@@ -821,9 +843,6 @@ var INTERFACE = new function () {
         $("#id_loginModalOkay").on("click", submitLogin);
         $('#id_loginModal form').on("submit", submitLogin);
 
-        // Stop background rendering
-        WEBGL.stopRendering();
-
         // Show the popup
         $('#id_loginModal').modal({
             backdrop: 'static',
@@ -837,6 +856,9 @@ var INTERFACE = new function () {
             // TEMP for testing purpose ##############################################
             $('#id_loginModalID').val("https://github.com/bayerls");
 //            $('#id_loginModalID').val("8023903");
+
+            // Stop background rendering
+            WEBGL.stopRendering();
 
         });
 
@@ -1556,6 +1578,9 @@ var INTERFACE = new function () {
         INTERFACE.fillDimensionList("x", MAIN.xDimensions);
         INTERFACE.fillDimensionList("y", MAIN.yDimensions);
         INTERFACE.fillDimensionList("z", MAIN.zDimensions);
+
+        // Update dropzones
+        INTERFACE.updateDropZones();
 
         $.each(MAIN.xDimensions, function (i, dimension) {
             INTERFACE.addDimensionButton(dimension, "x", MAIN.xDimensions);
