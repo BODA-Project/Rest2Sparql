@@ -66,8 +66,8 @@ var MAIN = new function () {
     this.COLORS = [
         "#ea5f5f",
         "#ddac42",
-        "#42ca45",
-        "#4fccc2",
+        "#59C543",
+        "#46CCC1",
         "#6098d8",
         "#8a7dd9",
         "#d871b5",
@@ -80,10 +80,11 @@ var MAIN = new function () {
     // Globas vars
     this.ID = "";
     this.HASH = "";
-    this.currentCube = "";
+    this.currentCube;
     this.currentColor = this.COLORS[4];
     this.currentAGG = "sum";
     this.currentScale = this.SCALE_LINEAR; // log or linear
+    this.currentURL = "";
     this.entityList = {}; // Contains all entities of all dimensions (and their selected status)
 
     // All possible dimensions and measures
@@ -147,7 +148,7 @@ var MAIN = new function () {
                 try {
                     obj = $.parseJSON(content);
                 } catch (e) {
-                    bootbox.alert("Error: " + content);
+                    bootbox.alert("<b>Error:</b><br><br>" + content);
                     return;
                 }
                 var results = obj.results.bindings;
@@ -199,7 +200,8 @@ var MAIN = new function () {
                 MAIN.availableCubes = [];
                 MAIN.availableDimensions = [];
                 MAIN.availableMeasures = [];
-                MAIN.currentCube = "";
+                MAIN.currentCube = undefined;
+                MAIN.currentURL = "";
                 MAIN.xDimensions = [];
                 MAIN.yDimensions = [];
                 MAIN.zDimensions = [];
@@ -227,6 +229,7 @@ var MAIN = new function () {
                 $("#id_measurePanel").removeClass("in");
                 $("#id_filterPanel").removeClass("in");
                 $("#id_acceptArea").removeClass("in");
+                $("#id_chartButton").removeClass("in");
                 $("#id_pageTitle").text("Rest2Sparql");
 
                 // Show default visualization
@@ -273,7 +276,14 @@ var MAIN = new function () {
 
         // Help function
         var handleContent = function (content, stopCamera) {
-            var obj = $.parseJSON(content);
+            var obj;
+            try {
+                obj = $.parseJSON(content);
+            } catch (e) {
+                bootbox.alert("<b>Error:</b><br><br>" + content); // TODO sollte nie passieren (alle dimensionen aus group)
+                return;
+            }
+
             var results = obj.results.bindings;
 
             // Stop and notify if no results
@@ -282,9 +292,15 @@ var MAIN = new function () {
                 // TODO texture for rotating cube "0 Results" statt popup
                 WEBGL.showLoadingScreen("0 Results");
 
+                // Disable chart button
+                $("#id_chartButton").addClass("disabled");
+
                 bootbox.alert("No results for the given query.");
                 return;
             }
+
+            // Enable chart button
+            $("#id_chartButton").removeClass("disabled");
 
             // Reset the entity map
             MAIN.entityMap = {};
@@ -433,6 +449,11 @@ var MAIN = new function () {
             // Show a loading screen while waiting
             WEBGL.showLoadingScreen("Loading...");
 
+            // Dont do anything for empty request
+            if (url === null) {
+                return;
+            }
+
             // Make a new ajax call
             var request = $.ajax({
                 url: url,
@@ -446,7 +467,15 @@ var MAIN = new function () {
                 handleContent(content, false);
             });
             request.fail(function (jqXHR, textStatus) {
-                bootbox.alert("Error: " + textStatus);
+
+
+                // TODO too many entities in bigdata -> "error"
+                if (textStatus === "error") {
+                    bootbox.alert("<b>Error:</b><br><br>Too many entities selected. Please select fewer (or all) entities of a dimension.");
+                } else {
+                    bootbox.alert("<b>Error:</b><br><br>" + textStatus);
+                }
+
             });
         }
     };
@@ -499,7 +528,7 @@ var MAIN = new function () {
      * Load the list of available dimensions for a cube and fill the lists accordingly
      */
     this.loadDimensionList = function () {
-        var url = TEMPLATES.DIMENSION_URL.replace("__cube__", MAIN.currentCube);
+        var url = TEMPLATES.DIMENSION_URL.replace("__cube__", MAIN.currentCube.cubeName);
         url = url.replace("__id__", MAIN.ID);
         url = url.replace("__hash__", MAIN.HASH);
 
@@ -531,7 +560,7 @@ var MAIN = new function () {
      * Load the list of available measures for a cube and fill the lists accordingly
      */
     this.loadMeasureList = function () {
-        var url = TEMPLATES.MEASURE_URL.replace("__cube__", MAIN.currentCube);
+        var url = TEMPLATES.MEASURE_URL.replace("__cube__", MAIN.currentCube.cubeName);
         url = url.replace("__id__", MAIN.ID);
         url = url.replace("__hash__", MAIN.HASH);
 
@@ -560,7 +589,7 @@ var MAIN = new function () {
 
     // Loads the list of possible entities for a given dimension (dimension URI).
     this.queryEntityList = function (dimensionName) {
-        var url = TEMPLATES.ENTITY_URL.replace("__cube__", MAIN.currentCube);
+        var url = TEMPLATES.ENTITY_URL.replace("__cube__", MAIN.currentCube.cubeName);
         url = url.replace("__id__", MAIN.ID);
         url = url.replace("__hash__", MAIN.HASH);
         url = url.replace("__dimension__", dimensionName);
@@ -649,8 +678,8 @@ var MAIN = new function () {
         }
 
         // Visualize the cube
-        var url = MAIN.createRequestURL();
-        MAIN.visualize(url, stopCamera);
+        MAIN.currentURL = MAIN.createRequestURL();
+        MAIN.visualize(MAIN.currentURL, stopCamera);
 
         // Update the configuration buttons (Dimensions, Measures, ...)
         INTERFACE.updateConfigButtons();
@@ -659,12 +688,7 @@ var MAIN = new function () {
         INTERFACE.updateNavigation();
 
         // DEBUG url
-        console.log("REQUEST URL", url);
-
-        console.log("dimensions", MAIN.xDimensions,MAIN.yDimensions,MAIN.zDimensions);
-
-        console.log("MAIN.entityList",MAIN.entityList)
-
+        console.log("REQUEST URL", MAIN.currentURL);
 //        console.log("UNDO STACK:", MAIN.undoStack);
 //        console.log("REDO STACK:", MAIN.redoStack);
 
@@ -684,8 +708,8 @@ var MAIN = new function () {
         MAIN.tempSelection = {};
 
         // Visualize the cube (again)
-        var url = MAIN.createRequestURL();
-        MAIN.visualize(url, true);
+        MAIN.currentURL = MAIN.createRequestURL();
+        MAIN.visualize(MAIN.currentURL, true);
 
         // Update the configuration buttons (Dimensions, Measures, ...)
         INTERFACE.updateConfigButtons();
@@ -707,7 +731,7 @@ var MAIN = new function () {
         var url = TEMPLATES.EXECUTE_URL;
         url = url.replace("__id__", MAIN.ID);
         url = url.replace("__hash__", MAIN.HASH);
-        url = url.replace("__cube__", MAIN.currentCube);
+        url = url.replace("__cube__", MAIN.currentCube.cubeName);
 
         // Add dimensions
         function addDim(index, dimension) {

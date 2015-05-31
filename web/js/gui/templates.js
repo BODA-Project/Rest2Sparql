@@ -15,7 +15,7 @@ var TEMPLATES = new function () {
     this.DIMENSION_ROLLUP_PART_URL = "&d=<__dimension__>,select=<true>,group=<false>,agg=<min>"; // TEST: agg=<min> liefert dimensionName, also z.b http://code-research.eu/resource/Country
 
     this.DIMENSION_FIX_PART_URL = ",fix=<__fix__>";
-    this.MEASURE_PART_URL = "&m=<__measure__>,select=<true>,group=<false>,agg=<__agg__>";
+    this.MEASURE_PART_URL = "&m=<__measure__>,select=<true>,group=<true>,agg=<__agg__>";
 
     this.FILTER_DIMENSION_PART_URL = "&d=<__dimension__>,select=<false>,group=<false>,fix=<__fix__>";
     this.FILTER_MEASURE_PART_URL = "&m=<__measure__>,select=<false>,filterR=<__filterR__>,filterV=<__filterV__>";

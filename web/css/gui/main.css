@@ -413,13 +413,30 @@ a.side-glyph:hover {
 
 /*Apply and Cancel area*/
 #id_acceptArea {
-    max-width: 400px;
+    max-width: 300px;
     display: inline-block;
-    margin-right: -20px;
+}
+
+@media(min-width:768px) {
+    #id_acceptArea {
+        margin-right: -20px;
+    }
 }
 
 .panel-footer.applyArea {
     text-align: right;
+}
+
+
+/*Charts with C3*/
+#id_chartButton {
+    /*float: right;*/
+
+    position: absolute;
+    right: 15px;
+}
+#id_pageTitle {
+    padding-right: 25px;
 }
 
 /*

@@ -275,7 +275,10 @@
 
                 <div class="row">
                     <div class="col-lg-12">
-                        <h3 class="page-header" id="id_pageTitle">Rest2Sparql</h3>
+                        <h3 class="page-header">
+                            <span id="id_pageTitle">Rest2Sparql</span>
+                            <a href="#" id="id_chartButton" class="fade btn"><span class="glyphicon glyphicon-stats"></span></a>
+                        </h3>
                     </div>
                 </div>
 
@@ -415,6 +418,31 @@
             </div>
         </div>
 
+        <!-- Chart Modal (hidden by default) -->
+        <div class="modal fade" id="id_chartModal">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title">TITLE TODO</h4>
+                    </div>
+                    <div class="modal-body">
+
+                        <div id="id_chart">
+                            <!--C3-Chart here-->
+                        </div>
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!--TODO: swap index.html and index_gui.html -->
+        <!--TODO: minified versions-->
+
         <!-- JavaScript -->
 
         <!-- alphanum sorting -->
@@ -445,7 +473,7 @@
         <script src="js/d3/d3.min.js"></script>
 
         <!-- C3.js -->
-        <script src="js/c3/c3.min.js"></script>
+        <script src="js/c3/c3.js"></script>
 
         <!-- Custom Scripts -->
         <script src="js/gui/main.js"></script>

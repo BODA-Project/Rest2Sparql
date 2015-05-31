@@ -1,4 +1,4 @@
-/* global TEMPLATES, THREE, MAIN, WEBGL */
+/* global TEMPLATES, THREE, MAIN, WEBGL, bootbox, d3 */
 
 // Namespace for events and html interface code
 
@@ -63,9 +63,11 @@ var INTERFACE = new function () {
             INTERFACE.popupMeasureFilter();
         });
 
-        // TODO Info icon tooltips
-
-
+        // Chart button
+        $("#id_chartButton").on('click', function (e) {
+            e.preventDefault();
+            INTERFACE.popupChart(); // TODO
+        });
 
         // Resize visualization on browser resize
         $(window).on('resize', WEBGL.resizeVizualisation);
@@ -115,12 +117,12 @@ var INTERFACE = new function () {
                 e.preventDefault();
 
                 // Is the same cube already selected?
-                if (MAIN.currentCube === cubeName) {
+                if (MAIN.currentCube && MAIN.currentCube.cubeName === cubeName) {
                     return;
                 }
 
                 // Set current cube's URI
-                MAIN.currentCube = cubeName;
+                MAIN.currentCube = cube;
 
                 // Query available dimensions and measures and fill the lists
                 MAIN.loadDimensionList();
@@ -136,6 +138,7 @@ var INTERFACE = new function () {
                 MAIN.tempSelection = {};
                 MAIN.availableDimensions = [];
                 MAIN.availableMeasures = [];
+                MAIN.currentURL = "";
 
                 // Clear undo / redo stacks TODO warnung vorher
                 MAIN.undoStack = [];
@@ -163,10 +166,12 @@ var INTERFACE = new function () {
                 $("#id_filterPanel button").removeAttr("disabled");
                 $("#id_acceptArea").addClass("in");
 
+                $("#id_chartButton").addClass("in");
+
                 $("#id_cancelButton").removeAttr("disabled");
                 $("#id_applyButton").removeAttr("disabled");
 
-                $("#id_undoButton").removeAttr("disabled"); // TODO erst wenn undo stack nicht leer -> immer prüfen!
+                $("#id_undoButton").removeAttr("disabled");
                 $("#id_redoButton").removeAttr("disabled");
                 $("#id_optionsButton").removeAttr("disabled");
                 $("#id_mergeButton").removeAttr("disabled");
@@ -757,7 +762,7 @@ var INTERFACE = new function () {
 //
         label.onclick = function () {
 
-            // Show a drop down menu
+            // Show a drop down menu TODO #################################################################################
 
             var pos = WEBGL.toScreenPosition(label);
             var buttonGroup = $("div.btn-group[data-dimension-name='" + dimension.dimensionName + "']");
@@ -774,6 +779,9 @@ var INTERFACE = new function () {
             container.append(toggle);
             container.append(menu);
             $("body").append(container);
+
+            // TEMP (not working)
+            $("div.btn-group[data-dimension-name='" + dimension.dimensionName + "'] > a").dropdown('toggle');
 
             // Remove on hide
 //            container.on('hidden.bs.dropdown', function () {
@@ -1138,6 +1146,181 @@ var INTERFACE = new function () {
             modal.remove();
 
             // Resume rendering again
+            WEBGL.resumeRendering();
+        });
+    };
+
+    /**
+     * Shows a (bar) chart popup using C3.
+     */
+    this.popupChart = function () {
+        var content = MAIN.resultCache[MAIN.currentURL];
+        if (!content) {
+            return;
+        }
+        var obj;
+        try {
+            obj = $.parseJSON(content);
+        } catch (e) {
+            bootbox.alert("<b>Error:</b><br><br>" + content); // TODO sollte nie passieren (alle dimensionen aus group)
+            return;
+        }
+        var results = obj.results.bindings;
+
+        // Stop if no results
+        if (results.length === 0) {
+            return;
+        }
+
+        // Gather data
+        var allDimensions = MAIN.xDimensions.concat(MAIN.yDimensions, MAIN.zDimensions);
+        var firstDimension = allDimensions[0];
+        var lastDimension = allDimensions[allDimensions.length - 1];
+        var lastDimEntities = []; // Grouped items
+        var categories = [];
+        var cleanResults = [];
+        $.each(results, function (i, result) {
+
+            // TODO if request is a slice (only 1 entity in a dimension) use title label instead of category
+            // TODO rollup labels -> tooltip?
+
+            var category = MAIN.getEntityFromJson(result, firstDimension).label;
+            var measure = MAIN.getMeasureValueFromJson(result, MAIN.measures[0]); // Only 1 measure
+            var label = MAIN.getEntityFromJson(result, lastDimension).label;
+
+            if (category === label) {
+                category = undefined; // only 1 dimension selected
+            }
+
+            // Rows of chart data
+            if (lastDimEntities.indexOf(label) === -1) {
+                lastDimEntities.push(label);
+            }
+
+            for (var i = 1; i < allDimensions.length - 1; i++) {
+                var dimension = allDimensions[i];
+                category += " > " + MAIN.getEntityFromJson(result, dimension).label;
+            }
+
+            // Multiple dimensions -> category label
+            if (category && category !== label && categories.indexOf(category) === -1) {
+                categories.push(category);
+            }
+            cleanResults.push({
+                category: category,
+                label: label,
+                measure: measure
+            });
+        });
+
+        // Sort the results and labels
+        cleanResults.sort(function (a, b) {
+            return alphanumCase(a.category + a.label, b.category + b.label);
+        });
+        categories.sort(function (a, b) {
+            return alphanumCase(a, b);
+        });
+        lastDimEntities.sort(function (a, b) {
+            return alphanumCase(a, b);
+        });
+
+        // Group as row data for C3
+        var rows = [];
+        rows.push(lastDimEntities); // First line with labels of last dimension
+        var group = [];
+        var prevCategory = cleanResults[0].category;
+        $.each(cleanResults, function (i, result) {
+            if (group.length > 0 && prevCategory !== result.category) {
+                // New group, fill empty fields and push last one,
+                $.each(lastDimEntities, function (i, label) {
+                    group[i] = group[i] ? group[i] : null; // Fill up empty slots with "null"
+                });
+                rows.push(group);
+                group = [];
+            }
+            var index = lastDimEntities.indexOf(result.label);
+            group[index] = result.measure;
+            prevCategory = result.category;
+        });
+
+        // Also push last row
+        $.each(lastDimEntities, function (i, label) {
+            group[i] = group[i] ? group[i] : null; // Fill up empty slots with "null"
+        });
+        rows.push(group);
+
+        var modal = $('#id_chartModal');
+
+        // Set title and slice information
+        modal.find(".modal-title").text(MAIN.currentCube.label);
+
+        // TODO: title, buttons (line, bar, stacked bar), resize bug?
+        // TODO in body: slices, zb: Gebiet: Berlin, ... Measure: <Anzahl>
+
+        var chart = c3.generate({
+            bindto: '#id_chart',
+            data: {
+                rows: rows,
+                type: 'bar',
+                groups: [
+                    lastDimEntities // Stacked bar chart
+                ]
+            },
+            bar: {
+                width: {
+                    ratio: 0.75
+                }
+            },
+            axis: {
+                rotated: true,
+                x: {
+                    type: 'category',
+                    categories: categories[0] ? categories : [""],
+                    tick: {
+                        multiline: false
+                    }
+                },
+                y: {
+                    label: {
+                        text: MAIN.measures[0].label,
+                        position: "outer-center"
+                    },
+                    tick: {
+                        format: d3.format(',')
+                    }
+                }
+            },
+            grid: {
+                y: {
+                    show: true
+                }
+            },
+            tooltip: {
+                format: {
+                    title: function (i) {
+//                        var title = categories[i] ? categories[i] + " (" + MAIN.measures[0].label + ")" : MAIN.measures[0].label;
+                        var title = categories[i] ? categories[i] : MAIN.measures[0].label;
+                        return  title;
+                    },
+                    value: d3.format(',')
+                }
+            }
+        });
+
+        // Pause rendering in background
+        WEBGL.stopRendering();
+
+        // Show the popup
+        modal.modal();
+
+        // Resize chart when the modal is finished (fixes chart)
+        modal.on('shown.bs.modal', function (e) {
+            chart.resize({height: 100 + categories.length * 20 + lastDimEntities.length * 5});
+//            chart.resize({height: 100 + categories.length * 10 * lastDimEntities.length + lastDimEntities.length * 5}); // for non-stacked bar chart
+        });
+
+        // Resume rendering again when modal is closed
+        modal.on('hidden.bs.modal', function (e) {
             WEBGL.resumeRendering();
         });
     };
