@@ -1116,7 +1116,7 @@ var INTERFACE = new function () {
         $.each(measures, function (i, measure) {
             var row = $("<tr>");
             row.append("<td>" + measure.measure + " <span style='font-weight:bold;color:" + MAIN.currentColor + ";'>(" + getAggregationLabel(MAIN.currentAGG) + ")</span></td>");
-            row.append("<td><b>" + INTERFACE.formatNumber(measure.value, 4) + "</b></td>");
+            row.append("<td><b>" + MAIN.formatNumber(measure.value, 3) + "</b></td>");
             table.append(row);
         });
         modalBody.append(table);
@@ -1129,7 +1129,7 @@ var INTERFACE = new function () {
             $.each(MAIN.filters, function (i, filter) {
                 var row = $("<tr>");
                 row.append("<td>" + filter.measure.label + "</td>");
-                row.append("<td><b>" + getRelationLabel(filter.relation) + " " + INTERFACE.formatNumber(filter.value, 4) + "</b></td>");
+                row.append("<td><b>" + getRelationLabel(filter.relation) + " " + MAIN.formatNumber(filter.value, 3) + "</b></td>");
                 table.append(row);
             });
         }
@@ -1162,7 +1162,7 @@ var INTERFACE = new function () {
         try {
             obj = $.parseJSON(content);
         } catch (e) {
-            bootbox.alert("<b>Error:</b><br><br>" + content); // TODO sollte nie passieren (alle dimensionen aus group)
+            bootbox.alert("<b>Error:</b><br><br>" + content);
             return;
         }
         var results = obj.results.bindings;
@@ -1172,6 +1172,9 @@ var INTERFACE = new function () {
             return;
         }
 
+        // Clear previous info area
+        $("#id_chartInfos").empty();
+
         // Gather data
         var allDimensions = MAIN.xDimensions.concat(MAIN.yDimensions, MAIN.zDimensions);
         var firstDimension = allDimensions[0];
@@ -1179,16 +1182,35 @@ var INTERFACE = new function () {
         var lastDimEntities = []; // Grouped items
         var categories = [];
         var cleanResults = [];
+
+        // Look for slices and rollup labels and show them on top of the chart
+        var subtitle = "";
+        $.each(allDimensions, function (i, dimension) {
+            if (dimension.entities.length === 1) {
+                // Slicing detected -> add info in subtitle
+                subtitle += "<span>" + dimension.label + ": <b>" + dimension.entities[0].label + "</b></span>";
+            } else if (dimension.rollup) {
+                // Rollup dimension detected -> -> add info in subtitle
+                var tooltip = "";
+                $.each(dimension.entities, function (i, entity) {
+                    tooltip += ", " + entity.label;
+                });
+                tooltip = tooltip.substring(2); // remove first ", "
+                subtitle += "<span data-toggle='tooltip' title='" + tooltip + "'>" + dimension.label + " <b>(" + dimension.entities.length + ")</b></span>";
+            }
+        });
+        subtitle += "<span>Measure: " + MAIN.measures[0].label + "<span style='font-weight:bold;color:" + MAIN.currentColor + ";'> (" + getAggregationLabel(MAIN.currentAGG) + ")</span></span>";
+
+        $("#id_chartInfos").html(subtitle);
+        $('#id_chartInfos [data-toggle="tooltip"]').tooltip(); // enable tooltips
+
         $.each(results, function (i, result) {
 
-            // TODO if request is a slice (only 1 entity in a dimension) use title label instead of category
-            // TODO rollup labels -> tooltip?
-
-            var category = MAIN.getEntityFromJson(result, firstDimension).label;
+            var category = "";
             var measure = MAIN.getMeasureValueFromJson(result, MAIN.measures[0]); // Only 1 measure
             var label = MAIN.getEntityFromJson(result, lastDimension).label;
 
-            if (category === label) {
+            if (label === MAIN.getEntityFromJson(result, firstDimension).label) {
                 category = undefined; // only 1 dimension selected
             }
 
@@ -1197,10 +1219,14 @@ var INTERFACE = new function () {
                 lastDimEntities.push(label);
             }
 
-            for (var i = 1; i < allDimensions.length - 1; i++) {
+            for (var i = 0; i < allDimensions.length - 1; i++) {
                 var dimension = allDimensions[i];
+                if (dimension.entities.length === 1 || dimension.rollup) {
+                    continue; // Slicing or rollup detected -> skip as category
+                }
                 category += " > " + MAIN.getEntityFromJson(result, dimension).label;
             }
+            category = category.substring(3); // remove first " > "
 
             // Multiple dimensions -> category label
             if (category && category !== label && categories.indexOf(category) === -1) {
@@ -1249,22 +1275,47 @@ var INTERFACE = new function () {
         });
         rows.push(group);
 
+        // Determine the chart type
+        var type;
+        if ($("#id_chartLineButton").prop("checked")) {
+            $("#id_chartLineButton").click();
+            type = "line";
+        } else if ($("#id_chartAreaButton").prop("checked")) {
+            $("#id_chartAreaButton").click();
+            type = "area";
+        } else if ($("#id_chartPieButton").prop("checked")) {
+            $("#id_chartPieButton").click();
+            type = "pie";
+        } else {
+            $("#id_chartBarButton").click();
+            type = "bar";
+        }
+
+        // Determine if stacked
+        var groups = [];
+        if ($("#id_chartStackingButton").prop("checked")) {
+            $("#id_chartStackingButton").parent().addClass("active");
+            groups = [lastDimEntities];
+        } else {
+            $("#id_chartStackingButton").parent().removeClass("active");
+        }
+
         var modal = $('#id_chartModal');
 
         // Set title and slice information
         modal.find(".modal-title").text(MAIN.currentCube.label);
 
-        // TODO: title, buttons (line, bar, stacked bar), resize bug?
-        // TODO in body: slices, zb: Gebiet: Berlin, ... Measure: <Anzahl>
-
+        // Create the chart
         var chart = c3.generate({
             bindto: '#id_chart',
             data: {
                 rows: rows,
-                type: 'bar',
-                groups: [
-                    lastDimEntities // Stacked bar chart
-                ]
+                type: type,
+                groups: groups,
+//                order: null
+            },
+            transition: {
+                duration: 300
             },
             bar: {
                 width: {
@@ -1291,6 +1342,9 @@ var INTERFACE = new function () {
                 }
             },
             grid: {
+                x: {
+                    show: true
+                },
                 y: {
                     show: true
                 }
@@ -1298,11 +1352,98 @@ var INTERFACE = new function () {
             tooltip: {
                 format: {
                     title: function (i) {
-//                        var title = categories[i] ? categories[i] + " (" + MAIN.measures[0].label + ")" : MAIN.measures[0].label;
                         var title = categories[i] ? categories[i] : MAIN.measures[0].label;
                         return  title;
                     },
                     value: d3.format(',')
+                }
+            }
+        });
+
+        // Add/Refresh button listeners
+
+        // Bar button listeners
+        $("#id_chartBarButton").off("change");
+        $("#id_chartBarButton").on("change", function (e) {
+            if ($("#id_chartBarButton").prop("checked")) {
+                type = "bar";
+                chart.transform(type);
+
+                if (groups.length === 0) {
+                    // No Stacking -> larger chart
+                    setTimeout(function () {
+                        chart.resize({height: 100 + Math.max(categories.length, 1) * 10 * lastDimEntities.length + lastDimEntities.length * 5});
+                    }, 400);
+                } else {
+                    setTimeout(function () {
+                        chart.resize({height: 100 + categories.length * 25 + lastDimEntities.length * 5});
+                    }, 400);
+                }
+            }
+        });
+
+        // Line button listeners
+        $("#id_chartLineButton").off("change");
+        $("#id_chartLineButton").on("change", function (e) {
+            if ($("#id_chartLineButton").prop("checked")) {
+                type = "line";
+                chart.transform(type);
+
+                // Smaller chart (line and area)
+                setTimeout(function () {
+                    chart.resize({height: 100 + categories.length * 25 + lastDimEntities.length * 5});
+                }, 400);
+            }
+        });
+
+        // Area button listeners
+        $("#id_chartAreaButton").off("change");
+        $("#id_chartAreaButton").on("change", function (e) {
+            if ($("#id_chartAreaButton").prop("checked")) {
+                type = "area";
+                chart.transform(type);
+
+                // Smaller chart (line and area)
+                setTimeout(function () {
+                    chart.resize({height: 100 + categories.length * 25 + lastDimEntities.length * 5});
+                }, 400);
+            }
+        });
+
+        // Pie button listeners
+        $("#id_chartPieButton").off("change");
+        $("#id_chartPieButton").on("change", function (e) {
+            if ($("#id_chartPieButton").prop("checked")) {
+                type = "pie";
+                chart.transform(type);
+
+                // Fixed height for pie chart
+                setTimeout(function () {
+                    chart.resize({height: 100 + 300 + lastDimEntities.length * 5});
+                }, 400);
+            }
+        });
+
+        // Stacking button listeners
+        $("#id_chartStackingButton").off("change");
+        $("#id_chartStackingButton").on("change", function (e) {
+            if ($("#id_chartStackingButton").prop("checked")) {
+                // Stacking
+                groups = [lastDimEntities];
+                chart.groups(groups);
+                setTimeout(function () {
+                    chart.resize({height: 100 + categories.length * 25 + lastDimEntities.length * 5});
+                }, 400);
+            } else {
+                // No stacking
+                groups = [];
+                chart.groups(groups);
+
+                // Only size up if bar chart
+                if (type === "bar") {
+                    setTimeout(function () {
+                        chart.resize({height: 100 + Math.max(categories.length, 1) * 10 * lastDimEntities.length + lastDimEntities.length * 5});
+                    }, 400);
                 }
             }
         });
@@ -1314,12 +1455,24 @@ var INTERFACE = new function () {
         modal.modal();
 
         // Resize chart when the modal is finished (fixes chart)
+        modal.off('hown.bs.modal');
         modal.on('shown.bs.modal', function (e) {
-            chart.resize({height: 100 + categories.length * 20 + lastDimEntities.length * 5});
-//            chart.resize({height: 100 + categories.length * 10 * lastDimEntities.length + lastDimEntities.length * 5}); // for non-stacked bar chart
+
+            if (type === "pie") {
+                chart.resize({height: 100 + 300 + lastDimEntities.length * 5});
+            } else if (type === "line" || type === "area") {
+                chart.resize({height: 100 + categories.length * 25 + lastDimEntities.length * 5});
+            } else if (groups.length === 0) { // bar chart
+                // No stacking
+                chart.resize({height: 100 + Math.max(categories.length, 1) * 10 * lastDimEntities.length + lastDimEntities.length * 5});
+            } else {
+                // Stacking
+                chart.resize({height: 100 + categories.length * 25 + lastDimEntities.length * 5});
+            }
         });
 
         // Resume rendering again when modal is closed
+        modal.off('hidden.bs.modal');
         modal.on('hidden.bs.modal', function (e) {
             WEBGL.resumeRendering();
         });
@@ -2113,16 +2266,6 @@ var INTERFACE = new function () {
                 node.css("transition", "");
             }, blinkDuration * 1000);
         }, blinkDuration * 1000);
-    };
-
-
-    // Returns a string like 71.003.345 (adds points and comma)
-    this.formatNumber = function (num, nrDigits) {
-        // round numbers to 2 digits
-        // TODO oft "x.66666666667"
-        num = Math.round(num * nrDigits * 10) / (nrDigits * 10);
-        // TODO add dots for thousand-steps
-        return num;
     };
 
     // Creates a random unique ID for HTML elements

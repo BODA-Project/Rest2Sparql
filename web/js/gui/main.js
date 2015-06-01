@@ -1,4 +1,4 @@
-/* global THREE, WEBGL, INTERFACE, TEMPLATES, bootbox */
+/* global THREE, WEBGL, INTERFACE, TEMPLATES, bootbox, d3 */
 // Custom script for the Rest2Sparql GUI
 
 // CLASSES =====================================================================
@@ -1216,6 +1216,13 @@ var MAIN = new function () {
         });
     };
 
+    // Returns a string like 71,003,345 (adds points and comma)
+    this.formatNumber = function (num, nrDigits) {
+        nrDigits = nrDigits === undefined ? 0 : nrDigits; // no digits by default
+        // round numbers to X digits
+        var roundedNum = Math.round(num * Math.pow(10, nrDigits)) / Math.pow(10, nrDigits);
+        return d3.format(",")(roundedNum); // add commas for thousand-steps
+    };
 
     // String extensions
     if (typeof String.prototype.contains === 'undefined') {

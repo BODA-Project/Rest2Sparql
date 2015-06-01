@@ -439,6 +439,21 @@ a.side-glyph:hover {
     padding-right: 25px;
 }
 
+#id_chartInfos {
+    margin: 10px 0;
+    text-align: right;
+}
+#id_chartInfos > span {
+    padding-left: 10px;
+    margin-left: 10px;
+    border-left: 2px solid #e0e0e0;
+}
+#id_chartInfos > span:first-child {
+    padding-left: 0;
+    margin-left: 0;
+    border: none;
+}
+
 /*
 #id_loadingSign {
     width: 100px;

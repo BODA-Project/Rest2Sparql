@@ -654,7 +654,7 @@ var WEBGL = new function () {
 
         // round numbers to 2 digits
         if ($.isNumeric(text)) {
-            text = Math.round(text * 100) / 100;
+            text = MAIN.formatNumber(text, 1);
         }
 
         // Compute a background color
@@ -917,9 +917,4 @@ var WEBGL = new function () {
         return deg * Math.PI / 180;
     };
 
-    // Returns a string like 71.003.345 (adds points and comma)
-    var formatNumber = function (num) {
-        // TODO
-        return num;
-    };
 };

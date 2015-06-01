@@ -277,7 +277,7 @@
                     <div class="col-lg-12">
                         <h3 class="page-header">
                             <span id="id_pageTitle">Rest2Sparql</span>
-                            <a href="#" id="id_chartButton" class="fade btn"><span class="glyphicon glyphicon-stats"></span></a>
+                            <a href="#" id="id_chartButton" class="fade btn"><span class="glyphicon glyphicon-stats"></span> Chart</a>
                         </h3>
                     </div>
                 </div>
@@ -424,9 +424,38 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                        <h4 class="modal-title">TITLE TODO</h4>
+                        <h4 class="modal-title"></h4>
                     </div>
                     <div class="modal-body">
+
+                        <div class="btn-toolbar" role="toolbar">
+                            <div class="btn-group" role="group" data-toggle="buttons">
+                                <label class="btn btn-default btn-sm active">
+                                    <input id="id_chartBarButton" type="radio" name="chartRadio" checked="checked">
+                                    Bar
+                                </label>
+                                <label class="btn btn-default btn-sm">
+                                    <input id="id_chartLineButton" type="radio" name="chartRadio">
+                                    Line
+                                </label>
+                                <label class="btn btn-default btn-sm">
+                                    <input id="id_chartAreaButton" type="radio" name="chartRadio">
+                                    Area
+                                </label>
+                                <label class="btn btn-default btn-sm">
+                                    <input id="id_chartPieButton" type="radio" name="chartRadio">
+                                    Pie
+                                </label>
+                            </div>
+                            <div class="btn-group" data-toggle="buttons">
+                                <label class="btn btn-default btn-sm active">
+                                    <input id="id_chartStackingButton" type="checkbox" checked="checked">
+                                    Stacking
+                                </label>
+                            </div>
+                        </div>
+
+                        <p id="id_chartInfos"></p>
 
                         <div id="id_chart">
                             <!--C3-Chart here-->
