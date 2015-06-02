@@ -1116,7 +1116,7 @@ var INTERFACE = new function () {
         $.each(measures, function (i, measure) {
             var row = $("<tr>");
             row.append("<td>" + measure.measure + " <span style='font-weight:bold;color:" + MAIN.currentColor + ";'>(" + getAggregationLabel(MAIN.currentAGG) + ")</span></td>");
-            row.append("<td><b>" + MAIN.formatNumber(measure.value, 3) + "</b></td>");
+            row.append("<td><b>" + MAIN.formatNumber(measure.value, 2) + "</b></td>");
             table.append(row);
         });
         modalBody.append(table);
@@ -1129,7 +1129,7 @@ var INTERFACE = new function () {
             $.each(MAIN.filters, function (i, filter) {
                 var row = $("<tr>");
                 row.append("<td>" + filter.measure.label + "</td>");
-                row.append("<td><b>" + getRelationLabel(filter.relation) + " " + MAIN.formatNumber(filter.value, 3) + "</b></td>");
+                row.append("<td><b>" + getRelationLabel(filter.relation) + " " + MAIN.formatNumber(filter.value, 2) + "</b></td>");
                 table.append(row);
             });
         }
@@ -1224,9 +1224,13 @@ var INTERFACE = new function () {
                 if (dimension.entities.length === 1 || dimension.rollup) {
                     continue; // Slicing or rollup detected -> skip as category
                 }
-                category += " > " + MAIN.getEntityFromJson(result, dimension).label;
+                var entityLabel = MAIN.getEntityFromJson(result, dimension).label;
+                category += " > " + entityLabel;
+
             }
-            category = category.substring(3); // remove first " > "
+            if (category) {
+                category = category.substring(3); // remove first " > "
+            }
 
             // Multiple dimensions -> category label
             if (category && category !== label && categories.indexOf(category) === -1) {
@@ -1328,7 +1332,7 @@ var INTERFACE = new function () {
                     type: 'category',
                     categories: categories[0] ? categories : [""],
                     tick: {
-                        multiline: false
+                        multiline: false,
                     }
                 },
                 y: {
@@ -1337,7 +1341,9 @@ var INTERFACE = new function () {
                         position: "outer-center"
                     },
                     tick: {
-                        format: d3.format(',')
+                        format: function (x) {
+                            return MAIN.formatNumber(x, 2);
+                        }
                     }
                 }
             },
@@ -1355,7 +1361,9 @@ var INTERFACE = new function () {
                         var title = categories[i] ? categories[i] : MAIN.measures[0].label;
                         return  title;
                     },
-                    value: d3.format(',')
+                    value: function (value, ratio, id) {
+                        return MAIN.formatNumber(value, 2);
+                    }
                 }
             }
         });
@@ -2054,7 +2062,6 @@ var INTERFACE = new function () {
     };
 
     // Updates the mouse position for webGL event handling
-    // TODO: für mobile geräte: auch/nur bei click-event?
     this.onCanvasMouseMove = function (event) {
         event.preventDefault();
 
@@ -2087,7 +2094,7 @@ var INTERFACE = new function () {
         var y = event.pageY - node.position().top;
 
         // cancel if dragged a certain min distance
-        var distance = 6; // TODO as CONSTANT! + darunter keine drehung
+        var distance = 6; // TODO: no raotation below
         if (Math.abs(x - INTERFACE.mouseDown.x) > distance || Math.abs(y - INTERFACE.mouseDown.y) > distance) {
             return;
         }
@@ -2099,13 +2106,27 @@ var INTERFACE = new function () {
         WEBGL.handleClick();
     };
 
+    // Executes hover out events when the mouse leaves the canvas
+    this.onCanvasMouseLeave = function (event) {
+        event.preventDefault();
+
+        var node = $(WEBGL.renderer.domElement);
+        INTERFACE.mousePosition.x = event.pageX;
+        INTERFACE.mousePosition.y = event.pageY;
+        WEBGL.mousePosition.x = -999;
+        WEBGL.mousePosition.y = 999;
+
+        // execute hover-out on webgl objects
+        WEBGL.handleLeave();
+    };
+
     // For distance limit of clicking
     this.onCanvasMouseDown = function (event) {
         event.preventDefault();
 
         var node = $(WEBGL.renderer.domElement);
-        this.mouseDown.x = event.pageX - node.position().left;
-        this.mouseDown.y = event.pageY - node.position().top;
+        INTERFACE.mouseDown.x = event.pageX - node.position().left;
+        INTERFACE.mouseDown.y = event.pageY - node.position().top;
     };
 
     // Handle screen resizing

@@ -730,9 +730,10 @@ var WEBGL = new function () {
         $("#id_cube").append(WEBGL.renderer.domElement);
 
         // Raycast for mouse events
-        $(WEBGL.renderer.domElement).on("mousemove", INTERFACE.onCanvasMouseMove.bind(INTERFACE));
-        $(WEBGL.renderer.domElement).on("click", INTERFACE.onCanvasMouseClick.bind(INTERFACE));
-        $(WEBGL.renderer.domElement).on("mousedown", INTERFACE.onCanvasMouseDown.bind(INTERFACE));
+        $(WEBGL.renderer.domElement).on("mousemove", INTERFACE.onCanvasMouseMove);
+        $(WEBGL.renderer.domElement).on("click", INTERFACE.onCanvasMouseClick);
+        $(WEBGL.renderer.domElement).on("mousedown", INTERFACE.onCanvasMouseDown);
+        $(WEBGL.renderer.domElement).on("mouseout", INTERFACE.onCanvasMouseLeave);
 
         // Start rendering
         WEBGL.resizeVizualisation(); // initially
@@ -873,6 +874,22 @@ var WEBGL = new function () {
                     return false;
                 }
             });
+        }
+    };
+
+    /**
+     * Executed when the cursor leaves the canvas
+     */
+    this.handleLeave = function () {
+        if (WEBGL.intersected) {
+            // Not hovering above anything anymore
+            if (WEBGL.intersected.onmouseout !== undefined) {
+                WEBGL.intersected.onmouseout();
+            }
+
+            // Forget last intersection
+            WEBGL.intersected = undefined;
+            WEBGL.renderer.domElement.style.cursor = 'auto'; // Set cursor to normal
         }
     };
 
