@@ -1224,6 +1224,20 @@ var MAIN = new function () {
         return d3.format(",")(roundedNum); // add commas for thousand-steps
     };
 
+    /**
+     * Converts a hex color string to rgba(...)
+     * @param {string} hex
+     * @param {float} opacity
+     * @returns {String}
+     */
+    this.hexToRGBA = function (hex, opacity) {
+        hex = hex.replace('#', '');
+        var r = parseInt(hex.substring(0, 2), 16);
+        var g = parseInt(hex.substring(2, 4), 16);
+        var b = parseInt(hex.substring(4, 6), 16);
+        return 'rgba(' + r + ',' + g + ',' + b + ',' + opacity + ')';
+    };
+
     // String extensions
     if (typeof String.prototype.contains === 'undefined') {
         String.prototype.contains = function (str) {

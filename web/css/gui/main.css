@@ -283,6 +283,13 @@ a.side-glyph:hover {
     margin-bottom: 5px;
 }
 
+/* Subtitle for modal headers */
+.modal-subtitle {
+    font-size: 14px;
+    color: #808080;
+    display: block;
+}
+
 /* X Y Z labels */
 .panel-body > .form-group > label {
     position: relative;

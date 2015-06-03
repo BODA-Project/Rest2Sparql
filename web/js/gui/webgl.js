@@ -9,7 +9,7 @@ var WEBGL = new function () {
 //    this.SPRITE_LENGTH = 6;
     this.SPRITE_LENGTH = 4.7;
     this.SPRITE_HEIGHT_DIMENSION = 1.2;
-    this.COLOR_SELECTION = 0x404040;
+    this.COLOR_SELECTION = 0x505050;
     this.COLOR_LOWEST = 0xe0e0e0; // Almost white
     this.COLOR_WHITE = new THREE.Color(0xffffff);
     this.COLOR_HIGHLIGHT = new THREE.Color(0xd8d8d8);
@@ -408,6 +408,7 @@ var WEBGL = new function () {
         }
         var geometry = new THREE.BoxGeometry(width, height, depth);
         var material = new THREE.MeshLambertMaterial({color: WEBGL.COLOR_SELECTION});
+//        var material = new THREE.MeshLambertMaterial({color: MAIN.currentColor});
 //        var material = new THREE.MeshBasicMaterial({color: WEBGL.COLOR_SELECTION});
         material.transparent = true;
         material.opacity = 0.15;
@@ -422,6 +423,7 @@ var WEBGL = new function () {
 //        label.selectionCube.scale.set(scale,scale,scale);
         label.selectionCubeOutline = new THREE.BoxHelper(label.selectionCube);
         label.selectionCubeOutline.material.color.set(WEBGL.COLOR_SELECTION);
+//        label.selectionCubeOutline.material.color.set(MAIN.currentColor);
         label.selectionCubeOutline.material.linewidth = 2;
         label.selectionCubeOutline.material.opacity = 0.15;
         label.selectionCubeOutline.material.transparent = true;
@@ -513,7 +515,7 @@ var WEBGL = new function () {
 //        context.strokeStyle = "rgba(0,128,255,0.5)";
 //        context.strokeRect(0, 0, canvas.width, canvas.height);
 
-        context.fillStyle = "rgba(0,0,0,0.7)";
+        context.fillStyle = "rgba(0,0,0,0.6)";
         context.fillText(text, canvas.width / 2, canvas.height / 2);
 
         var texture = new THREE.Texture(canvas);
@@ -533,25 +535,27 @@ var WEBGL = new function () {
         mesh.labelWidth = finalWidth;
         mesh.doubleSided = true;
 
+        var selectedColor = MAIN.hexToRGBA(MAIN.currentColor, 1);
+
         // To change between bold and normal font
         mesh.toBold = function () {
-            context.font = "bold " + size + "px monospace"; // important (2. after setting size)
+            context.font = "bold " + size + "px monospace";
             context.clearRect(0, 0, canvas.width, canvas.height);
             context.fillStyle = "rgba(0,0,0,1.0)";
             context.fillText(text, canvas.width / 2, canvas.height / 2);
             texture.needsUpdate = true;
         };
         mesh.toNormal = function () {
-            context.font = size + "px monospace"; // important (2. after setting size)
+            context.font = size + "px monospace";
             context.clearRect(0, 0, canvas.width, canvas.height);
-            context.fillStyle = "rgba(0,0,0,0.7)";
+            context.fillStyle = "rgba(0,0,0,0.6)";
             context.fillText(text, canvas.width / 2, canvas.height / 2);
             texture.needsUpdate = true;
         };
         mesh.toSelected = function () {
-            context.font = "bold " + size + "px monospace"; // important (2. after setting size)
+            context.font = "bold " + size + "px monospace";
             context.clearRect(0, 0, canvas.width, canvas.height);
-            context.fillStyle = "rgba(200,50,50,1.0)";
+            context.fillStyle = selectedColor;
             context.fillText(text, canvas.width / 2, canvas.height / 2);
             texture.needsUpdate = true;
         };
@@ -616,25 +620,27 @@ var WEBGL = new function () {
         mesh.labelWidth = finalWidth;
         mesh.doubleSided = true;
 
+        var selectedColor = MAIN.hexToRGBA(MAIN.currentColor, 1);
+
         // To change between bold and normal font
         mesh.toBold = function () {
-            context.font = "bold " + size + "px monospace"; // important (2. after setting size)
+            context.font = "bold " + size + "px monospace";
             context.clearRect(0, 0, canvas.width, canvas.height);
-            context.fillStyle = "rgba(0,0,0,1.0)";
+            context.fillStyle = "rgba(0,0,0,0.4)";
             context.fillText(finalText, canvas.width / 2, canvas.height / 2);
             texture.needsUpdate = true;
         };
         mesh.toNormal = function () {
-            context.font = size + "px monospace"; // important (2. after setting size)
+            context.font = size + "px monospace";
             context.clearRect(0, 0, canvas.width, canvas.height);
             context.fillStyle = "rgba(0,0,0,0.25)";
             context.fillText(finalText, canvas.width / 2, canvas.height / 2);
             texture.needsUpdate = true;
         };
         mesh.toSelected = function () {
-            context.font = "bold " + size + "px monospace"; // important (2. after setting size)
+            context.font = "bold " + size + "px monospace";
             context.clearRect(0, 0, canvas.width, canvas.height);
-            context.fillStyle = "rgba(200,50,50,1.0)";
+            context.fillStyle = selectedColor;
             context.fillText(finalText, canvas.width / 2, canvas.height / 2);
             texture.needsUpdate = true;
         };

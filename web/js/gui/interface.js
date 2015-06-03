@@ -39,7 +39,7 @@ var INTERFACE = new function () {
 
         // Options / Settings
         $("#id_aggItem").on('click', INTERFACE.popupMeasureAgg);
-        $("#id_colorItem").on('click', INTERFACE.popupMeasureColor);
+        $("#id_colorItem").on('click', INTERFACE.popupAccentColor);
         $("#id_scaleItem").on('click', INTERFACE.toggleScale);
 
         // Merge button
@@ -108,6 +108,9 @@ var INTERFACE = new function () {
             var itemLink = $("<a role='menuitem' tabindex='-1' href='#'></a>");
             itemLink.text(label);
             itemLink.attr("title", label + ":\n\n" + comment); // tooltip
+            itemLink.attr("data-placement", "auto top");
+            itemLink.tooltip();
+
             var item = $("<li role='presentation' data-cube-name='" + cubeName + "'></li>");
             item.append(itemLink);
             $("#id_cubeList").append(item);
@@ -151,6 +154,8 @@ var INTERFACE = new function () {
                 $("#id_cubeButton").append("<span class=cube-button-text>" + label + "</span>");
                 $("#id_cubeButton").append(" <span class='caret'></span>");
                 $("#id_cubeButton").attr("title", label + ":\n\n" + comment); // tooltip
+                $("#id_cubeButton").attr("data-placement", "auto top");
+                $("#id_cubeButton").tooltip();
                 $("#id_pageTitle").text(label); // set page title
 
                 // Show a loading screen while ajax infos are loading (dimensions + entities and measures)
@@ -233,7 +238,7 @@ var INTERFACE = new function () {
         // Include other measure options like color and aggregation
         var filterItem = $('<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Add Filter...</a></li>');
         var aggItem = $('<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Change Aggregation...</a></li>');
-        var colorItem = $('<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Change Color...</a></li>');
+        var colorItem = $('<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Change Accent Color...</a></li>');
         measureList.append('<li role="presentation" class="divider"></li>');
         measureList.append(filterItem);
         measureList.append(aggItem);
@@ -241,16 +246,19 @@ var INTERFACE = new function () {
 
         // Add item listeners
         filterItem.on("click", function (e) {
+            e.preventDefault();
             // INFO: Only works with one measure
             INTERFACE.popupMeasureFilter(MAIN.measures[0]);
         });
 
         aggItem.on("click", function (e) {
+            e.preventDefault();
             INTERFACE.popupMeasureAgg();
         });
 
         colorItem.on("click", function (e) {
-            INTERFACE.popupMeasureColor();
+            e.preventDefault();
+            INTERFACE.popupAccentColor();
         });
 
 
@@ -292,15 +300,18 @@ var INTERFACE = new function () {
         buttonArea.append(plusButton); // Move plus to end
 
         aggItem.on("click", function (e) {
+            e.preventDefault();
             //...
         });
 
         colorItem.on("click", function (e) {
+            e.preventDefault();
             //...
         });
 
         // Add event for removing the measure
         removeItem.on("click", function (e) {
+            e.preventDefault();
             // Delete from selected list
             $.each(MAIN.measures, function (index, measure1) {
                 if (measure1.measureName === measure.measureName) {
@@ -367,9 +378,16 @@ var INTERFACE = new function () {
         button.append(caret);
         button.append(badge);
 
-        // Set badge color to show grouping (rollup)
+        // Set badge color to show grouping (rollup) and prepare tooltip
+        var tooltip;
         if (dimension.rollup) {
             badge.css("background-color", MAIN.currentColor);
+
+            tooltip = "";
+            $.each(dimension.entities, function (i, entity) {
+                tooltip += ", " + entity.label;
+            });
+            tooltip = tooltip.substring(2); // remove first ", "
         }
 
         // Reuse already configured dimension entities
@@ -387,7 +405,12 @@ var INTERFACE = new function () {
         buttonArea.append(" ");
         buttonArea.append(plusButton); // Move plus to end
 
-        // TODO: tooltip if text too long
+        // Tooltip for long named dimensions
+        if (text.innerWidth() >= 140 || dimension.rollup) {
+            button.attr("title", tooltip ? dimension.label + ": \n\n" + tooltip : dimension.label); // tooltip
+            button.attr("data-placement", "auto top");
+            button.tooltip();
+        }
 
         // Set max width after setting badge
         text.css("max-width", (185 - badge.outerWidth() - caret.outerWidth()));
@@ -642,8 +665,15 @@ var INTERFACE = new function () {
          * label.selectionSize;
          */
         var dimensionName = label.entity.dimensionName;
-
         label.toggled = false;
+
+        // Show accent color of rolled up entity by default
+        if (label.entity.rollupLabels) {
+            label.toSelected();
+            label.toggled = true;
+        }
+
+
         label.onmouseover = function () {
 
             // TODO only if distance to camera >= 10 (?) or if label.entity.rollupLabels
@@ -670,7 +700,9 @@ var INTERFACE = new function () {
         };
         label.onclick = function () {
             if (label.entity.rollupLabels) {
-                // TODO rollup-label darf nicht selektiert werden (oder stattdessen dimension-menu zeigen?)
+
+                // TODO: show dimension menu instead of selecting results
+
             } else {
                 if (!label.toggled) {
 
@@ -719,7 +751,7 @@ var INTERFACE = new function () {
 
         label.showRow = function () {
             if (!label.toggled) {
-                label.toSelected(); // highlight color
+                label.toBold(); // highlight color
             }
             WEBGL.addSelectionCube(label);
         };
@@ -748,18 +780,23 @@ var INTERFACE = new function () {
     // Adds mouse events to the given dimension label
     this.addDimensionLabelListener = function (label, dimension) {
 
-        // TODO
 
 //        label.toggled = false;
-//
-//        label.onmouseover = function () {
-//
-//        };
-//
-//        label.onmouseout = function () {
-//
-//        };
-//
+
+        // Show accent color of rolled up entity by default
+        if (dimension.rollup) {
+            label.toSelected();
+        } else {
+            label.onmouseover = function () {
+                label.toBold();
+            };
+
+            label.onmouseout = function () {
+                label.toNormal();
+            };
+        }
+
+
         label.onclick = function () {
 
             // Show a drop down menu TODO #################################################################################
@@ -968,7 +1005,7 @@ var INTERFACE = new function () {
     };
 
     // Shows a popup for changing the measure aggregation
-    this.popupMeasureColor = function () {
+    this.popupAccentColor = function () {
         var modal = $("#id_colorModal");
         $("body").append(modal);
         var modalAggBody = $("#id_colorModalBody");
@@ -1263,7 +1300,7 @@ var INTERFACE = new function () {
             if (group.length > 0 && prevCategory !== result.category) {
                 // New group, fill empty fields and push last one,
                 $.each(lastDimEntities, function (i, label) {
-                    group[i] = group[i] ? group[i] : null; // Fill up empty slots with "null"
+                    group[i] = (group[i] || group[i] === 0) ? group[i] : null; // Fill up empty slots with "null"
                 });
                 rows.push(group);
                 group = [];
@@ -1275,7 +1312,7 @@ var INTERFACE = new function () {
 
         // Also push last row
         $.each(lastDimEntities, function (i, label) {
-            group[i] = group[i] ? group[i] : null; // Fill up empty slots with "null"
+            group[i] = (group[i] || group[i] === 0) ? group[i] : null; // Fill up empty slots with "null"
         });
         rows.push(group);
 
@@ -1492,7 +1529,9 @@ var INTERFACE = new function () {
      */
     this.popupEntitySelection = function (dimension) {
         // Add popup to the body
-        var modal = $(TEMPLATES.MODAL_DIMENSION_TEMPLATE.replace("__label__", dimension.label));
+        var modal = $(TEMPLATES.MODAL_DIMENSION_TEMPLATE
+                .replace("__label__", dimension.label)
+                .replace("__uri__", dimension.dimensionName));
         $("body").append(modal);
 
         var buttonArea = $("#id_entityModalNavigation");
@@ -1544,6 +1583,7 @@ var INTERFACE = new function () {
 
         // Accept action of popup
         $("#id_entityModalOkay").on("click", function (e) {
+            e.preventDefault();
 
             // Apply selected entities
             var newEntities = [];
@@ -1567,6 +1607,8 @@ var INTERFACE = new function () {
 
         // Select all entities
         SelectAllButton.on("click", function (e) {
+            e.preventDefault();
+
             $("input[data-entity-name]").each(function (i, element) {
                 $(element).prop("checked", true);
                 $(element).parent().addClass("active");
@@ -1580,6 +1622,8 @@ var INTERFACE = new function () {
 
         // Deselect all entities
         SelectNoneButton.on("click", function (e) {
+            e.preventDefault();
+
             $("input[data-entity-name]").each(function (i, element) {
                 $(element).prop("checked", false);
                 $(element).parent().removeClass("active");
@@ -1591,6 +1635,8 @@ var INTERFACE = new function () {
 
         // Invert selection of all entities
         SelectInvertButton.on("click", function (e) {
+            e.preventDefault();
+
             $("input[data-entity-name]").each(function (i, element) {
                 if ($(element).prop("checked")) {
                     $(element).prop("checked", false);
@@ -1613,6 +1659,8 @@ var INTERFACE = new function () {
 
         // Select previous 10 entities (before first selected)
         SelectPrevButton.on("click", function (e) {
+            e.preventDefault();
+
             var lowestIndex = 0;
             $("input[data-entity-name]").each(function (i, element) {
                 if ($(element).prop("checked")) {
@@ -1637,6 +1685,8 @@ var INTERFACE = new function () {
 
         // Select next 10 entities (after last selected)
         SelectNextButton.on("click", function (e) {
+            e.preventDefault();
+
             var highestIndex = 0;
             $("input[data-entity-name]").each(function (i, element) {
                 if ($(element).prop("checked")) {
@@ -1660,6 +1710,8 @@ var INTERFACE = new function () {
 
         // Select the first 10 entities again
         SelectDefaultButton.on("click", function (e) {
+            e.preventDefault();
+
             $("input[data-entity-name]").each(function (i, element) {
                 if (i < INTERFACE.NUM_ENTITIES) {
                     $(element).prop("checked", true);
@@ -1820,6 +1872,8 @@ var INTERFACE = new function () {
         modalAcceptButton.off("click");
         modalAcceptButton.removeAttr("disabled");
         modalAcceptButton.on("click", function (e) {
+            e.preventDefault();
+
             if (validateFilterInput()) {
 
                 // Disable button to avoid multiple adding (by fast clicking)
