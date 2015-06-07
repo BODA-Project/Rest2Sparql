@@ -410,6 +410,12 @@ var INTERFACE = new function () {
             button.attr("title", tooltip ? dimension.label + ": \n\n" + tooltip : dimension.label); // tooltip
             button.attr("data-placement", "auto top");
             button.tooltip();
+
+            // close tooltip on click
+            button.on("click", function (e) {
+                e.preventDefault();
+                button.tooltip("hide");
+            });
         }
 
         // Set max width after setting badge
@@ -683,11 +689,8 @@ var INTERFACE = new function () {
 //            }
 
             $.each(label.sprites, function (i, sprite) {
-//                sprite.showSelection();
                 sprite.showRow(); // Show surrounding cube
             });
-
-
         };
         label.onmouseout = function () {
 
@@ -707,7 +710,6 @@ var INTERFACE = new function () {
                 if (!label.toggled) {
 
                     $.each(label.sprites, function (i, sprite) {
-                        label.toSelected(); // highlight color
                         sprite.toggled = true;
                     });
 
@@ -727,7 +729,6 @@ var INTERFACE = new function () {
 
                 } else {
                     $.each(label.sprites, function (i, sprite) {
-                        label.toNormal();
                         sprite.toggled = false;
                     });
 
@@ -741,7 +742,6 @@ var INTERFACE = new function () {
                     WEBGL.highlightSelectedCubes();
 
                 }
-//            console.log("TempSelection", MAIN.tempSelection)
             }
 
             // Update the navigation
@@ -751,7 +751,7 @@ var INTERFACE = new function () {
 
         label.showRow = function () {
             if (!label.toggled) {
-                label.toBold(); // highlight color
+                label.toSelected(); // highlight color
             }
             WEBGL.addSelectionCube(label);
         };
@@ -2081,25 +2081,33 @@ var INTERFACE = new function () {
      */
     this.showTooltip = function (label) {
         var pos = WEBGL.toScreenPosition(label);
-        var text = "";
-        if (label.entity.rollupLabels) {
-            $.each(label.entity.rollupLabels, function (i, label) {
-                text += label + ", ";
-            });
-            text = text.substring(0, text.length - 2); // remove last comma
-        } else {
-            text = label.entity.label;
+
+        // Init tooltip for 1st time
+        if (!label.tooltip) {
+            var text = "";
+            if (label.entity.rollupLabels) {
+                $.each(label.entity.rollupLabels, function (i, label) {
+                    text += label + ", ";
+                });
+                text = text.substring(0, text.length - 2); // remove last comma
+            } else {
+                text = label.entity.label;
+            }
+            label.tooltip = $("<div class='hiddenTooltip'></div>");
+            label.tooltip.attr("title", text);
+
+            // Place top label tooltips left
+            if (label.position.x >= 0) {
+                label.tooltip.attr("data-placement", "left"); // TODO wenn Y oder Z label -> placement LEFT
+            }
+            $("body").append(label.tooltip);
         }
 
-        label.tooltip = $("<div class='hiddenTooltip'></div>");
-        label.tooltip.attr("title", text);
-//        label.tooltip.attr("data-placement", "left"); // TODO wenn Y oder Z label -> placement LEFT
         label.tooltip.css("left", pos.x);
         label.tooltip.css("top", pos.y);
 
-        $("body").append(label.tooltip);
         label.tooltip.tooltip('show');
-        label.tooltip.css("display", "none"); // hide secret element
+//        label.tooltip.css("display", "none"); // hide secret element
     };
 
     /**
@@ -2111,8 +2119,10 @@ var INTERFACE = new function () {
         if (!label.tooltip) {
             return;
         }
+        label.tooltip.css("left", 0);
+        label.tooltip.css("top", 0);
         label.tooltip.tooltip('hide');
-        label.tooltip.remove();
+//        label.tooltip.remove();
     };
 
     // Updates the mouse position for webGL event handling

@@ -34,6 +34,49 @@ var WEBGL = new function () {
     // Total cube size
     this.totalSize = [0, 0, 0];
 
+
+    // Sets up three.js
+    this.initThreeJs = function () {
+        WEBGL.scene = new THREE.Scene();
+        WEBGL.camera = new THREE.PerspectiveCamera(30, 2 / 1, 0.1, 2000);
+//        WEBGL.camera = new THREE.OrthographicCamera(-(2 / 1) * viewsize / 2, (2 / 1) * viewsize / 2, viewsize / 2, -viewsize / 2, -100, 100);
+        WEBGL.renderer = new THREE.WebGLRenderer({antialias: true}); // TODO AA as option?
+//        WEBGL.renderer = new THREE.CanvasRenderer();
+//        WEBGL.renderer = new THREE.CSS2DRenderer();
+//        WEBGL.renderer = new THREE.CSS3DRenderer();
+//        WEBGL.renderer = new THREE.SVGRenderer();
+        WEBGL.controls = new THREE.OrbitControls(WEBGL.camera, WEBGL.renderer.domElement);
+        WEBGL.lighting = new THREE.PointLight(0x202020, 1, 0);
+        WEBGL.ambientLight = new THREE.AmbientLight(0xffffff);
+        WEBGL.scene.add(WEBGL.lighting);
+        WEBGL.scene.add(WEBGL.ambientLight);
+
+        // Orbit controls
+        WEBGL.controls.noKeys = true;
+//        WEBGL.controls.noPan = true;
+        WEBGL.controls.minDistance = 15;
+//        WEBGL.controls.maxDistance = 40;
+        WEBGL.controls.rotateSpeed = 0.75;
+//        WEBGL.controls.zoomSpeed = 0.5;
+        WEBGL.controls.addEventListener('change', WEBGL.onControlMoved, false);
+
+        WEBGL.renderer.setClearColor(0xffffff, 1);
+
+        // Add the canvas to the page
+        $("#id_cube").append(WEBGL.renderer.domElement);
+
+        // Raycast for mouse events
+        $(WEBGL.renderer.domElement).on("mousemove", INTERFACE.onCanvasMouseMove);
+        $(WEBGL.renderer.domElement).on("click", INTERFACE.onCanvasMouseClick);
+        $(WEBGL.renderer.domElement).on("mousedown", INTERFACE.onCanvasMouseDown);
+        $(WEBGL.renderer.domElement).on("mouseout", INTERFACE.onCanvasMouseLeave);
+
+        // Start rendering
+        WEBGL.resizeVizualisation(); // initially
+        WEBGL.animationRequest = requestAnimationFrame(WEBGL.render);
+
+    };
+
     // Starts the rendering process of three.js, goes infinitly. Call only once!
     this.render = function () {
         WEBGL.animationRequest = requestAnimationFrame(WEBGL.render);
@@ -82,7 +125,7 @@ var WEBGL = new function () {
     // Resizes the WebGL visualization (on browser window resize).
     this.resizeVizualisation = function () {
         var maxHeight = $(window).height() - 235; // = nav + title + footer
-        var maxWidth = $("#id_cube").width();
+        var maxWidth = $("#id_cube").innerWidth();
         var aspectRatio = maxWidth / maxHeight;
         WEBGL.camera.aspect = aspectRatio;
         WEBGL.camera.updateProjectionMatrix();
@@ -446,46 +489,104 @@ var WEBGL = new function () {
 
 
     // Updates the center point of the cube for the orbit-camera to move around
-    this.updateCenterPoint = function () {
+    this.resetCameraView = function () {
         console.log("totalSize: ", WEBGL.totalSize);
-
-        // TODO better view / distance / panning view?
 
         var x = WEBGL.totalSize[0];
         var y = WEBGL.totalSize[1];
         var z = WEBGL.totalSize[2];
 
-        // Horizontal ratio
-        var hRatio = x / (x + z);
-        var vRatio = ((x * (z / (z + y))) + (z * (x / (x + y)))) / (x + z);
+        // Compute min/max position of scene
+        var minX = 0;
+        var maxX = 0;
+        var minY = 0;
+        var maxY = 0;
+        var minZ = 0;
+        var maxZ = 0;
+        $.each(WEBGL.scene.children, function (i, obj) {
+            // Skip non mesh objects
+            if (obj.type !== "Mesh") {
+                return true; // Skip
+            }
+            minX = Math.min(minX, obj.position.x);
+            maxX = Math.max(maxX, obj.position.x);
+            minY = Math.min(minY, obj.position.y);
+            maxY = Math.max(maxY, obj.position.y);
+            minZ = Math.min(minZ, obj.position.z);
+            maxZ = Math.max(maxZ, obj.position.z);
+        });
 
-        // TODO vector + angle + distance?
+        // Determine view
+        var centerPos;
+        if (MAIN.zDimensions.length === 0) {
+            // Front view for 2D data,
+            centerPos = new THREE.Vector3(
+                    (maxX + minX) / 2,
+                    (maxY + minY) / 2,
+                    (maxZ + minZ) / 2);
+            WEBGL.camera.position.copy(centerPos);
+            WEBGL.camera.position.add(new THREE.Vector3(0, 0, 1));
+            WEBGL.controls.noRotate = true; // Disable rotation
+        } else {
+            // Diagonal view for 3D (other) data
+            centerPos = new THREE.Vector3(
+                    (maxX + minX + x) / 4,
+                    (maxY + minY + y) / 4,
+                    (maxZ + minZ + z) / 4);
 
-        WEBGL.camera.position.x = 1.5 * (x / 2 - z);
-        WEBGL.camera.position.y = 1.0 * (y / 2 + y);
-        WEBGL.camera.position.z = 1.5 * (z / 2 + x);
+            // Compute good angle ratio
+            var vec = new THREE.Vector3(-(maxZ - minZ), 1, maxX - minX);
+            vec.normalize();
+            vec.setX(Math.min(vec.x, -0.5));
+            vec.setY(0.5);
+            vec.setZ(Math.max(vec.z, 0.5));
 
-        WEBGL.controls.target = new THREE.Vector3(
-                (WEBGL.totalSize[0] - 1) / 2,
-                (WEBGL.totalSize[1] - 1) / 2,
-                (WEBGL.totalSize[2] - 1) / 2);
+            WEBGL.camera.position.copy(centerPos);
+            WEBGL.camera.position.add(vec);
+            WEBGL.controls.noRotate = false; // Enable rotation
+        }
+        WEBGL.controls.target = centerPos;
         WEBGL.controls.update();
-    };
 
-    // Updates the controls according to configuration
-    this.updateControls = function () {
+        // Zoom out untill all objects are visible
+        var frustum = new THREE.Frustum();
+        var cameraViewProjectionMatrix = new THREE.Matrix4();
+        WEBGL.camera.updateMatrixWorld(); // make sure the camera matrix is updated
+        WEBGL.camera.matrixWorldInverse.getInverse(WEBGL.camera.matrixWorld);
+        cameraViewProjectionMatrix.multiplyMatrices(WEBGL.camera.projectionMatrix, WEBGL.camera.matrixWorldInverse);
+        frustum.setFromMatrix(cameraViewProjectionMatrix);
+        var existsHidden = true;
+        while (existsHidden) {
+            existsHidden = false;
+            $.each(WEBGL.scene.children, function (i, obj) {
+                // Skip non mesh objects
+                if (obj.type !== "Mesh") {
+                    return true; // Skip
+                }
+                if (!frustum.containsPoint(obj.position)) {
+                    // Not far enough, zoom out and repeat
+                    existsHidden = true;
+//                    console.log("zooming out");
 
-        // TODO wenn 2D -> no rotate
-        // TODO wenn nahe genug -> no pan
+                    WEBGL.controls.dollyOut(1.05);
+                    WEBGL.controls.update();
 
-//        if()
-        WEBGL.controls.noPan = true;
-        WEBGL.controls.noRotate = true;
+                    // Update frusum for next check
+                    var cameraViewProjectionMatrix = new THREE.Matrix4();
+                    WEBGL.camera.updateMatrixWorld(); // make sure the camera matrix is updated
+                    WEBGL.camera.matrixWorldInverse.getInverse(WEBGL.camera.matrixWorld);
+                    cameraViewProjectionMatrix.multiplyMatrices(WEBGL.camera.projectionMatrix, WEBGL.camera.matrixWorldInverse);
+                    frustum.setFromMatrix(cameraViewProjectionMatrix);
+                    return false;
+                }
+            });
+        }
 
+        // Zoom out a bit more
+        WEBGL.controls.dollyOut(1.10);
         WEBGL.controls.update();
+
     };
-
-
 
     // Creates an entity label with different drawing modes (bold, normal, ...)
     this.createEntityLabel = function (text) { // TODO übergeben: entity mit liste (bei rollup)
@@ -556,11 +657,31 @@ var WEBGL = new function () {
             context.font = "bold " + size + "px monospace";
             context.clearRect(0, 0, canvas.width, canvas.height);
             context.fillStyle = selectedColor;
+
+            // Fill rounded rectangle
+            var radius = 10;
+            var x = backgroundMargin / 2;
+            var y = backgroundMargin / 2;
+            var width = canvas.width - backgroundMargin;
+            var height = canvas.height - backgroundMargin;
+            context.beginPath();
+            context.moveTo(x + radius, y);
+            context.lineTo(x + width - radius, y);
+            context.quadraticCurveTo(x + width, y, x + width, y + radius);
+            context.lineTo(x + width, y + height - radius);
+            context.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+            context.lineTo(x + radius, y + height);
+            context.quadraticCurveTo(x, y + height, x, y + height - radius);
+            context.lineTo(x, y + radius);
+            context.quadraticCurveTo(x, y, x + radius, y);
+            context.closePath();
+            context.fill();
+
+//            context.fillRect(0, 0, canvas.width, canvas.height);
+            context.fillStyle = "white";
             context.fillText(text, canvas.width / 2, canvas.height / 2);
             texture.needsUpdate = true;
         };
-
-//        console.log(mesh)
 
         return mesh;
     };
@@ -569,11 +690,6 @@ var WEBGL = new function () {
 
     // Creates an entity label with different drawing modes (bold, normal, ...)
     this.createDimensionLabel = function (text, axis) {
-
-
-
-        // TODO: code von entityLabel:
-
 
         var size = 30;
         var abbrSign = '\u2026'; // a single char "..." sign
@@ -645,12 +761,7 @@ var WEBGL = new function () {
             texture.needsUpdate = true;
         };
 
-//        console.log(mesh)
-
         return mesh;
-
-
-
     };
 
 
@@ -705,48 +816,6 @@ var WEBGL = new function () {
 
         return texture;
     };
-
-    // Sets up three.js
-    this.initThreeJs = function () {
-        WEBGL.scene = new THREE.Scene();
-        WEBGL.camera = new THREE.PerspectiveCamera(30, 2 / 1, 0.1, 2000);
-        WEBGL.renderer = new THREE.WebGLRenderer({antialias: true}); // TODO AA as option?
-//        WEBGL.renderer = new THREE.CanvasRenderer();
-//        WEBGL.renderer = new THREE.CSS2DRenderer();
-//        WEBGL.renderer = new THREE.CSS3DRenderer();
-//        WEBGL.renderer = new THREE.SVGRenderer();
-        WEBGL.controls = new THREE.OrbitControls(WEBGL.camera, WEBGL.renderer.domElement);
-        WEBGL.lighting = new THREE.PointLight(0x202020, 1, 0);
-        WEBGL.ambientLight = new THREE.AmbientLight(0xffffff);
-        WEBGL.scene.add(WEBGL.lighting);
-        WEBGL.scene.add(WEBGL.ambientLight);
-
-        // Orbit controls
-        WEBGL.controls.noKeys = true;
-//        WEBGL.controls.noPan = true;
-        WEBGL.controls.minDistance = 15;
-//        WEBGL.controls.maxDistance = 40;
-        WEBGL.controls.rotateSpeed = 0.75;
-//        WEBGL.controls.zoomSpeed = 0.5;
-        WEBGL.controls.addEventListener('change', WEBGL.onControlMoved, false);
-
-        WEBGL.renderer.setClearColor(0xffffff, 1);
-
-        // Add the canvas to the page
-        $("#id_cube").append(WEBGL.renderer.domElement);
-
-        // Raycast for mouse events
-        $(WEBGL.renderer.domElement).on("mousemove", INTERFACE.onCanvasMouseMove);
-        $(WEBGL.renderer.domElement).on("click", INTERFACE.onCanvasMouseClick);
-        $(WEBGL.renderer.domElement).on("mousedown", INTERFACE.onCanvasMouseDown);
-        $(WEBGL.renderer.domElement).on("mouseout", INTERFACE.onCanvasMouseLeave);
-
-        // Start rendering
-        WEBGL.resizeVizualisation(); // initially
-        WEBGL.animationRequest = requestAnimationFrame(WEBGL.render);
-
-    };
-
 
     // Shows a WebGL loading screen, containing a rotating cube with a given message for demonstration.
     this.showLoadingScreen = function (loadingMessage) {

@@ -306,6 +306,9 @@ var MAIN = new function () {
             MAIN.entityMap = {};
             MAIN.labelMap = {};
 
+            // Clean old hidden tooltips
+            $(".hiddenTooltip").remove();
+
             // Look for actually used entities (saved in entityMap)
             $.each(results, function (index, result) {
                 addToEntityMap(MAIN.xDimensions, result);
@@ -427,7 +430,7 @@ var MAIN = new function () {
 
             // Update the camera and center point of the visualization
             if (!stopCamera) {
-                WEBGL.updateCenterPoint(); // TODO auch labels dazuzählen!!! #######################
+                WEBGL.resetCameraView();
             }
 
             // Draw a grid for better orientation
