@@ -8,6 +8,7 @@ body {
 
 .viz-area .page-header {
     margin-top: 30px;
+    padding-bottom: 0;
 }
 
 .navbar {
@@ -435,15 +436,28 @@ a.side-glyph:hover {
 }
 
 
+#id_resetViewButton {
+    position: absolute;
+    right: 85px;
+    bottom: 0;
+}
+
 /*Charts with C3*/
 #id_chartButton {
-    /*float: right;*/
-
     position: absolute;
-    right: 15px;
+    right: 0;
+    bottom: 0;
 }
 #id_pageTitle {
-    padding-right: 80px;
+    margin-right: 190px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.viz-button-area {
+    position: absolute;
+    right: 15px;
 }
 
 #id_chartInfos {

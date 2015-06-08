@@ -63,10 +63,16 @@ var INTERFACE = new function () {
             INTERFACE.popupMeasureFilter();
         });
 
+        // Reset View button
+        $("#id_resetViewButton").on('click', function (e) {
+            e.preventDefault();
+            WEBGL.resetCameraView();
+        });
+
         // Chart button
         $("#id_chartButton").on('click', function (e) {
             e.preventDefault();
-            INTERFACE.popupChart(); // TODO
+            INTERFACE.popupChart();
         });
 
         // Resize visualization on browser resize
@@ -171,6 +177,7 @@ var INTERFACE = new function () {
                 $("#id_filterPanel button").removeAttr("disabled");
                 $("#id_acceptArea").addClass("in");
 
+                $("#id_resetViewButton").addClass("in");
                 $("#id_chartButton").addClass("in");
 
                 $("#id_cancelButton").removeAttr("disabled");
@@ -654,9 +661,6 @@ var INTERFACE = new function () {
         cube.onmouseout = function () {
             WEBGL.resetCube(cube);
             WEBGL.resetLabels(cube);
-
-            // TODO: reset matching labels (use normal font; -> standard texture)
-
         };
 
     };
@@ -704,7 +708,7 @@ var INTERFACE = new function () {
         label.onclick = function () {
             if (label.entity.rollupLabels) {
 
-                // TODO: show dimension menu instead of selecting results
+                // TODO: ? show dimension menu instead of selecting results
 
             } else {
                 if (!label.toggled) {
@@ -780,33 +784,33 @@ var INTERFACE = new function () {
     // Adds mouse events to the given dimension label
     this.addDimensionLabelListener = function (label, dimension) {
 
-
-//        label.toggled = false;
-
         // Show accent color of rolled up entity by default
         if (dimension.rollup) {
             label.toSelected();
-        } else {
-            label.onmouseover = function () {
-                label.toBold();
-            };
-
-            label.onmouseout = function () {
-                label.toNormal();
-            };
         }
 
+        label.onmouseover = function () {
+            if (!dimension.rollup) {
+                label.toBold();
+            }
+        };
+
+        label.onmouseout = function () {
+            if (!dimension.rollup) {
+                label.toNormal();
+            }
+        };
 
         label.onclick = function () {
 
-            // Show a drop down menu TODO #################################################################################
+            // Show a drop down menu (same as the left panel menu)
 
             var pos = WEBGL.toScreenPosition(label);
             var buttonGroup = $("div.btn-group[data-dimension-name='" + dimension.dimensionName + "']");
             var dimensionList = buttonGroup.data("dimensionList");
 
             var container = $("<div class='dropdown'></div>");
-            var toggle = $("<div class='dropdown-toggle' type='button' data-toggle='dropdown' aria-expanded='true'></div>");
+            var toggle = $("<div class='dropdown-toggle' type='button' data-toggle='dropdown'></div>");
             var menu = INTERFACE.createDimensionMenu(dimension, dimensionList);
 
             container.css("position", "absolute");
@@ -817,24 +821,17 @@ var INTERFACE = new function () {
             container.append(menu);
             $("body").append(container);
 
-            // TEMP (not working)
-            $("div.btn-group[data-dimension-name='" + dimension.dimensionName + "'] > a").dropdown('toggle');
+            toggle.dropdown('toggle');
 
             // Remove on hide
-//            container.on('hidden.bs.dropdown', function () {
-//                container.remove();
-//            });
+            container.on('hidden.bs.dropdown', function () {
+                toggle.dropdown('toggle');
+                container.off('hidden.bs.dropdown');
+                container.on('hidden.bs.dropdown', function () {
+                    container.remove(); // Remove finally
+                });
+            });
 
-            // TODO geht noch nicht (bootstrap dropdown)
-
-//            container.addClass("open");
-
-//            toggle.dropdown(); // TEMP toggle the dropdown menu
-//            toggle.click()
-//            toggle.dropdown('toggle');
-//            container.dropdown('toggle');
-//            menu.dropdown('toggle');
-//            toggle.trigger('click.bs.dropdown');
         };
 
     };

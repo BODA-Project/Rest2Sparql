@@ -229,6 +229,7 @@ var MAIN = new function () {
                 $("#id_measurePanel").removeClass("in");
                 $("#id_filterPanel").removeClass("in");
                 $("#id_acceptArea").removeClass("in");
+                $("#id_resetViewButton").removeClass("in");
                 $("#id_chartButton").removeClass("in");
                 $("#id_pageTitle").text("Rest2Sparql");
 
@@ -292,15 +293,17 @@ var MAIN = new function () {
                 // TODO texture for rotating cube "0 Results" statt popup
                 WEBGL.showLoadingScreen("0 Results");
 
-                // Disable chart button
+                // Disable chart and reset view button
                 $("#id_chartButton").addClass("disabled");
+                $("#id_resetViewButton").addClass("disabled");
 
                 bootbox.alert("No results for the given query.");
                 return;
             }
 
-            // Enable chart button
+            // Enable chart and reset view button
             $("#id_chartButton").removeClass("disabled");
+            $("#id_resetViewButton").removeClass("disabled");
 
             // Reset the entity map
             MAIN.entityMap = {};
