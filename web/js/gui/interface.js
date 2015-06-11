@@ -863,7 +863,7 @@ var INTERFACE = new function () {
         $("#id_infoFilter").attr('data-content', TEMPLATES.HINT_FILTER);
 
         // add tooltips
-        $('[data-toggle="tooltip"]').tooltip(); // TODO oder alle mit "title" aktivieren?
+        $('[data-toggle="tooltip"]').tooltip();
 
         // add popovers
         $('[data-toggle="popover"]').popover({container: 'body', placement: "auto right"});
