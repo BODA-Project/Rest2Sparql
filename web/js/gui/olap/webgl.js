@@ -40,7 +40,7 @@ var WEBGL = new function () {
         WEBGL.scene = new THREE.Scene();
         WEBGL.camera = new THREE.PerspectiveCamera(30, 2 / 1, 0.1, 2000);
 //        WEBGL.camera = new THREE.OrthographicCamera(-(2 / 1) * viewsize / 2, (2 / 1) * viewsize / 2, viewsize / 2, -viewsize / 2, -100, 100);
-        WEBGL.renderer = new THREE.WebGLRenderer({antialias: true}); // TODO AA as option?
+        WEBGL.renderer = new THREE.WebGLRenderer({antialias: true});
 //        WEBGL.renderer = new THREE.CanvasRenderer();
 //        WEBGL.renderer = new THREE.CSS2DRenderer();
 //        WEBGL.renderer = new THREE.CSS3DRenderer();
@@ -83,7 +83,7 @@ var WEBGL = new function () {
         WEBGL.renderer.render(WEBGL.scene, WEBGL.camera);
         WEBGL.controls.update();
 
-        // TEST: make cubes shiver randomly
+        // for fun: make cubes shiver randomly
 //        $.each(WEBGL.scene.children, function (i, obj) {
 //            obj.translateX((Math.random() - 0.5) * 0.01);
 //            obj.translateY((Math.random() - 0.5) * 0.01);
@@ -92,17 +92,11 @@ var WEBGL = new function () {
 
         // check for hover events
         WEBGL.handleHover(); // TEMP better performance if only done when rendered
-
-        // TODO reset target point after panning
-//        WEBGL.controls.target = new THREE.Vector3(WEBGL.totalSize[0]/2,WEBGL.totalSize[1]/2,WEBGL.totalSize[2]/2);
-
-//        WEBGL.controls.panLeft(0.1)
-
     };
 
     // Stops rendering completely
     this.stopRendering = function () {
-        if (!WEBGL.isPaused) {
+        if (!WEBGL.isPaused && WEBGL.animationRequest) {
             cancelAnimationFrame(WEBGL.animationRequest);
             WEBGL.isPaused = true;
         }
@@ -260,7 +254,7 @@ var WEBGL = new function () {
             WEBGL.totalSize[i] = (coordinates[i] + 1 > size) ? coordinates[i] + 1 : size;
         });
 
-        // TEST: Lines around every cube
+        // Lines around every cube
 //        var cube2 = new THREE.EdgesHelper(cube);
 //        cube2.material.color.set(resultColor);
 //        cube2.material.linewidth = 2;
@@ -376,8 +370,6 @@ var WEBGL = new function () {
             opacity: 0.15
         });
 
-        // TODO linien nur wenn nicht identische schon vorhanden...
-
         // Back grid (X,Y)
         if (hasX && hasY && (sizeX > 1 && sizeY > 1)) {
             for (var x = 0; x <= sizeX; x++) {
@@ -414,9 +406,7 @@ var WEBGL = new function () {
         lines.position.z -= 0.5;
         WEBGL.scene.add(lines);
 
-        // TODO kein gitter bei gaps! (schwer)
-
-        // TODO evtl auf jeder seite gitter und einausblenden je nach kamerawinkel
+        // TODO no grid for gaps (difficult)
 
     };
 
@@ -456,7 +446,7 @@ var WEBGL = new function () {
         material.transparent = true;
         material.opacity = 0.15;
 
-        // Test
+        // Fix for graphical bugs (overlapping planes)
         material.depthTest = true;
         material.depthWrite = false;
 
@@ -471,7 +461,7 @@ var WEBGL = new function () {
         label.selectionCubeOutline.material.opacity = 0.15;
         label.selectionCubeOutline.material.transparent = true;
 
-        // Test
+        // Fix for graphical bugs (overlapping planes)
         label.selectionCubeOutline.material.depthTest = true;
         label.selectionCubeOutline.material.depthWrite = false;
 
@@ -589,7 +579,7 @@ var WEBGL = new function () {
     };
 
     // Creates an entity label with different drawing modes (bold, normal, ...)
-    this.createEntityLabel = function (text) { // TODO übergeben: entity mit liste (bei rollup)
+    this.createEntityLabel = function (text) { // TODO split: number of entities + label
         var size = 30;
         var abbrSign = '\u2026'; // a single char "..." sign
 
@@ -764,10 +754,16 @@ var WEBGL = new function () {
         return mesh;
     };
 
-
-
-    // TEST measure as cube label (TODO better wrapping, 6 different sides)
+    /**
+     * Create a texture for a result cube
+     *
+     * @param {type} text the measure value to display
+     * @param {type} ratio the ratio of the value for color encoding
+     * @returns {THREE.Texture} the texture
+     */
     this.createSqareLabelTexture = function (text, ratio) {
+
+        // TODO better wrapping, 6 different sides for unequal shaped cube
 
         // round numbers to 2 digits
         if ($.isNumeric(text)) {

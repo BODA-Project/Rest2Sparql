@@ -12,7 +12,7 @@ var TEMPLATES = new function () {
     this.EXECUTE_URL = "./backend?func=<execute>&c=<__cube__>,select=<false>&id=<__id__>&hash=<__hash__>";
 
     this.DIMENSION_PART_URL = "&d=<__dimension__>,select=<true>,group=<true>";
-    this.DIMENSION_ROLLUP_PART_URL = "&d=<__dimension__>,select=<true>,group=<false>,agg=<min>"; // TEST: agg=<min> liefert dimensionName, also z.b http://code-research.eu/resource/Country
+    this.DIMENSION_ROLLUP_PART_URL = "&d=<__dimension__>,select=<true>,group=<false>,agg=<min>"; // Note: agg=<min> provides dimensionName, e.g. http://code-research.eu/resource/Country
 
     this.DIMENSION_FIX_PART_URL = ",fix=<__fix__>";
     this.MEASURE_PART_URL = "&m=<__measure__>,select=<true>,group=<true>,agg=<__agg__>";

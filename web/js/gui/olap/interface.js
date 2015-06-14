@@ -25,6 +25,18 @@ var INTERFACE = new function () {
         $("#id_redoButton").attr("disabled", "disabled");
         $("#id_optionsButton").attr("disabled", "disabled");
         $("#id_mergeButton").attr("disabled", "disabled");
+
+        // Hide info icons initially
+        $("#id_infoDimension").css("display", "none");
+        $("#id_infoMeasure").css("display", "none");
+        $("#id_infoFilter").css("display", "none");
+
+        // Hide reset view and chart button initially
+        $("#id_resetViewButton").css("display", "none");
+        $("#id_chartButton").css("display", "none");
+
+        // Remove custom tooltip of cube button
+        $('#id_cubeButton').tooltip('destroy');
     };
 
     // ...
@@ -84,7 +96,7 @@ var INTERFACE = new function () {
     // Inits the cube dropdown lists and its listeners
     this.initCubeList = function () {
 
-        // TEST HIGHLIGHT CUBE LIST
+        // highloght cube node
         flashHTMLNode($("#id_cubePanel"));
 
         // enable cube selection
@@ -99,15 +111,13 @@ var INTERFACE = new function () {
         $("#id_optionsButton").attr("disabled", "disabled");
         $("#id_mergeButton").attr("disabled", "disabled");
 
-        // TODO info icons sind unsichtbar ABER klickbar
-
         // Clear old cube list
         $("#id_cubeList").empty();
 
         // Iterate through available cubes and fill the list
         $.each(MAIN.availableCubes, function (index, cube) {
             var cubeName = cube.cubeName;
-            var comment = cube.comment; // TODO as tooltip? / "information area"
+            var comment = cube.comment;
             var label = cube.label;
 
             // Create Dropdown entries
@@ -168,6 +178,11 @@ var INTERFACE = new function () {
                 // Pre-select up to 3 dimensions per default to begin with after the ajax calls are done
                 INTERFACE.popupWhileAjax(showSomeData);
 
+                // Enable info icons
+                $("#id_infoDimension").css("display", "");
+                $("#id_infoMeasure").css("display", "");
+                $("#id_infoFilter").css("display", "");
+
                 // Enable dimension, measure and filter input
                 $("#id_dimensionPanel").addClass("in");
                 $("#id_dimensionPanel button").removeAttr("disabled");
@@ -177,7 +192,9 @@ var INTERFACE = new function () {
                 $("#id_filterPanel button").removeAttr("disabled");
                 $("#id_acceptArea").addClass("in");
 
+                $("#id_resetViewButton").css("display", "");
                 $("#id_resetViewButton").addClass("in");
+                $("#id_chartButton").css("display", "");
                 $("#id_chartButton").addClass("in");
 
                 $("#id_cancelButton").removeAttr("disabled");
@@ -355,7 +372,7 @@ var INTERFACE = new function () {
         $.each(MAIN.availableDimensions, function (index, dimension) {
             var dimensionName = dimension.dimensionName;
             MAIN.entityList[dimensionName] = {};
-            MAIN.entityList[dimensionName].list = MAIN.queryEntityList(dimensionName); // TODO hier ajax problem -> solved, aber blockierendes popup unschön
+            MAIN.entityList[dimensionName].list = MAIN.queryEntityList(dimensionName); // Previous AJAX problem, now blocking popup
         });
         INTERFACE.fillDimensionList("x", MAIN.xDimensions);
         INTERFACE.fillDimensionList("y", MAIN.yDimensions);
@@ -583,7 +600,7 @@ var INTERFACE = new function () {
             MAIN.applyOLAP();
         });
 
-        // TEMP for rollup test
+        // Add rollup / grouping event
         drillItem.on("click", function (e) {
             e.preventDefault();
             dimension.rollup = !dimension.rollup;
@@ -708,7 +725,7 @@ var INTERFACE = new function () {
         label.onclick = function () {
             if (label.entity.rollupLabels) {
 
-                // TODO: ? show dimension menu instead of selecting results
+                // Nothing to do for rollup labels?
 
             } else {
                 if (!label.toggled) {
@@ -1473,15 +1490,19 @@ var INTERFACE = new function () {
                 // Stacking
                 groups = [lastDimEntities];
                 chart.groups(groups);
-                setTimeout(function () {
-                    chart.resize({height: 100 + categories.length * 25 + lastDimEntities.length * 5});
-                }, 400);
+
+                // Only resize if bar chart
+                if (type === "bar") {
+                    setTimeout(function () {
+                        chart.resize({height: 100 + categories.length * 25 + lastDimEntities.length * 5});
+                    }, 400);
+                }
             } else {
                 // No stacking
                 groups = [];
                 chart.groups(groups);
 
-                // Only size up if bar chart
+                // Only resize if bar chart
                 if (type === "bar") {
                     setTimeout(function () {
                         chart.resize({height: 100 + Math.max(categories.length, 1) * 10 * lastDimEntities.length + lastDimEntities.length * 5});
@@ -1549,15 +1570,13 @@ var INTERFACE = new function () {
 
         // Add all entities to the popup body
         $.each(MAIN.entityList[dimension.dimensionName].list, function (index, entity) {
-
-            // TODO nicht ganz bootstrap konform (row missing)
-            var btnGroup = $('<div class="btn-group col-md-4 col-xs-12 entity-button" data-toggle="buttons"></div> ');
+            var btnGroup = $('<div class="btn-group col-md-4 col-xs-12 entity-button" data-toggle="buttons"></div> '); // missinb bootstrap row
             var label = $('<label class="btn btn-default btn-xs ' + (MAIN.entityList[dimension.dimensionName][entity.entityName] ? 'active' : '') + '" title="' + entity.label + '"></label>');
             var button = $('<input type="checkbox" autocomplete="off"' + (MAIN.entityList[dimension.dimensionName][entity.entityName] ? 'checked' : '') + ' data-entity-name="' + entity.entityName + '" data-entity-label="' + entity.label + '">');
 
             // Combine the checkbox and add
             label.append(button);
-            label.append(document.createTextNode(entity.label)); // escaping TODO überall
+            label.append(document.createTextNode(entity.label)); // escaping
             btnGroup.append(label);
             $("#id_entityModalBody").append(btnGroup);
             $("#id_entityModalBody").append(" ");
@@ -1613,8 +1632,6 @@ var INTERFACE = new function () {
 
             // Enable apply button
             $("#id_entityModalOkay").removeClass("disabled");
-
-            // TODO much warning, many entity
         });
 
         // Deselect all entities
@@ -1891,8 +1908,6 @@ var INTERFACE = new function () {
 
                 // Update visualization and interface right away
                 MAIN.applyOLAP();
-
-//                console.log("FILTERS:", MAIN.filters); // DEBUG
             }
         });
 
@@ -1999,7 +2014,6 @@ var INTERFACE = new function () {
         var agg = measure.agg.toUpperCase(); // Possible if multiple measures
         agg = MAIN.currentAGG.toUpperCase();
 
-        // TODO nur 1 measure, keine buttons
 //        $.each(MAIN.measures, function (i, measure) {
 //            INTERFACE.addMeasureButton(measure);
 //        });
@@ -2093,9 +2107,9 @@ var INTERFACE = new function () {
             label.tooltip = $("<div class='hiddenTooltip'></div>");
             label.tooltip.attr("title", text);
 
-            // Place top label tooltips left
+            // Place top label tooltips on the left side
             if (label.position.x >= 0) {
-                label.tooltip.attr("data-placement", "left"); // TODO wenn Y oder Z label -> placement LEFT
+                label.tooltip.attr("data-placement", "left");
             }
             $("body").append(label.tooltip);
         }

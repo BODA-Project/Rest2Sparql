@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description" content="RDF Datacube Visualization">
+        <link rel="shortcut icon" href="img/favicon_3.png">
+
+        <title>REST 2 SPARQL</title>
+
+        <!-- CSS -->
+        <link href="css/bootstrap/bootstrap.min.css" rel="stylesheet">
+        <link href="css/bootstrap/bootstrap-theme.min.css" rel="stylesheet">
+        <link href="css/gui/merge/main.css" rel="stylesheet">
+
+    </head>
+    <body>
+
+        <!-- Navigation -->
+        <nav class="navbar navbar-default navbar-static-top" role="navigation">
+
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="./">Rest2Sparql</a> <!-- TODO link/name -->
+            </div>
+
+            <div class="collapse navbar-collapse">
+                <div class="navbar-right">
+
+                    <!--                    <div class="btn-group dropdown">
+                                            <button type="button" class="btn btn-default btn-sm dropdown-toggle" disabled="disabled" id="id_optionsButton" data-toggle="dropdown">
+                                                <span class="glyphicon glyphicon glyphicon-cog"></span> Options <span class="caret"></span>
+                                            </button>
+                                            <ul class="dropdown-menu" role="menu">
+                                                <li role="presentation"><a role="menuitem" tabindex="-1" id="id_aggItem" href="#">Aggregation</a></li>
+                                                <li role="presentation"><a role="menuitem" tabindex="-1" id="id_colorItem" href="#">Accent Color</a></li>
+                                                <li role="presentation"><a role="menuitem" tabindex="-1" id="id_scaleItem" href="#"><span class="glyphicon glyphicon-unchecked"></span> Logarithmic Scale</a></li>
+                                            </ul>
+                                        </div>
+
+                                        <button type="button" class="btn btn-default btn-sm navbar-btn" id="id_mergeButton">
+                                            <span class="glyphicon glyphicon-link"></span> Merge...</button>
+                                        <button type="button" class="btn btn-default btn-sm navbar-btn" id="id_changeUserButton">
+                                            <span class="glyphicon glyphicon-log-out"></span> Change User ID...</button>-->
+                </div>
+            </div>
+
+        </nav>
+
+        <div class='container'>
+
+            <section id="id_wizard">
+                <div class="page-header">
+                    <h1>Wizard With Disabled Tab Click</h1>
+                </div>
+
+                <div id="id_rootWizard">
+                    <div class="navbar">
+                        <div class="container">
+                            <ul>
+                                <li><a href="#id_tab1" data-toggle="tab">First</a></li>
+                                <li><a href="#id_tab2" data-toggle="tab">Second</a></li>
+                                <li><a href="#id_tab3" data-toggle="tab">Third</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="tab-content">
+                        <div class="tab-pane" id="id_tab1">
+                            TODO: 1. Choose a 2nd cube to merge
+                        </div>
+                        <div class="tab-pane" id="id_tab2">
+                            TODO: Overview of dimensions and measures and options to add or match them
+                        </div>
+                        <div class="tab-pane" id="id_tab3">
+                            TODO: Visualize matched cube (diff -> overlapps, cube1, cube2)
+                        </div>
+                        <ul class="pager wizard">
+                            <li class="previous first" style="display:none;"><a href="#">First</a></li>
+                            <li class="previous"><a href="#">Previous</a></li>
+                            <li class="next last" style="display:none;"><a href="#">Last</a></li>
+                            <li class="next"><a href="#">Next</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+
+            </section>
+        </div>
+
+
+
+        <!-- Example Modal (hidden by default) -->
+        <div class="modal fade" id="id_exampleModal">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title"></h4>
+                    </div>
+                    <div class="modal-body">
+                        <!-- ... -->
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!--TODO: minified versions-->
+
+        <!-- JavaScript -->
+
+        <!-- alphanum sorting -->
+        <script src="js/alphanum.js"></script>
+
+        <!-- jQuery -->
+        <script src="js/jquery/jquery-2.1.3.js"></script>
+        <!--<script src="js/jquery/jquery-2.1.3.min.js"></script>-->
+        <script src="js/jquery/jquery.cookie.js"></script>
+        <script src="js/jquery/jquery-ui.min.js"></script>
+
+        <!-- Bootstrap -->
+        <script src="js/bootstrap/bootstrap.min.js"></script>
+        <script src="js/bootstrap/bootbox.min.js"></script>
+        <script src="js/bootstrap/jquery.bootstrap.wizard.min.js"></script>
+
+        <!-- THREE.js -->
+        <script src="js/threejs/three.js"></script>
+        <!--<script src="js/threejs/three.min.js"></script>-->
+        <script src="js/threejs/controls/OrbitControls.js"></script>
+
+        <!-- Custom Scripts -->
+        <script src="js/gui/merge/main.js"></script>
+        <!--<script src="js/gui/merge/TODO.js"></script>-->
+    </body>
+</html>

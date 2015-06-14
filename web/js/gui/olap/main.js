@@ -132,7 +132,7 @@ var MAIN = new function () {
         });
 
         requestHash.done(function (hash) {
-            console.log(id + ", HASH = " + hash); // TEST
+            console.log(id + ", HASH = " + hash); // DEBUG id + hash
 
             // Also check if given user has any cubes
             var urlCubes = TEMPLATES.CUBE_URL.replace("__id__", id);
@@ -153,8 +153,6 @@ var MAIN = new function () {
                 }
                 var results = obj.results.bindings;
                 if (results.length === 0) {
-
-                    // TODO escape überall
                     bootbox.alert("There are no Cubes belonging to User ID &lt;" + id + "&gt;", function () {
 
                         // Bring up modal if not shown
@@ -269,10 +267,15 @@ var MAIN = new function () {
 
 
     // TODO: method to create Model state (xyzDimensions, ...) from a given URL (for bookmarks)
+    // TODO: loading screen text for visualizetion
 
 
-    // Sends the given url and visualizes the results.
-    // TODO: loading screen, error messages
+    /**
+     * Visualize the given url
+     *
+     * @param {type} url the url to be requested at the rest2sparql backend
+     * @param {type} stopCamera whether the camera should be reset
+     */
     this.visualize = function (url, stopCamera) {
 
         // Help function
@@ -281,7 +284,7 @@ var MAIN = new function () {
             try {
                 obj = $.parseJSON(content);
             } catch (e) {
-                bootbox.alert("<b>Error:</b><br><br>" + content); // TODO sollte nie passieren (alle dimensionen aus group)
+                bootbox.alert("<b>Error:</b><br><br>" + content); // should never happen
                 return;
             }
 
@@ -290,8 +293,8 @@ var MAIN = new function () {
             // Stop and notify if no results
             if (results.length === 0) {
 
-                // TODO texture for rotating cube "0 Results" statt popup
-                WEBGL.showLoadingScreen("0 Results");
+                // TODO texture for rotating cube "0 Results" instead of popup
+                WEBGL.showLoadingScreen("No Results for the given query.");
 
                 // Disable chart and reset view button
                 $("#id_chartButton").addClass("disabled");
@@ -439,16 +442,14 @@ var MAIN = new function () {
             // Draw a grid for better orientation
             WEBGL.addGrid();
 
-            // DEBUG:
-            console.log("lowest measure: ", lowestMeasures, ", highest: ", highestMeasures, ", #results: ", results.length);
+//            console.log("lowest measure: ", lowestMeasures, ", highest: ", highestMeasures, ", #results: ", results.length); // DEBUG
 
         };
 
         // Prefer the already cached result if no "random sample" aggregation wanted
         if (MAIN.resultCache[url] && !String(url).contains(",agg=<sample>")) {
 
-            // TODO niemals loadingscreen?
-
+            // no loadingscreen for already cached results
             handleContent(MAIN.resultCache[url], stopCamera);
         } else {
 
@@ -473,15 +474,12 @@ var MAIN = new function () {
                 handleContent(content, false);
             });
             request.fail(function (jqXHR, textStatus) {
-
-
-                // TODO too many entities in bigdata -> "error"
+                // too many entities in bigdata -> "error"
                 if (textStatus === "error") {
                     bootbox.alert("<b>Error:</b><br><br>Too many entities selected. Please select fewer (or all) entities of a dimension.");
                 } else {
                     bootbox.alert("<b>Error:</b><br><br>" + textStatus);
                 }
-
             });
         }
     };
@@ -693,7 +691,7 @@ var MAIN = new function () {
         // Update the rest of the interface (Apply, Cancel, Undo, ...)
         INTERFACE.updateNavigation();
 
-        // DEBUG url
+        // DEBUG url, undo stack
         console.log("REQUEST URL", MAIN.currentURL);
 //        console.log("UNDO STACK:", MAIN.undoStack);
 //        console.log("REDO STACK:", MAIN.redoStack);
@@ -789,7 +787,7 @@ var MAIN = new function () {
     // Returns the numerical value of a given measure of a json result
     this.getMeasureValueFromJson = function (result, measure) {
 
-        // TODO nur 1 measure möglich? kein "V_NAME_2_AGG" o.ä.
+        // rest2sparql BUG: only 1 measure possible, no "V_NAME_X_AGG" in results
         if (result["V_NAME_AGG"]) {
             return parseFloat(result["V_NAME_AGG"].value);
         } else {
@@ -808,7 +806,7 @@ var MAIN = new function () {
             $.each(result, function (key, val) {
                 if (val.value === dimension.dimensionName) {
 
-                    var entityName = ""; // TODO entity name leer lassen?
+                    var entityName = ""; // empty uri for grouped entity
                     var label = "(" + dimension.entities.length + ") " + dimension.label; // TODO: (x) trennen für verschiedene Farben
                     entity = new Entity(dimension.dimensionName, entityName, label);
                     entity.rollupLabels = [];
@@ -1066,7 +1064,7 @@ var MAIN = new function () {
         $.each(dimensionList, function (index, dimension) {
             var row = dimensionList.length - index - 1;
             var label = WEBGL.addDimensionLabel(axis, dimension, row);
-            INTERFACE.addDimensionLabelListener(label, dimension); // TODO #########
+            INTERFACE.addDimensionLabelListener(label, dimension);
         });
     };
 
