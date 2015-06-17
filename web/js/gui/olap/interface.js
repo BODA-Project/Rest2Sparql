@@ -452,6 +452,7 @@ var INTERFACE = new function () {
         // Add drag and drop functionality
         // Make button dragable
         btnGroup.draggable({
+            axis: "y",
             distance: 5,
             revert: true,
             zIndex: 9999,

@@ -128,15 +128,30 @@ var WEBGL = new function () {
 
     // Hilights a given cube mesh
     this.highlightCube = function (cube) {
-        cube.material.color = WEBGL.COLOR_HIGHLIGHT;
-
         // Show lines around the cube
+        cube.material.color = WEBGL.COLOR_HIGHLIGHT;
         cube.outline = new THREE.EdgesHelper(cube);
         cube.outline.material.color.set(cube.lineColor);
         cube.outline.material.linewidth = 3;
         cube.outline.material.transparent = true;
-        cube.outline.material.opacity = cube.material.opacity;
         WEBGL.scene.add(cube.outline);
+
+        if (cube.hidden) {
+            cube.material.transparent = true;
+            cube.material.opacity = 0.6;
+            cube.outline.material.opacity = 0.6;
+            cube.visible = true; // but still marked as hidden
+        }
+
+    };
+
+    // Resets a highlighted cube to its normal state
+    this.resetCube = function (cube) {
+        cube.material.color = WEBGL.COLOR_WHITE;
+        WEBGL.scene.remove(cube.outline);
+        cube.visible = !cube.hidden;
+        cube.material.transparent = false;
+        cube.material.opacity = 1;
     };
 
     /**
@@ -178,20 +193,26 @@ var WEBGL = new function () {
 
             // Apply opacity
             if (selected) {
-                cube.material.transparent = false;
-                cube.material.opacity = 1;
-                // TODO add edges to selected cubes (and remove below)
+
+                // Hide sprite and show cube again
+                cube.visible = true;
+                cube.hidden = false; // own flag
+                if (cube.hiddenSprite) {
+                    cube.hiddenSprite.visible = false;
+                }
             } else {
-                cube.material.transparent = true;
-                cube.material.opacity = 0.25;
+                if (!cube.hiddenSprite) {
+                    cube.hiddenSprite = WEBGL.createCubeSprite(cube.measureColor);
+                    cube.hiddenSprite.position.copy(cube.position);
+                    WEBGL.scene.add(cube.hiddenSprite);
+                }
+
+                // Hide cube and show sprite
+                cube.visible = false;
+                cube.hidden = true; // own flag
+                cube.hiddenSprite.visible = true;
             }
         });
-    };
-
-    // Resets a highlighted cube to its normal state
-    this.resetCube = function (cube) {
-        cube.material.color = WEBGL.COLOR_WHITE;
-        WEBGL.scene.remove(cube.outline);
     };
 
     // Hilights a given labels's similar labels
@@ -247,7 +268,7 @@ var WEBGL = new function () {
 
         // Add additional information to each result cube
         cube.measureColor = resultColor; // save color to object TEMP first one for now...
-        cube.lineColor = resultColor.clone().multiplyScalar(0.75); // save color to object TEMP first one for now...
+        cube.lineColor = resultColor.clone().multiplyScalar(0.8); // save color to object TEMP first one for now...
 
         // Update the total size of the visualization
         $.each(WEBGL.totalSize, function (i, size) {
@@ -752,6 +773,46 @@ var WEBGL = new function () {
         };
 
         return mesh;
+    };
+
+    /**
+     * Creates a sprite to show instead of hidden cubes.
+     *
+     * @param {type} color the color of the sprite
+     * @returns {WEBGL.createCubeSprite.mesh}
+     */
+    this.createCubeSprite = function (color) {
+        var canvas = document.createElement("canvas");
+        var context = canvas.getContext("2d");
+
+        var hsl = color.getHSL();
+        hsl.l = (hsl.l * 3 + 1) / 4;
+        var darkColor = color.clone().getHexString();
+        var brightColor = color.clone().setHSL(hsl.h, hsl.s, hsl.l).getHexString();
+
+        canvas.width = 32;
+        canvas.height = 32;
+        context.fillStyle = "#" + brightColor;
+        context.strokeStyle = "#" + darkColor;
+        context.lineWidth = 4;
+        context.beginPath();
+        context.arc(canvas.width / 2, canvas.height / 2, canvas.height / 2 - context.lineWidth / 2, 0, Math.PI * 2, true);
+        context.closePath();
+        context.fill();
+        context.stroke();
+
+        var texture = new THREE.Texture(canvas);
+        texture.needsUpdate = true;
+        texture.minFilter = THREE.LinearFilter;
+
+        var material = new THREE.SpriteMaterial({
+            map: texture
+        });
+
+        var sprite = new THREE.Sprite(material);
+        sprite.scale.multiplyScalar(0.25);
+        sprite.material.opacity = 0.8;
+        return sprite;
     };
 
     /**
