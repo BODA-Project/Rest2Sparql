@@ -141,6 +141,10 @@ a.side-glyph:hover {
     overflow: hidden;
 }
 
+/* Canvas */
+#id_cube canvas {
+    background-color: #ffffff;
+}
 
 /*cube button size*/
 #id_cubePanel .panel-body > .btn-group {
@@ -473,6 +477,14 @@ a.side-glyph:hover {
     padding-left: 0;
     margin-left: 0;
     border: none;
+}
+
+/* bookmark */
+#id_bookmarkLink {
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /*

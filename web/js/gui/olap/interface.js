@@ -24,6 +24,7 @@ var INTERFACE = new function () {
         $("#id_undoButton").attr("disabled", "disabled");
         $("#id_redoButton").attr("disabled", "disabled");
         $("#id_optionsButton").attr("disabled", "disabled");
+        $("#id_bookmarkButton").attr("disabled", "disabled");
         $("#id_mergeButton").attr("disabled", "disabled");
 
         // Hide info icons initially
@@ -49,20 +50,34 @@ var INTERFACE = new function () {
         $("#id_redoButton").on('click', MAIN.redo);
         $("#id_undoButton").on('click', MAIN.undo);
 
+        // Save bookmark
+        $("#id_bookmarkButton").on('click', function (e) {
+            e.preventDefault();
+            INTERFACE.popupBookmark();
+        });
+
         // Options / Settings
-        $("#id_aggItem").on('click', INTERFACE.popupMeasureAgg);
-        $("#id_colorItem").on('click', INTERFACE.popupAccentColor);
-        $("#id_scaleItem").on('click', INTERFACE.toggleScale);
+        $("#id_aggItem").on('click', function (e) {
+            e.preventDefault();
+            INTERFACE.popupMeasureAgg();
+        });
+        $("#id_colorItem").on('click', function (e) {
+            e.preventDefault();
+            INTERFACE.popupAccentColor();
+        });
+        $("#id_scaleItem").on('click', function (e) {
+            e.preventDefault();
+            INTERFACE.toggleScale();
+        });
 
         // Merge button
 //        $("#id_mergeButton").on('click', TODO);
 
-        // Side bar
+        // Cancel and Apply
         $("#id_cancelButton").on('click', function (e) {
             e.preventDefault();
             MAIN.cancelOLAP();
         });
-
         $("#id_applyButton").on('click', function (e) {
             e.preventDefault();
             MAIN.applyTempSelection(); // apply on-screen selection if given
@@ -109,6 +124,7 @@ var INTERFACE = new function () {
         $("#id_undoButton").attr("disabled", "disabled");
         $("#id_redoButton").attr("disabled", "disabled");
         $("#id_optionsButton").attr("disabled", "disabled");
+        $("#id_bookmarkButton").attr("disabled", "disabled");
         $("#id_mergeButton").attr("disabled", "disabled");
 
         // Clear old cube list
@@ -134,85 +150,102 @@ var INTERFACE = new function () {
             // Add on-click handler for chosen cubes
             itemLink.on("click", function (e) {
                 e.preventDefault();
-
-                // Is the same cube already selected?
-                if (MAIN.currentCube && MAIN.currentCube.cubeName === cubeName) {
-                    return;
-                }
-
-                // Set current cube's URI
-                MAIN.currentCube = cube;
-
-                // Query available dimensions and measures and fill the lists
-                MAIN.loadDimensionList();
-                MAIN.loadMeasureList();
-
-                // TODO evtl "MAIN.clearState()" methode
-
-                // Reset filters
-                MAIN.filters = [];
-                INTERFACE.clearFilters();
-
-                // Reset temp selection and other
-                MAIN.tempSelection = {};
-                MAIN.availableDimensions = [];
-                MAIN.availableMeasures = [];
-                MAIN.currentURL = "";
-
-                // Clear undo / redo stacks TODO warnung vorher
-                MAIN.undoStack = [];
-                MAIN.redoStack = [];
-                MAIN.currentState = undefined;
-                MAIN.resultCache = {};
-
-                // Set button and cube title and tooltip
-                $("#id_cubeButton").empty();
-                $("#id_cubeButton").append("<span class=cube-button-text>" + label + "</span>");
-                $("#id_cubeButton").append(" <span class='caret'></span>");
-                $("#id_cubeButton").attr("title", label + ":\n\n" + comment); // tooltip
-                $("#id_cubeButton").attr("data-placement", "auto top");
-                $("#id_cubeButton").tooltip();
-                $("#id_pageTitle").text(label); // set page title
-
-                // Show a loading screen while ajax infos are loading (dimensions + entities and measures)
-                // Pre-select up to 3 dimensions per default to begin with after the ajax calls are done
-                INTERFACE.popupWhileAjax(showSomeData);
-
-                // Enable info icons
-                $("#id_infoDimension").css("display", "");
-                $("#id_infoMeasure").css("display", "");
-                $("#id_infoFilter").css("display", "");
-
-                // Enable dimension, measure and filter input
-                $("#id_dimensionPanel").addClass("in");
-                $("#id_dimensionPanel button").removeAttr("disabled");
-                $("#id_measurePanel").addClass("in");
-                $("#id_measurePanel button").removeAttr("disabled");
-                $("#id_filterPanel").addClass("in");
-                $("#id_filterPanel button").removeAttr("disabled");
-                $("#id_acceptArea").addClass("in");
-
-                $("#id_resetViewButton").css("display", "");
-                $("#id_resetViewButton").addClass("in");
-                $("#id_chartButton").css("display", "");
-                $("#id_chartButton").addClass("in");
-
-                $("#id_cancelButton").removeAttr("disabled");
-                $("#id_applyButton").removeAttr("disabled");
-
-                $("#id_undoButton").removeAttr("disabled");
-                $("#id_redoButton").removeAttr("disabled");
-                $("#id_optionsButton").removeAttr("disabled");
-                $("#id_mergeButton").removeAttr("disabled");
-
-                // Disable the selected cube from list (and re-enable all others)
-                $('[data-cube-name]').removeClass("disabled");
-                $('[data-cube-name="' + cubeName + '"]').addClass("disabled");
-
+                INTERFACE.selectCube(cube);
             });
 
         });
 
+    };
+
+    /**
+     * Select a given cub
+     * @param {type} cubeName
+     * @param {type} label
+     * @param {type} comment
+     */
+    this.selectCube = function (cube, callback) {
+        var cubeName = cube.cubeName;
+        var comment = cube.comment;
+        var label = cube.label;
+
+        // Is the same cube already selected?
+        if (MAIN.currentCube && MAIN.currentCube.cubeName === cubeName) {
+            return;
+        }
+
+        // Set current cube's URI
+        MAIN.currentCube = cube;
+
+        // Query available dimensions and measures and fill the lists
+        MAIN.loadDimensionList();
+        MAIN.loadMeasureList();
+
+        // TODO evtl "MAIN.clearState()" methode
+
+        // Reset filters
+        MAIN.filters = [];
+        INTERFACE.clearFilters();
+
+        // Reset temp selection and other
+        MAIN.tempSelection = {};
+        MAIN.availableDimensions = [];
+        MAIN.availableMeasures = [];
+        MAIN.currentURL = "";
+
+        // Clear undo / redo stacks TODO warnung vorher
+        MAIN.undoStack = [];
+        MAIN.redoStack = [];
+        MAIN.currentState = undefined;
+        MAIN.resultCache = {};
+
+        // Set button and cube title and tooltip
+        $("#id_cubeButton").empty();
+        $("#id_cubeButton").append("<span class=cube-button-text>" + label + "</span>");
+        $("#id_cubeButton").append(" <span class='caret'></span>");
+        $("#id_cubeButton").attr("title", label + ":\n\n" + comment); // tooltip
+        $("#id_cubeButton").attr("data-placement", "auto top");
+        $("#id_cubeButton").tooltip();
+        $("#id_pageTitle").text(label); // set page title
+
+        // Show a loading screen while ajax infos are loading (dimensions + entities and measures)
+        // Pre-select up to 3 dimensions per default to begin with after the ajax calls are done
+        if (callback) {
+            INTERFACE.popupWhileAjax(callback); // If given (from bookmark loading)
+        } else {
+            INTERFACE.popupWhileAjax(showSomeData);
+        }
+
+        // Enable info icons
+        $("#id_infoDimension").css("display", "");
+        $("#id_infoMeasure").css("display", "");
+        $("#id_infoFilter").css("display", "");
+
+        // Enable dimension, measure and filter input
+        $("#id_dimensionPanel").addClass("in");
+        $("#id_dimensionPanel button").removeAttr("disabled");
+        $("#id_measurePanel").addClass("in");
+        $("#id_measurePanel button").removeAttr("disabled");
+        $("#id_filterPanel").addClass("in");
+        $("#id_filterPanel button").removeAttr("disabled");
+        $("#id_acceptArea").addClass("in");
+
+        $("#id_resetViewButton").css("display", "");
+        $("#id_resetViewButton").addClass("in");
+        $("#id_chartButton").css("display", "");
+        $("#id_chartButton").addClass("in");
+
+        $("#id_cancelButton").removeAttr("disabled");
+        $("#id_applyButton").removeAttr("disabled");
+
+        $("#id_undoButton").removeAttr("disabled");
+        $("#id_redoButton").removeAttr("disabled");
+        $("#id_optionsButton").removeAttr("disabled");
+        $("#id_bookmarkButton").removeAttr("disabled");
+        $("#id_mergeButton").removeAttr("disabled");
+
+        // Disable the selected cube from list (and re-enable all others)
+        $('[data-cube-name]').removeClass("disabled");
+        $('[data-cube-name="' + cubeName + '"]').addClass("disabled");
     };
 
     // Inits the measure dropdown list and its listeners
@@ -855,7 +888,7 @@ var INTERFACE = new function () {
     };
 
     // Toggles the measure scale between linear to logarithmic
-    this.toggleScale = function (e) {
+    this.toggleScale = function () {
         if (MAIN.currentScale === MAIN.SCALE_LINEAR) {
             MAIN.currentScale = MAIN.SCALE_LOG;
             $("#id_scaleItem span").removeClass("glyphicon-unchecked");
@@ -1004,6 +1037,35 @@ var INTERFACE = new function () {
             });
         });
         modalAggBody.append(buttonGroup);
+
+        // Pause rendering in background
+        WEBGL.stopRendering();
+
+        // Show the popup
+        modal.modal();
+
+        // Resume visualization when finished
+        modal.off('hidden.bs.modal');
+        modal.on('hidden.bs.modal', function (e) {
+            // Resume rendering again
+            WEBGL.resumeRendering();
+        });
+    };
+
+    /**
+     * Shows a popup for bookmarking or sharing the current state as a link.
+     *
+     */
+    this.popupBookmark = function () {
+
+        var url = MAIN.saveURL();
+        var modal = $("#id_bookmarkModal");
+        $("body").append(modal);
+        var modalBookmarkLink = $("#id_bookmarkLink");
+
+        // Apply the url to the link
+        modalBookmarkLink.text(url);
+        modalBookmarkLink.attr("href", url);
 
         // Pause rendering in background
         WEBGL.stopRendering();

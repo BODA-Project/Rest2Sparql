@@ -40,10 +40,12 @@
                         <span class="glyphicon glyphicon-chevron-left"></span> Undo</button>
                     <button type="button" class="btn btn-default btn-sm navbar-btn" disabled="disabled" id="id_redoButton">
                         <span class="glyphicon glyphicon-chevron-right"></span> Redo</button>
+                    <button type="button" class="btn btn-default btn-sm navbar-btn" disabled="disabled" id="id_bookmarkButton">
+                        <span class="glyphicon glyphicon-floppy-disk"></span> Save</button>
 
                     <div class="btn-group dropdown">
                         <button type="button" class="btn btn-default btn-sm dropdown-toggle" disabled="disabled" id="id_optionsButton" data-toggle="dropdown">
-                            <span class="glyphicon glyphicon glyphicon-cog"></span> Options <span class="caret"></span>
+                            <span class="glyphicon glyphicon glyphicon-cog"></span> Settings <span class="caret"></span>
                         </button>
                         <ul class="dropdown-menu" role="menu">
                             <li role="presentation"><a role="menuitem" tabindex="-1" id="id_aggItem" href="#">Aggregation</a></li>
@@ -376,6 +378,25 @@
                     <div class="modal-footer">
                         <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
                         <button type="button" class="btn btn-primary" id="id_filterModalOkay">Apply</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bookmark Modal (hidden by default) -->
+        <div class="modal fade" id="id_bookmarkModal">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title">Save Current State</h4>
+                    </div>
+                    <div class="modal-body">
+                        <p>Bookmark the following url to save your current operation, or share it with others.</p>
+                        <a href="#" id="id_bookmarkLink"></a>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                     </div>
                 </div>
             </div>

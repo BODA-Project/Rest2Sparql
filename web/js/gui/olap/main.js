@@ -73,7 +73,7 @@ var MAIN = new function () {
         "#d871b5",
         "#aaaaaa"
     ];
-
+    this.BOOKMARK_SIGN = "#bookmark=";
     this.SCALE_LOG = 0;
     this.SCALE_LINEAR = 1;
 
@@ -125,7 +125,14 @@ var MAIN = new function () {
     });
 
     // Tries to log in a given ID
-    this.loginUser = function (id) {
+
+    /**
+     * Try to log a user with given id in. the given callback function (optional) is executed after the user's cubes have been loaded.
+     *
+     * @param {type} id user id
+     * @param {type} callback function to execute after cubes have been loaded
+     */
+    this.loginUser = function (id, callback) {
         var urlHash = TEMPLATES.GET_HASH_URL.replace("__id__", id);
         var requestHash = $.ajax({
             url: urlHash
@@ -171,8 +178,7 @@ var MAIN = new function () {
                     $('#id_loginModal').modal('hide');
 
                     // Load users cubes...
-                    MAIN.loadCubeList();
-
+                    MAIN.loadCubeList(callback);
                 }
 
             });
@@ -239,19 +245,10 @@ var MAIN = new function () {
             }
         });
 
-
-
     };
 
     // Inits the whole interface
     this.init = function () {
-
-        // Check if session is open already and login
-        if ($.cookie("ID") === undefined) {
-            INTERFACE.popupLogin(); // Show login prompt
-        } else {
-            MAIN.loginUser($.cookie("ID"));
-        }
 
         // Setup THREE.JS components
         WEBGL.initThreeJs();
@@ -263,12 +260,178 @@ var MAIN = new function () {
         // Disable certain input to begin with
         INTERFACE.disableInputInitially();
         INTERFACE.initTooltips();
+
+        // Load a given bookmark / shared url
+        if (window.location.href.contains(MAIN.BOOKMARK_SIGN)) {
+            MAIN.loadURL(window.location.href);
+        } else {
+            // Check if session is open already and login
+            if ($.cookie("ID") === undefined) {
+                INTERFACE.popupLogin(); // Show login prompt
+            } else {
+                MAIN.loginUser($.cookie("ID"));
+            }
+        }
     };
 
+    /**
+     * Load a given url bookmark as a model and visualize it right away.
+     *
+     * @param {string} url
+     */
+    this.loadURL = function (url) {
+        var decodedURL = decodeURIComponent(url); // cross browser compatible
+        var urlParts = decodedURL.split("&");
 
-    // TODO: method to create Model state (xyzDimensions, ...) from a given URL (for bookmarks)
+        var cubeName;
+        var id;
+        $.each(urlParts, function (i, part) {
+
+            // First get userID and cubeName
+            if (part.startsWith("c=<")) {
+                // Cube name
+                var temp = part.replace("c=<", "");
+                cubeName = temp.substring(0, temp.indexOf('>'));
+            } else if (part.startsWith("id=<")) {
+                // User ID
+                var temp = part.replace("id=<", "");
+                id = temp.substring(0, temp.indexOf('>'));
+            }
+        });
+
+        // Login with callback function
+        MAIN.loginUser(id, function () {
+
+            // look for cube in available list by cubeName
+            var cube;
+            $.each(MAIN.availableCubes, function (index, availableCube) {
+                if (availableCube.cubeName === cubeName) {
+                    cube = availableCube;
+                }
+            });
+
+            // Select the cube and continue to parse data after it finished loading
+            INTERFACE.selectCube(cube, function () {
+
+                $.each(urlParts, function (i, part) {
+
+                    // Parse dimensions and measures (and filters)
+                    if (part.startsWith("d=<")) {
+                        // A dimension
+                        var temp = part.replace("d=<", "");
+                        var dimensionName = temp.substring(0, temp.indexOf('>'));
+                        var rollup = temp.substring(temp.indexOf(",group=<") + 8, temp.length).startsWith("false");
+                        var axis = temp.substring(temp.indexOf(",axis=<") + 7, temp.length).split(">")[0];
+
+                        var entities = [];
+                        if (temp.contains(",fix=<")) {
+                            var fix = temp.substring(temp.indexOf(",fix=<") + 6, temp.length).split(">")[0];
+                            var entityNames = fix.split(",");
+                            $.each(entityNames, function (j, entityName) {
+                                MAIN.entityList[dimensionName][entityName] = true; // Mark as selected
+                                $.each(MAIN.entityList[dimensionName].list, function (k, entity) {
+                                    if (entity.entityName === entityName) {
+                                        entities.push(new Entity(entity.dimensionName, entity.entityName, entity.label));
+                                    }
+                                });
+
+                            });
+                        } else {
+                            // no slicing, add all entities
+                            $.each(MAIN.entityList[dimensionName].list, function (k, entity) {
+                                MAIN.entityList[dimensionName][entity.entityName] = true; // Mark as selected
+                                entities.push(new Entity(entity.dimensionName, entity.entityName, entity.label));
+                            });
+                        }
+
+                        // look for dimension in available list by dimensionName
+                        var dimension;
+                        $.each(MAIN.availableDimensions, function (index, availableDimension) {
+                            if (availableDimension.dimensionName === dimensionName) {
+                                dimension = new Dimension(dimensionName, availableDimension.label, entities);
+                                dimension.rollup = rollup;
+                                return false; // break
+                            }
+                        });
+                        MAIN[axis + "Dimensions"].push(dimension); // Add dimension to the list
+
+                    } else if (part.startsWith("m=<")) {
+                        // The measure
+                        var temp = part.replace("m=<", "");
+                        var measureName = temp.substring(0, temp.indexOf('>'));
+                        var agg = temp.substring(temp.indexOf(",agg=<") + 6, temp.length).split(">")[0];
+
+                        // look for measure in available list by measureName
+                        var measure;
+                        $.each(MAIN.availableMeasures, function (index, availableMeasure) {
+                            if (availableMeasure.measureName === measureName) {
+                                measure = new Measure(measureName, availableMeasure.label, agg);
+                            }
+                        });
+
+                        // Check if measure or filter statement
+                        var select = temp.substring(temp.indexOf(",select=<") + 9, temp.length).startsWith("true");
+                        if (select) {
+                            // Measure
+
+                            MAIN.measures.push(measure); // Add measure to the list
+                            MAIN.currentAGG = agg;
+                        } else {
+                            // Filter
+
+                            var rel = temp.substring(temp.indexOf(",filterR=<") + 10, temp.length).split(">")[0];
+                            var val = parseFloat(temp.substring(temp.indexOf(",filterV=<") + 10, temp.length).split(">")[0]);
+                            var filter = new Filter(measure, rel, val);
+                            MAIN.filters.push(filter);
+                        }
+                    }
+
+                }); // url parts loop end
+
+                MAIN.applyOLAP(); // Build interface from model and visualize
+
+            }); // select cube callback end
+
+        }); // login callback end
+
+    };
+
+    /**
+     * Save the current state as a url bookmark. Infos about axis allocation are saved too.
+     *
+     * @returns {String} the generated url to bookmark or share
+     */
+    this.saveURL = function () {
+        var origin = window.location.protocol + '//' + window.location.hostname + (window.location.port ? ':' + window.location.port : '') + window.location.pathname;
+        var urlParts = MAIN.currentURL.split("&");
+        var finalURL = "";
+        $.each(urlParts, function (i, part) {
+            if (part.startsWith("d=<")) {
+                // A dimension, see in which axis it is
+                var temp = part.replace("d=<", "");
+                var dimensionName = temp.substring(0, temp.indexOf('>'));
+                var axis;
+                $.each(["x", "y", "z"], function (i, listAxis) {
+                    $.each(MAIN[listAxis + "Dimensions"], function (j, dimension) {
+                        if (dimension.dimensionName === dimensionName) {
+                            axis = listAxis;
+                            return false;
+                        }
+                    });
+                });
+                finalURL += part;
+                finalURL += ",axis=<";
+                finalURL += axis;
+                finalURL += ">&";
+            } else {
+                finalURL += part + "&";
+            }
+        });
+        finalURL = origin + MAIN.BOOKMARK_SIGN + finalURL.substring(2, finalURL.length - 1); // remove first "./" and last "&"
+        return finalURL;
+    };
+
     // TODO: loading screen text for visualizetion
-
 
     /**
      * Visualize the given url
@@ -488,7 +651,7 @@ var MAIN = new function () {
     /**
      * Load the list of available cubes and fill the lists accordingly
      */
-    this.loadCubeList = function () {
+    this.loadCubeList = function (callback) {
 
         // Make the request
         var url = TEMPLATES.CUBE_URL.replace("__id__", MAIN.ID);
@@ -519,7 +682,12 @@ var MAIN = new function () {
                 return alphanumCase(a.LABEL.value, b.LABEL.value);
             });
             MAIN.parseCubes(results);
-            INTERFACE.initCubeList(results); // create HTML list
+            INTERFACE.initCubeList(); // create HTML list
+
+            // Execute callback function if given (bookmark loading -> clicks a certain cube button)
+            if (callback) {
+                callback();
+            }
         });
         request.fail(function (jqXHR, textStatus) {
             bootbox.alert("Error: " + textStatus);
