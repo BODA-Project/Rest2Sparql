@@ -1,2 +1,45 @@
 /* Custom Merger CSS */
 
+.panel-heading > h4 {
+    margin-top: 5px;
+    margin-bottom: 5px;
+    color: #909090;
+}
+
+/*one buttone each line*/
+#id_tab1 .panel-body > .btn-group:first-child {
+    margin-bottom: 10px;
+}
+#id_tab1 .panel-body > .btn-group{
+    width: 100%;
+}
+#id_tab1 .panel-body button.btn {
+    width: 100%;
+    max-width: 400px;
+    text-align: left;
+}
+
+/* text and caret in button */
+#id_tab1 .panel-body button.btn > .caret {
+    float: right;
+    margin-top: 8px;
+    margin-left: 5px;
+}
+#id_tab1 .panel-body button.btn > .button-text {
+    float: left;
+    padding-right: 0;
+}
+
+#id_wizard > .page-header {
+    border-width: 2px;
+    margin-top: 20px;
+}
+
+#id_wizard > .page-header > h1 > img{
+    vertical-align: top;
+    height: 42px;
+}
+
+#id_wizard .pager li > a {
+    border-radius: 4px;
+}
