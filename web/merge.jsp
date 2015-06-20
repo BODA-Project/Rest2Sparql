@@ -184,5 +184,18 @@
         <!-- Custom Scripts -->
         <script src="js/gui/merge/main.js"></script>
         <!--<script src="js/gui/merge/TODO.js"></script>-->
+
+        <!--Default first cube if given-->
+        <%
+            String cube1 = request.getParameter("cube1");
+        %>
+        <script type="text/javascript">
+            var cube = '<%=cube1%>';
+            if (cube !== "null" && cube !== "") {
+                // TODO cube given
+                alert("cube is '" + cube + "'");
+            }
+        </script>
+
     </body>
 </html>

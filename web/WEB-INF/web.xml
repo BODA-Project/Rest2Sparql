@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <web-app xmlns="http://java.sun.com/xml/ns/javaee"
-           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-           xsi:schemaLocation="http://java.sun.com/xml/ns/javaee
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee
 		  http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
-           version="3.0">
+         version="3.0">
 
+    <!--Backend-->
     <servlet>
         <servlet-name>Backend</servlet-name>
         <servlet-class>de.uni_passau.fim.dimis.rest2sparql.rest.Rest2SparqlServlet</servlet-class>
@@ -30,4 +31,19 @@
         <servlet-name>Backend</servlet-name>
         <url-pattern>/backend/*</url-pattern>
     </servlet-mapping>
+
+    <!--Merger-->
+    <servlet>
+        <servlet-name>Merger</servlet-name>
+        <jsp-file>/merge.jsp</jsp-file>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>Merger</servlet-name>
+        <url-pattern>/merge</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>Merger</servlet-name>
+        <url-pattern>/merger</url-pattern>
+    </servlet-mapping>
+
 </web-app>
