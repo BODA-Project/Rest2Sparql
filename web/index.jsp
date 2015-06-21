@@ -7,7 +7,7 @@
         <meta name="description" content="RDF Datacube Visualization">
         <link rel="shortcut icon" href="img/favicon_3.png">
 
-        <title>REST 2 SPARQL / OLAP</title>
+        <title>REST 2 SPARQL | OLAP</title>
 
         <!-- CSS -->
         <link href="css/bootstrap/bootstrap.min.css" rel="stylesheet">
@@ -487,7 +487,7 @@
             </div>
         </div>
 
-        <!--TODO finished version: minified versions, no autologin, remove link to old page, mobile fix, ... -->
+        <!--TODO finished version: minified versions, no autologin (merger+olap), remove link to old page, mobile fixes, ... -->
 
         <!-- JavaScript -->
 
@@ -522,8 +522,9 @@
         <script src="js/c3/c3.js"></script>
 
         <!-- Custom Scripts -->
+        <script src="js/gui/classes.js"></script>
+        <script src="js/gui/templates.js"></script>
         <script src="js/gui/olap/main.js"></script>
-        <script src="js/gui/olap/templates.js"></script>
         <script src="js/gui/olap/webgl.js"></script>
         <script src="js/gui/olap/interface.js"></script>
     </body>

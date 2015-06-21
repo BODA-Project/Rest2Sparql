@@ -6,6 +6,16 @@
     color: #909090;
 }
 
+.navbar-header {
+    float: none;
+}
+
+#id_changeUserButton {
+    float: right;
+    margin-right: 15px;
+}
+
+
 /*one buttone each line*/
 #id_tab1 .panel-body > .btn-group:first-child {
     margin-bottom: 10px;

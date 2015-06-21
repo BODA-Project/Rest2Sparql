@@ -7,7 +7,7 @@
         <meta name="description" content="RDF Datacube Visualization">
         <link rel="shortcut icon" href="img/favicon_3.png">
 
-        <title>REST 2 SPARQL / MERGE</title>
+        <title>REST 2 SPARQL | MERGE</title>
 
         <!-- CSS -->
         <link href="css/bootstrap/bootstrap.min.css" rel="stylesheet">
@@ -23,8 +23,11 @@
             <div class="navbar-header">
                 <a class="navbar-brand" href="./">Rest2Sparql</a> <!-- TODO link/name -->
                 <!--<a class="navbar-text" href="./">CODE Research</a>-->
-            </div>
 
+                <button type="button" class="btn btn-default btn-sm navbar-btn" id="id_changeUserButton">
+                    <span class="glyphicon glyphicon-log-out"></span> Change User ID...
+                </button>
+            </div>
         </nav>
 
         <div class='container'>
@@ -182,18 +185,22 @@
         <script src="js/threejs/controls/OrbitControls.js"></script>
 
         <!-- Custom Scripts -->
+        <script src="js/gui/classes.js"></script>
+        <script src="js/gui/templates.js"></script>
         <script src="js/gui/merge/main.js"></script>
-        <!--<script src="js/gui/merge/TODO.js"></script>-->
+        <script src="js/gui/merge/interface.js"></script>
+
+
 
         <!--Default first cube if given-->
         <%
             String cube1 = request.getParameter("cube1");
         %>
         <script type="text/javascript">
-            var cube = '<%=cube1%>';
-            if (cube !== "null" && cube !== "") {
+            var CUBE_1 = '<%=cube1%>';
+            if (CUBE_1 !== "null" && CUBE_1 !== "") {
                 // TODO cube given
-                alert("cube is '" + cube + "'");
+                alert("cube #1 is '" + CUBE_1 + "'");
             }
         </script>
 

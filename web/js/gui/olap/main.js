@@ -1,47 +1,6 @@
 /* global THREE, WEBGL, INTERFACE, TEMPLATES, bootbox, d3 */
 // Custom script for the Rest2Sparql GUI
 
-// CLASSES =====================================================================
-
-// Cube class (getCubes)
-function Cube(cubeName, comment, label) {
-    this.cubeName = cubeName;           // e.g. http://code-research.eu/resource/Dataset-173bbc55-68ca-4398-bd28-232415f7db4d
-    this.comment = comment;             // e.g. fish_ld_be.xlsx  +  fish_ld_bg.xlsx  +  ...
-    this.label = label;                 // e.g. headlessMergedCube
-}
-
-// Dimension class (getDimensions)
-function Dimension(dimensionName, label, entities) {
-    this.dimensionName = dimensionName; // e.g. http://code-research.eu/resource/Country
-    this.label = label;                 // e.g. Country
-    this.entities = entities;           // list of entities selected
-    this.rollup = false;                // to be set later
-}
-
-// Measure class (getMeasures)
-function Measure(measureName, label, agg) {
-    this.measureName = measureName;     // e.g. http://code-research.eu/resource/Euro
-    this.label = label;                 // e.g. Euro
-    this.agg = agg;                     // e.g. sum
-}
-
-// Entity class (getEntities)
-function Entity(dimensionName, entityName, label) {
-    this.dimensionName = dimensionName; // e.g. http://code-research.eu/resource/Country
-    this.entityName = entityName;       // e.g. http://code-research.eu/resource/Entity-1b7500d2-6e12-42f0-a006-f38ae763418f
-    this.label = label;                 // e.g. Netherlands
-    this.position;                      // x, y or z coordinate (to be set later)
-    this.rollupLabels;                  // to be set later (list of entities' labels)
-}
-
-// Filter class, for measures
-function Filter(measure, relation, value) {
-    this.measure = measure;             // Measure object
-    this.relation = relation;           // e.g. bigger
-    this.value = value;                 // e.g. 12345
-    this.disabled = false;              // to be set later
-}
-
 // Main namespace
 
 var MAIN = new function () {
@@ -196,55 +155,12 @@ var MAIN = new function () {
     this.logoutUser = function () {
         bootbox.confirm("Really log out?", function (result) {
             if (result) {
-                MAIN.ID = "";
-                MAIN.HASH = "";
+
+                // Remove cookie and refresh page
                 $.removeCookie('ID');
-
-                // Reset configuration
-                MAIN.availableCubes = [];
-                MAIN.availableDimensions = [];
-                MAIN.availableMeasures = [];
-                MAIN.currentCube = undefined;
-                MAIN.currentURL = "";
-                MAIN.xDimensions = [];
-                MAIN.yDimensions = [];
-                MAIN.zDimensions = [];
-                MAIN.measures = [];
-                MAIN.filters = [];
-                MAIN.undoStack = [];
-                MAIN.redoStack = [];
-                MAIN.currentState = undefined;
-                MAIN.entityList = {};
-                MAIN.tempSelection = {};
-                MAIN.entityMap = {};
-                MAIN.resultCache = {};
-
-                // Reset buttons to initial behaviour
-                INTERFACE.disableInputInitially();
-
-                // Reset interface
-                INTERFACE.clearCubes();
-                INTERFACE.clearDimensions();
-                INTERFACE.clearFilters();
-//            INTERFACE.clearMeasures(); // only 1 measure
-
-                // Fade out panels
-                $("#id_dimensionPanel").removeClass("in");
-                $("#id_measurePanel").removeClass("in");
-                $("#id_filterPanel").removeClass("in");
-                $("#id_acceptArea").removeClass("in");
-                $("#id_resetViewButton").removeClass("in");
-                $("#id_chartButton").removeClass("in");
-                $("#id_pageTitle").text("Rest2Sparql");
-
-                // Show default visualization
-                WEBGL.showLoadingScreen();
-
-                // Show login popup again
-                INTERFACE.popupLogin();
+                window.location = "./";
             }
         });
-
     };
 
     // Inits the whole interface
