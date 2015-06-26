@@ -68,6 +68,7 @@ public class CubeManager {
         cube.setVarName("CUBE_NAME", false);
         String query = PrefixManager.createPrefixString() +
                 "SELECT ?CUBE_NAME ?DIMENSION_NAME ?LABEL " +
+                "FROM <" + cube.getName() + "> " +
                 "WHERE { ?CUBE_NAME qb:structure ?dsd. " +
                 "?dsd qb:component ?compSpec. " +
                 "?compSpec qb:dimension ?DIMENSION_NAME. " +
@@ -88,6 +89,7 @@ public class CubeManager {
         cube.setVarName("CUBE_NAME", false);
         String query = PrefixManager.createPrefixString() +
                 "SELECT ?CUBE_NAME ?MEASURE_NAME ?LABEL " +
+                "FROM <" + cube.getName() + "> " +
                 "WHERE { ?CUBE_NAME qb:structure ?dsd. " +
                 "?dsd qb:component ?compSpec. " +
                 "?compSpec qb:measure ?MEASURE_NAME. " +
@@ -110,6 +112,7 @@ public class CubeManager {
         dimension.setVarName("DIMENSION_NAME", false);
         String query = PrefixManager.createPrefixString() +
                 "SELECT ?CUBE_NAME ?DIMENSION_NAME ?ENTITY_NAME ?LABEL " +
+                "FROM <" + cube.getName() + "> " +
                 "WHERE { ?CUBE_NAME qb:structure ?dsd. " +
                 "?dsd qb:component ?compSpec. " +
                 "?compSpec qb:dimension ?DIMENSION_NAME. " +
@@ -156,6 +159,7 @@ public class CubeManager {
         cube.setVarName("CUBE_NAME", false);
         String query = PrefixManager.createPrefixString() +
                 "SELECT ?CUBE_NAME ?DIMENSION_NAME ?LABEL " +
+                "FROM <" + cube.getName() + "> " +
                 "WHERE { ?CUBE_NAME qb:structure ?dsd. " +
                 "?dsd qb:component ?compSpec. " +
                 "?compSpec qb:dimension ?DIMENSION_NAME. " +
@@ -179,6 +183,7 @@ public class CubeManager {
         cube.setVarName("CUBE_NAME", false);
         String query = PrefixManager.createPrefixString() +
                 "SELECT ?CUBE_NAME ?MEASURE_NAME ?LABEL " +
+                "FROM <" + cube.getName() + "> " +
                 "WHERE { ?CUBE_NAME qb:structure ?dsd. " +
                 "?dsd qb:component ?compSpec. " +
                 "?compSpec qb:measure ?MEASURE_NAME. " +
@@ -204,6 +209,7 @@ public class CubeManager {
         dimension.setVarName("DIMENSION_NAME", false);
         String query = PrefixManager.createPrefixString() +
                 "SELECT ?CUBE_NAME ?DIMENSION_NAME ?ENTITY_NAME ?LABEL " +
+                "FROM <" + cube.getName() + "> " +
                 "WHERE { ?CUBE_NAME qb:structure ?dsd. " +
                 "?dsd qb:component ?compSpec. " +
                 "?compSpec qb:dimension ?DIMENSION_NAME. " +

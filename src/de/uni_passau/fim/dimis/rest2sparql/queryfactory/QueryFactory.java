@@ -56,6 +56,7 @@ public class QueryFactory {
         StringBuilder query = new StringBuilder();
         query.append(PrefixManager.createPrefixString());
         query.append(selectString);
+        query.append("FROM <" + cubeName + "> "); // NEW: cube name must match context-uri (named-graph)
         query.append(whereString);
         query.append(filters);
         query.append("}");
@@ -131,6 +132,7 @@ public class QueryFactory {
         StringBuilder query = new StringBuilder();
         query.append(PrefixManager.createPrefixString());
         query.append(selectString);
+        query.append("FROM <" + cube.getName() + "> "); // NEW: cube name must match context-uri (named-graph)
         query.append(whereString);
         query.append(filters);
         query.append("}");
@@ -182,6 +184,7 @@ public class QueryFactory {
         StringBuilder query = new StringBuilder();
         query.append(PrefixManager.createPrefixString());
         query.append(selectString);
+        query.append("FROM <" + cube.getName() + "> "); // NEW: cube name must match context-uri (named-graph)
         query.append(whereString);
         query.append(filters);
         query.append("} ");
