@@ -929,6 +929,7 @@ var INTERFACE = new function () {
 
         // Accept action of popup
         var submitLogin = function (e) {
+            e.preventDefault();
             // Try to login the user with the given ID
             var id = $("#id_loginModalID").val();
             MAIN.loginUser(id);

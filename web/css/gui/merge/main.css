@@ -6,8 +6,17 @@
     color: #909090;
 }
 
+.alert.alert-gray > h4 {
+    margin: 0;
+    color: #909090;
+}
+
 .navbar-header {
     float: none;
+}
+
+.btn-link[disabled] {
+    opacity: 0.5;
 }
 
 #id_changeUserButton {
@@ -15,6 +24,59 @@
     margin-right: 15px;
 }
 
+/*alerts*/
+.alert.alert-gray {
+    background-image: linear-gradient(#F5F5F5, #E8E8E8);
+    border-color: #DDD;
+}
+
+/*Table icons*/
+td > .glyphicon {
+    color: #c0c0c0;
+}
+td.success,
+td.success .glyphicon {
+    color: #97C086;
+}
+td.danger .glyphicon {
+    color: #C08383;
+}
+.table td:first-child {
+    text-align: right;
+}
+.table th:nth-child(2),
+.table th:nth-child(3),
+.table td:nth-child(2),
+.table td:nth-child(3) {
+    text-align: center;
+    width: 30%
+}
+.dimension-table td,
+.measure-table td {
+    vertical-align: middle !important;
+}
+.dimension-table td:first-child,
+.measure-table td:first-child,
+.dimension-table th:first-child,
+.measure-table th:first-child {
+    width: 30%;
+}
+
+.dimension-table td:last-child,
+.measure-table td:last-child,
+.dimension-table th:last-child,
+.measure-table th:last-child {
+    width: 1%;
+}
+
+/* disabled / replaced rows */
+.table tr.replaced {
+    background-color: #f8f8f8;
+    color: #a0a0a0;
+}
+.table tr.replaced > td > b {
+    color: #c0c0c0;
+}
 
 /*one buttone each line*/
 #id_tab1 .panel-body > .btn-group:first-child {
@@ -38,6 +100,9 @@
 #id_tab1 .panel-body button.btn > .button-text {
     float: left;
     padding-right: 0;
+    max-width: 90%;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 #id_wizard > .page-header {

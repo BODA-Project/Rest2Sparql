@@ -155,9 +155,55 @@ var MAIN = new function () {
     this.logoutUser = function () {
         bootbox.confirm("Really log out?", function (result) {
             if (result) {
+                /*
+                 * Configuration is reset, otherwise a user could hit "back"
+                 * in browser after a logout and continue working on the data.
+                 */
 
-                // Remove cookie and refresh page
+                // Remove cookie
                 $.removeCookie('ID');
+
+                // Reset configuration
+                MAIN.availableCubes = [];
+                MAIN.availableDimensions = [];
+                MAIN.availableMeasures = [];
+                MAIN.currentCube = undefined;
+                MAIN.currentURL = "";
+                MAIN.xDimensions = [];
+                MAIN.yDimensions = [];
+                MAIN.zDimensions = [];
+                MAIN.measures = [];
+                MAIN.filters = [];
+                MAIN.undoStack = [];
+                MAIN.redoStack = [];
+                MAIN.currentState = undefined;
+                MAIN.entityList = {};
+                MAIN.tempSelection = {};
+                MAIN.entityMap = {};
+                MAIN.resultCache = {};
+
+                // Reset buttons to initial behaviour
+                INTERFACE.disableInputInitially();
+
+                // Reset interface
+                INTERFACE.clearCubes();
+                INTERFACE.clearDimensions();
+                INTERFACE.clearFilters();
+//                INTERFACE.clearMeasures(); // only 1 measure
+
+                // Fade out panels
+                $("#id_dimensionPanel").removeClass("in");
+                $("#id_measurePanel").removeClass("in");
+                $("#id_filterPanel").removeClass("in");
+                $("#id_acceptArea").removeClass("in");
+                $("#id_resetViewButton").removeClass("in");
+                $("#id_chartButton").removeClass("in");
+                $("#id_pageTitle").text("Rest2Sparql");
+
+                // Show default visualization
+                WEBGL.showLoadingScreen();
+
+                // Refresh page
                 window.location = "./";
             }
         });
@@ -776,7 +822,7 @@ var MAIN = new function () {
         INTERFACE.updateNavigation();
 
         // DEBUG url, undo stack
-        console.log("REQUEST URL", MAIN.currentURL);
+//        console.log("REQUEST URL", MAIN.currentURL);
 //        console.log("UNDO STACK:", MAIN.undoStack);
 //        console.log("REDO STACK:", MAIN.redoStack);
 

@@ -36,15 +36,15 @@
 
             <div class="collapse navbar-collapse">
                 <div class="navbar-right">
-                    <button type="button" class="btn btn-default btn-sm navbar-btn" disabled="disabled" id="id_undoButton">
+                    <button type="button" class="btn btn-link btn-sm navbar-btn" disabled="disabled" id="id_undoButton">
                         <span class="glyphicon glyphicon-chevron-left"></span> Undo</button>
-                    <button type="button" class="btn btn-default btn-sm navbar-btn" disabled="disabled" id="id_redoButton">
+                    <button type="button" class="btn btn-link btn-sm navbar-btn" disabled="disabled" id="id_redoButton">
                         <span class="glyphicon glyphicon-chevron-right"></span> Redo</button>
-                    <button type="button" class="btn btn-default btn-sm navbar-btn" disabled="disabled" id="id_bookmarkButton">
+                    <button type="button" class="btn btn-link btn-sm navbar-btn" disabled="disabled" id="id_bookmarkButton">
                         <span class="glyphicon glyphicon-floppy-disk"></span> Save</button>
 
                     <div class="btn-group dropdown">
-                        <button type="button" class="btn btn-default btn-sm dropdown-toggle" disabled="disabled" id="id_optionsButton" data-toggle="dropdown">
+                        <button type="button" class="btn btn-link btn-sm dropdown-toggle" disabled="disabled" id="id_optionsButton" data-toggle="dropdown">
                             <span class="glyphicon glyphicon glyphicon-cog"></span> Settings <span class="caret"></span>
                         </button>
                         <ul class="dropdown-menu" role="menu">
@@ -54,9 +54,9 @@
                         </ul>
                     </div>
 
-                    <button type="button" class="btn btn-default btn-sm navbar-btn" id="id_mergeButton">
+                    <button type="button" class="btn btn-link btn-sm navbar-btn" id="id_mergeButton">
                         <span class="glyphicon glyphicon-link"></span> Merge...</button>
-                    <button type="button" class="btn btn-default btn-sm navbar-btn" id="id_changeUserButton">
+                    <button type="button" class="btn btn-link btn-sm navbar-btn" id="id_changeUserButton">
                         <span class="glyphicon glyphicon-log-out"></span> Change User ID...</button>
                 </div>
             </div>
@@ -274,8 +274,8 @@
                         <div class="page-header">
                             <h3 id="id_pageTitle">Rest2Sparql</h3>
                             <div class="viz-button-area">
-                                <a href="#" id="id_resetViewButton" class="fade btn"><span class="glyphicon glyphicon-eye-open"></span> Reset View</a>
-                                <a href="#" id="id_chartButton" class="fade btn"><span class="glyphicon glyphicon-stats"></span> Chart</a>
+                                <a href="#" id="id_resetViewButton" class="fade btn btn-link"><span class="glyphicon glyphicon-eye-open"></span> Reset View</a>
+                                <a href="#" id="id_chartButton" class="fade btn btn-link"><span class="glyphicon glyphicon-stats"></span> Chart</a>
                             </div>
                         </div>
                     </div>

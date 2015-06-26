@@ -21,6 +21,10 @@ body {
     margin-right: 15px;
 }
 
+.btn-link[disabled] {
+    opacity: 0.5;
+}
+
 .hiddenTooltip {
     width: 1px;
     height: 1px;

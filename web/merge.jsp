@@ -24,7 +24,7 @@
                 <a class="navbar-brand" href="./">Rest2Sparql</a> <!-- TODO link/name -->
                 <!--<a class="navbar-text" href="./">CODE Research</a>-->
 
-                <button type="button" class="btn btn-default btn-sm navbar-btn" id="id_changeUserButton">
+                <button type="button" class="btn btn-link btn-sm navbar-btn" id="id_changeUserButton">
                     <span class="glyphicon glyphicon-log-out"></span> Change User ID...
                 </button>
             </div>
@@ -56,9 +56,10 @@
                                 <div class="panel-body">
 
                                     <!--CUBE 1-->
+                                    <label for="id_cubeButton1">First Cube</label>
                                     <div class="btn-group">
                                         <button class="btn btn-default btn-sm dropdown-toggle" type="button" data-toggle="dropdown" id="id_cubeButton1">
-                                            <span class="button-text"> First Cube </span>
+                                            <span class="button-text"> Select Cube </span>
                                             <span class="caret"></span>
                                         </button>
                                         <ul class="dropdown-menu" role="menu" id="id_cubeList1">
@@ -67,11 +68,13 @@
                                     </div>
 
                                     <br>
+                                    <br>
 
                                     <!--CUBE 2-->
+                                    <label for="id_cubeButton2">Second Cube</label>
                                     <div class="btn-group">
                                         <button class="btn btn-default btn-sm dropdown-toggle" type="button" data-toggle="dropdown" id="id_cubeButton2">
-                                            <span class="button-text"> Second Cube</span>
+                                            <span class="button-text"> Select Cube </span>
                                             <span class="caret"></span>
                                         </button>
                                         <ul class="dropdown-menu" role="menu" id="id_cubeList2">
@@ -92,7 +95,49 @@
                                 </div>
                                 <div class="panel-body">
 
-                                    TODO: Overview of dimensions and measures and options to add or match them
+                                    <h4>Dimensions</h4>
+
+                                    <table class="table table-bordered dimension-table" id="id_dimensionTable"></table>
+
+                                    <h4>Measures</h4>
+
+                                    <table class="table table-bordered measure-table" id="id_measureTable">
+
+                                        <tr>
+                                            <td></td>
+                                            <th>Cube 1 Name</th>
+                                            <th>Cube 2 Name</th>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Measure 1 Name</td>
+                                            <td class="success"><span class="glyphicon glyphicon-ok"></span></td>
+                                            <td><span class="glyphicon glyphicon-remove"></span></td>
+                                            <td>
+                                                <button class="btn btn-sm btn-default"><span class="glyphicon glyphicon-wrench"></span></button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>Measure 2 Name</td>
+                                            <td><span class="glyphicon glyphicon-remove"></span></td>
+                                            <td class="success"><span class="glyphicon glyphicon-ok"></span></td>
+                                            <td>
+                                                <button class="btn btn-sm btn-default"><span class="glyphicon glyphicon-wrench"></span></button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>Measure 3 Name</td>
+                                            <td class="success"><span class="glyphicon glyphicon-ok"></span></td>
+                                            <td class="success"><span class="glyphicon glyphicon-ok"></span></td>
+                                            <td>
+                                            </td>
+                                        </tr>
+
+                                    </table>
+
+                                    <h4>Infos</h4>
+
+                                    TODO Maybe
 
                                 </div>
                             </div>
@@ -129,10 +174,8 @@
 
                         </div>
                         <ul class="pager wizard">
-                            <li class="previous first" style="display:none;"><a href="#">First</a></li>
-                            <li class="previous"><a href="#">&larr; Previous</a></li>
-                            <li class="next last" style="display:none;"><a href="#">Last</a></li>
-                            <li class="next"><a href="#">Next &rarr;</a></li>
+                            <li class="previous"><a href="#" id="id_wizardPrev">&larr; Previous</a></li>
+                            <li class="next"><a href="#" id="id_wizardNext">Next &rarr;</a></li>
                         </ul>
                     </div>
                 </div>

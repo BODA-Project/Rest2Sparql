@@ -19,12 +19,14 @@ var MERGE_MAIN = new function () {
     this.entityList = {}; // Contains all entities of all dimensions for both cubes (entityList[cubeName][dimensionName].list)
 
     // Cube #1
-    this.availableDimensions1 = [];
-    this.availableMeasures1 = [];
+    this.availableDimensions = {}; // availableDimensions[cubeName] = []
+    this.availableMeasures = {}; // availableMeasures[cubeName] = []
 
-    // Cube #2
-    this.availableDimensions2 = [];
-    this.availableMeasures2 = [];
+
+    this.dimensionMatching = {}; // dimensionMatching[dimensionName1] = dimensionName2, meaning dim 1 will be replaced by dim 2
+    this.measureMatching = {}; // ...
+
+    this.addedDimensions = {}; // addedDimensions[cubeName] = [], list of dimensions with 1 (new default) entity
 
     // Dimension -> label list
 //    this.labelMap = {};
@@ -44,12 +46,25 @@ var MERGE_MAIN = new function () {
     // Inits the whole interface
     this.init = function () {
 
-        // TODO
+        // Set listeners for buttons
+        MERGE_INTERFACE.addInterfaceListeners(); // must be before wizard setup
+
+        // Disable wizard
+        MERGE_INTERFACE.disableWizardInitially();
 
         // Setup wizard
         $('#id_rootWizard').bootstrapWizard({
             onTabClick: function (tab, navigation, index) {
-                return false;
+                // Disable tabbing if button got the disabled class (bugfix, tab is always old tab)
+                return !MERGE_INTERFACE.clickedTab.parent().hasClass("disabled");
+            },
+            onNext: function (tab, navigation, index) {
+                // Disable forward if button got the disabled class
+                return !$("#id_wizardNext").parent().hasClass("disabled");
+            },
+            onTabShow: function (tab, navigation, index) {
+                MERGE_INTERFACE.updateWizardButtons(index);
+                MERGE_INTERFACE.updateWizardPage(index);
             }
         });
 
@@ -60,8 +75,7 @@ var MERGE_MAIN = new function () {
             MERGE_MAIN.loginUser($.cookie("ID"));
         }
 
-        // Set listeners for buttons
-        MERGE_INTERFACE.addInterfaceListeners();
+        // TODO ...
 
     };
 
@@ -163,7 +177,7 @@ var MERGE_MAIN = new function () {
             results.sort(function (a, b) {
                 return alphanumCase(a.LABEL.value, b.LABEL.value);
             });
-            MERGE_MAIN.parseMeasures(results);
+            MERGE_MAIN.parseMeasures(results, cubeName);
         });
         request.fail(function (jqXHR, textStatus) {
             bootbox.alert("Error: " + textStatus);
@@ -195,7 +209,9 @@ var MERGE_MAIN = new function () {
                 var label = result.LABEL.value;
                 list.push(new Entity(dimensionName, entityName, label));
             });
-            list.sort(labelCompare);
+            list.sort(function (a, b) {
+                return alphanumCase(a.label, b.label);
+            });
             MERGE_MAIN.entityList[cubeName][dimensionName] = {};
             MERGE_MAIN.entityList[cubeName][dimensionName].list = list; // Add it to the list
         });
@@ -224,15 +240,16 @@ var MERGE_MAIN = new function () {
     /**
      * Add results to available measures
      * @param {json} results json result containing measures
+     * @param {String} cubeName the cube URI
      */
-    this.parseMeasures = function (results) {
-        MERGE_MAIN.availableMeasures = [];
+    this.parseMeasures = function (results, cubeName) {
+        MERGE_MAIN.availableMeasures[cubeName] = [];
 
         // Iterate through available measures
         $.each(results, function (index, element) {
             var measureName = element.MEASURE_NAME.value;
             var label = element.LABEL.value;
-            MERGE_MAIN.availableMeasures.push(new Measure(measureName, label));
+            MERGE_MAIN.availableMeasures[cubeName].push(new Measure(measureName, label));
         });
     };
 
@@ -242,13 +259,13 @@ var MERGE_MAIN = new function () {
      * @param {String} cubeName the cube URI
      */
     this.parseDimensions = function (results, cubeName) {
-        MERGE_MAIN.availableDimensions = [];
+        MERGE_MAIN.availableDimensions[cubeName] = [];
 
         // Iterate through available dimensions
         $.each(results, function (index, element) {
             var dimensionName = element.DIMENSION_NAME.value;
             var label = element.LABEL.value;
-            MERGE_MAIN.availableDimensions.push(new Dimension(dimensionName, label));
+            MERGE_MAIN.availableDimensions[cubeName].push(new Dimension(dimensionName, label));
 
             // Query the entities for the new dimension
             MERGE_MAIN.queryEntityList(cubeName, dimensionName);
@@ -337,7 +354,199 @@ var MERGE_MAIN = new function () {
 
     };
 
+    /**
+     * Executes callback after all ajax is done
+     */
+    this.waitForAjax = function (callback) {
+        $(document).off('ajaxStop'); // remove handler if given
+        $(document).ajaxStop(function () {
+            console.log("DEBUG: All ajax done");
+            $(document).off('ajaxStop'); // remove handler
 
+            // Execute given callback function
+            if (callback) {
+                callback();
+            }
+        });
+
+        // TODO: add dummy ajax call?
+
+    };
+
+
+    /**
+     * Checks if a dimension with the given name (uri) is in the given list.
+     *
+     * @param dimensionList the list of dimensions
+     * @param dimensionName the dimensions's uri to lock for
+     * @returns {Boolean}
+     */
+    this.containsDimension = function (dimensionList, dimensionName) {
+        var result = false;
+        $.each(dimensionList, function (i, dimension) {
+            if (dimension.dimensionName === dimensionName) {
+                result = true;
+                return false; // break
+            }
+        });
+        return result;
+    };
+
+    /**
+     * Compute a list of dimensions that are missing in cube A, but present in cube B.
+     *
+     * @param dimensionListA list A
+     * @param dimensionListB list B
+     * @returns {Array} list of dimensions
+     */
+    this.computeMissingList = function (dimensionListA, dimensionListB) {
+        var result = [];
+        $.each(dimensionListB, function (i, dimensionB) {
+            var isInA = false;
+            $.each(dimensionListA, function (i, dimensionA) {
+                if (dimensionB.dimensionName === dimensionA.dimensionName) {
+                    isInA = true; // dimension is in both cubes
+                    return false; // break
+                }
+            });
+            if (!isInA) {
+                result.push(dimensionB);
+            }
+        });
+        return result;
+    };
+
+    /**
+     * Checks if the given dimension was added (with default entity) in one of the cubes.
+     *
+     * @param dimensionName
+     * @returns {Boolean}
+     */
+    this.isAddedDimension = function (dimensionName) {
+        var result = false;
+        $.each(MERGE_MAIN.addedDimensions, function (key, dimensionList) {
+            $.each(dimensionList, function (i, dimension) {
+                if (dimensionName === dimension.dimensionName) {
+                    result = true;
+                    return false; // break
+                }
+            });
+        });
+        return result;
+    };
+
+    /**
+     * Checks if the given dimension is a replacement for another dimension.
+     *
+     * @param dimensionName
+     * @returns {Boolean}
+     */
+    this.isMatchedDimension = function (dimensionName) {
+        var result = false;
+        $.each(MERGE_MAIN.dimensionMatching, function (key, value) {
+            if (value === dimensionName) {
+                result = true;
+                return false; // break
+            }
+        });
+        return result;
+    };
+
+    /**
+     * Get the dimension that replaces the given dimension.
+     *
+     * @param dimensionName
+     * @returns {Dimension} the dimension that will replace the given dimension
+     */
+    this.getMatchedDimension = function (dimensionName) {
+        var dimensionName;
+        $.each(MERGE_MAIN.dimensionMatching, function (key, value) {
+            if (key === dimensionName) {
+                dimensionName = value;
+                return false; // break
+            }
+        });
+
+        // Get the dimension object with this name
+        var result;
+        $.each(MERGE_MAIN.availableDimensions, function (key, dimensionList) {
+            $.each(dimensionList, function (i, dimension) {
+                if (dimensionName === dimension.dimensionName) {
+                    result = dimension;
+                    return false; // break
+                }
+            });
+        });
+        return result;
+    };
+
+    /**
+     * Get the dimension that is to be replaced by the given dimension.
+     *
+     * @param dimensionName
+     * @returns {Dimension} the dimension that will be replaced
+     */
+    this.getMatchingDimension = function (dimensionName) {
+        var dimensionName;
+        $.each(MERGE_MAIN.dimensionMatching, function (key, value) {
+            if (value === dimensionName) {
+                dimensionName = key;
+                return false; // break
+            }
+        });
+
+        // Get the dimension object with this name
+        var result;
+        $.each(MERGE_MAIN.availableDimensions, function (key, dimensionList) {
+            $.each(dimensionList, function (i, dimension) {
+                if (dimensionName === dimension.dimensionName) {
+                    result = dimension;
+                    return false; // break
+                }
+            });
+        });
+        return result;
+    };
+
+    /**
+     * Delete the dimension-matching of the given dimension (uri).
+     *
+     * @param dimensionName
+     */
+    this.undoDimensionMatching = function (dimensionName) {
+        delete MERGE_MAIN.dimensionMatching[dimensionName]; // delete to avoid errors when iterating
+    };
+
+    /**
+     * Delete the dimension-adding of the given dimension (uri).
+     *
+     * @param dimensionName
+     */
+    this.undoDimensionAdding = function (dimensionName) {
+        $.each(MERGE_MAIN.addedDimensions, function (key, dimensionList) {
+            $.each(dimensionList, function (i, dimension) {
+                if (dimensionName === dimension.dimensionName) {
+                    dimensionList.splice(i, 1); // remove from list
+                    result = dimension;
+                    return false; // break
+                }
+            });
+        });
+        delete MERGE_MAIN.dimensionMatching[dimensionName]; // delete to avoid errors when iterating
+    };
+
+
+
+    /**
+     * Check if the current configuration of matching and adding dimensions is
+     * complete and visualization or storage can be done.
+     *
+     * @returns {Boolean} true if the config is ok
+     */
+    this.isValidConfiguration = function () {
+        // TODO!
+        return false;
+    };
 
 
     // Returns a string like 71,003,345 (adds points and comma)
@@ -360,16 +569,6 @@ var MERGE_MAIN = new function () {
         var g = parseInt(hex.substring(2, 4), 16);
         var b = parseInt(hex.substring(4, 6), 16);
         return 'rgba(' + r + ',' + g + ',' + b + ',' + opacity + ')';
-    };
-
-    /**
-     * Compare function for sorting by an objects label property.
-     *
-     * @param a first entity
-     * @param b second entity
-     */
-    var labelCompare = function (a, b) {
-        return alphanumCase(a.label, b.label);
     };
 
     // String extensions
