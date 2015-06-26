@@ -119,7 +119,7 @@ var MAIN = new function () {
                 }
                 var results = obj.results.bindings;
                 if (results.length === 0) {
-                    bootbox.alert("There are no Cubes belonging to User ID &lt;" + id + "&gt;", function () {
+                    bootbox.alert('There are no Cubes belonging to User ID "' + id + '"', function () {
 
                         // Bring up modal if not shown
                         if ($("#id_loginModal").length !== 1) {
@@ -198,7 +198,7 @@ var MAIN = new function () {
                 $("#id_acceptArea").removeClass("in");
                 $("#id_resetViewButton").removeClass("in");
                 $("#id_chartButton").removeClass("in");
-                $("#id_pageTitle").text("Rest2Sparql");
+                $("#id_pageTitle").html('<img src="img/logo_100_3.png"> Rest2Sparql');
 
                 // Show default visualization
                 WEBGL.showLoadingScreen();

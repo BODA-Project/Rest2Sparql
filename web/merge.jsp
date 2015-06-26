@@ -135,10 +135,6 @@
 
                                     </table>
 
-                                    <h4>Infos</h4>
-
-                                    TODO Maybe
-
                                 </div>
                             </div>
 
@@ -199,6 +195,40 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Dimension Modal (hidden by default) -->
+        <div class="modal fade" id="id_addDimensionModal">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title"></h4>
+                    </div>
+                    <div class="modal-body">
+                        <form>
+                            <div class="form-group">
+                                <label for="id_addDimensionModalInput" class="control-label">Enter an Entity Label:</label>
+                                <input type="text" class="form-control" id="id_addDimensionModalInput">
+                            </div>
+                        </form>
+                        <label for="id_addDimensionModalDropdown" class="control-label">Or choose an existing Entity:</label>
+                        <br>
+                        <div class="btn-group" id="id_addDimensionModalDropdown">
+                            <button class="btn btn-default dropdown-toggle btn-sm" type="button" data-toggle="dropdown">
+                                <!-- ... -->
+                            </button>
+                            <ul class="dropdown-menu" role="menu">
+                                <!-- ... -->
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" id="id_addDimensionModalOkay">Apply</button>
                     </div>
                 </div>
             </div>

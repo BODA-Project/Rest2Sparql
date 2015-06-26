@@ -29,7 +29,7 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a class="navbar-brand" href="./index_old.html">Rest2Sparql</a>
+                <a class="navbar-brand" href="./">Rest2Sparql</a>
 
                 <!--<a class="navbar-text" href="./">Cube title</a>-->
             </div>
@@ -272,7 +272,7 @@
                 <div class="row">
                     <div class="col-lg-12">
                         <div class="page-header">
-                            <h3 id="id_pageTitle">Rest2Sparql</h3>
+                            <h3 id="id_pageTitle"><img src="img/logo_100_3.png"> Rest2Sparql</h3>
                             <div class="viz-button-area">
                                 <a href="#" id="id_resetViewButton" class="fade btn btn-link"><span class="glyphicon glyphicon-eye-open"></span> Reset View</a>
                                 <a href="#" id="id_chartButton" class="fade btn btn-link"><span class="glyphicon glyphicon-stats"></span> Chart</a>

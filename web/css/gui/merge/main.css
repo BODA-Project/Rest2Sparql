@@ -62,6 +62,11 @@ td.danger .glyphicon {
     width: 30%;
 }
 
+.dimension-table th:last-child,
+.measure-table th:last-child {
+    min-width: 51px; /* for missing buttons */
+}
+
 .dimension-table td:last-child,
 .measure-table td:last-child,
 .dimension-table th:last-child,
@@ -76,6 +81,28 @@ td.danger .glyphicon {
 }
 .table tr.replaced > td > b {
     color: #c0c0c0;
+}
+
+/*Add dimension popup*/
+#id_addDimensionModalDropdown {
+    width: 100%;
+}
+#id_addDimensionModalDropdown button.btn {
+    width: 100%;
+    max-width: 400px;
+    text-align: left;
+}
+#id_addDimensionModalDropdown button.btn > .caret {
+    float: right;
+    margin-top: 8px;
+    margin-left: 5px;
+}
+#id_addDimensionModalDropdown button.btn > .button-text {
+    float: left;
+    padding-right: 0;
+    max-width: 90%;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /*one buttone each line*/

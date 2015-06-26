@@ -18,22 +18,21 @@ var MERGE_MAIN = new function () {
     this.availableCubes = [];
     this.entityList = {}; // Contains all entities of all dimensions for both cubes (entityList[cubeName][dimensionName].list)
 
-    // Cube #1
+    // Available dimensions and measures for each cube
     this.availableDimensions = {}; // availableDimensions[cubeName] = []
     this.availableMeasures = {}; // availableMeasures[cubeName] = []
 
-
+    // Current matching of dimensions and measures (replacement relations)
     this.dimensionMatching = {}; // dimensionMatching[dimensionName1] = dimensionName2, meaning dim 1 will be replaced by dim 2
-    this.measureMatching = {}; // ...
+    this.measureMatching = {}; // -
 
+    // Added entities for missing dimensions
     this.addedDimensions = {}; // addedDimensions[cubeName] = [], list of dimensions with 1 (new default) entity
 
     // Dimension -> label list
 //    this.labelMap = {};
-
     // List of actually used entities (for the visualization only) with stacked dimensions in every entity (if more than one dimension / axis))
 //    this.entityMap = {};
-
     // Cache olap results
 //    this.resultCache = {}; // Map (url: content)
 
@@ -43,7 +42,9 @@ var MERGE_MAIN = new function () {
     });
 
 
-    // Inits the whole interface
+    /**
+     * Init the interface
+     */
     this.init = function () {
 
         // Set listeners for buttons
@@ -125,6 +126,8 @@ var MERGE_MAIN = new function () {
 
     /**
      * Load the list of available dimensions for a cube and fill the lists accordingly
+     *
+     * @param {String} cubeName the cube URI
      */
     this.loadDimensionList = function (cubeName) {
         var url = TEMPLATES.DIMENSION_URL.replace("__cube__", cubeName);
@@ -156,6 +159,8 @@ var MERGE_MAIN = new function () {
 
     /**
      * Load the list of available measures for a cube and fill the lists accordingly
+     *
+     * @param {String} cubeName the cube URI
      */
     this.loadMeasureList = function (cubeName) {
         var url = TEMPLATES.MEASURE_URL.replace("__cube__", cubeName);
@@ -187,6 +192,7 @@ var MERGE_MAIN = new function () {
     /**
      * Loads the list of possible entities for a given dimension (dimension URI).
      *
+     * @param {String} cubeName the cube URI
      * @param {String} dimensionName the dimension URI
      */
     this.queryEntityList = function (cubeName, dimensionName) {
@@ -239,6 +245,7 @@ var MERGE_MAIN = new function () {
 
     /**
      * Add results to available measures
+     *
      * @param {json} results json result containing measures
      * @param {String} cubeName the cube URI
      */
@@ -255,6 +262,7 @@ var MERGE_MAIN = new function () {
 
     /**
      * Add results to available dimensions
+     *
      * @param {json} results json result containing dimensions
      * @param {String} cubeName the cube URI
      */
@@ -304,8 +312,8 @@ var MERGE_MAIN = new function () {
                     return;
                 }
                 var results = obj.results.bindings;
-                if (results.length < 1) { // TODO min 2 cubes ##############################################################################
-                    bootbox.alert("There are no two Cubes belonging to User ID &lt;" + id + "&gt;", function () {
+                if (results.length < 2) {
+                    bootbox.alert('There are no two Cubes belonging to User ID "' + id + '"', function () {
 
                         // Bring up modal if not shown
                         if ($("#id_loginModal").length !== 1) {
@@ -368,9 +376,7 @@ var MERGE_MAIN = new function () {
                 callback();
             }
         });
-
         // TODO: add dummy ajax call?
-
     };
 
 
@@ -393,13 +399,31 @@ var MERGE_MAIN = new function () {
     };
 
     /**
+     * Checks if a measure with the given name (uri) is in the given list.
+     *
+     * @param measureList the list of measures
+     * @param measureName the measure's uri to lock for
+     * @returns {Boolean}
+     */
+    this.containsMeasure = function (measureList, measureName) {
+        var result = false;
+        $.each(measureList, function (i, measure) {
+            if (measure.measureName === measureName) {
+                result = true;
+                return false; // break
+            }
+        });
+        return result;
+    };
+
+    /**
      * Compute a list of dimensions that are missing in cube A, but present in cube B.
      *
      * @param dimensionListA list A
      * @param dimensionListB list B
      * @returns {Array} list of dimensions
      */
-    this.computeMissingList = function (dimensionListA, dimensionListB) {
+    this.computeMissingDimensions = function (dimensionListA, dimensionListB) {
         var result = [];
         $.each(dimensionListB, function (i, dimensionB) {
             var isInA = false;
@@ -411,6 +435,30 @@ var MERGE_MAIN = new function () {
             });
             if (!isInA) {
                 result.push(dimensionB);
+            }
+        });
+        return result;
+    };
+
+    /**
+     * Compute a list of measures that are missing in cube A, but present in cube B.
+     *
+     * @param measureListA list A
+     * @param measureListB list B
+     * @returns {Array} list of measures
+     */
+    this.computeMissingMeasures = function (measureListA, measureListB) {
+        var result = [];
+        $.each(measureListB, function (i, measureB) {
+            var isInA = false;
+            $.each(measureListA, function (i, dimensionA) {
+                if (measureB.measureName === dimensionA.measureName) {
+                    isInA = true; // dimension is in both cubes
+                    return false; // break
+                }
+            });
+            if (!isInA) {
+                result.push(measureB);
             }
         });
         return result;
@@ -453,26 +501,59 @@ var MERGE_MAIN = new function () {
     };
 
     /**
+     * Checks if the given measure is a replacement for another measure.
+     *
+     * @param measureName
+     * @returns {Boolean}
+     */
+    this.isMatchedMeasure = function (measureName) {
+        var result = false;
+        $.each(MERGE_MAIN.measureMatching, function (key, value) {
+            if (value === measureName) {
+                result = true;
+                return false; // break
+            }
+        });
+        return result;
+    };
+
+    /**
      * Get the dimension that replaces the given dimension.
      *
      * @param dimensionName
      * @returns {Dimension} the dimension that will replace the given dimension
      */
     this.getMatchedDimension = function (dimensionName) {
-        var dimensionName;
-        $.each(MERGE_MAIN.dimensionMatching, function (key, value) {
-            if (key === dimensionName) {
-                dimensionName = value;
-                return false; // break
-            }
-        });
+        var replacementName = MERGE_MAIN.dimensionMatching[dimensionName];
 
         // Get the dimension object with this name
         var result;
         $.each(MERGE_MAIN.availableDimensions, function (key, dimensionList) {
             $.each(dimensionList, function (i, dimension) {
-                if (dimensionName === dimension.dimensionName) {
+                if (replacementName === dimension.dimensionName) {
                     result = dimension;
+                    return false; // break
+                }
+            });
+        });
+        return result;
+    };
+
+    /**
+     * Get the measure that replaces the given measure.
+     *
+     * @param measureName
+     * @returns {Measure} the measure that will replace the given measure
+     */
+    this.getMatchedMeasure = function (measureName) {
+        var replacementName = MERGE_MAIN.measureMatching[measureName];
+
+        // Get the measure object with this name
+        var result;
+        $.each(MERGE_MAIN.availableMeasures, function (key, measureList) {
+            $.each(measureList, function (i, measure) {
+                if (replacementName === measure.measureName) {
+                    result = measure;
                     return false; // break
                 }
             });
@@ -487,10 +568,10 @@ var MERGE_MAIN = new function () {
      * @returns {Dimension} the dimension that will be replaced
      */
     this.getMatchingDimension = function (dimensionName) {
-        var dimensionName;
+        var replacedName;
         $.each(MERGE_MAIN.dimensionMatching, function (key, value) {
             if (value === dimensionName) {
-                dimensionName = key;
+                replacedName = key;
                 return false; // break
             }
         });
@@ -499,7 +580,7 @@ var MERGE_MAIN = new function () {
         var result;
         $.each(MERGE_MAIN.availableDimensions, function (key, dimensionList) {
             $.each(dimensionList, function (i, dimension) {
-                if (dimensionName === dimension.dimensionName) {
+                if (replacedName === dimension.dimensionName) {
                     result = dimension;
                     return false; // break
                 }
@@ -509,12 +590,68 @@ var MERGE_MAIN = new function () {
     };
 
     /**
+     * Get the measure that is to be replaced by the given measure.
+     *
+     * @param measureName
+     * @returns {Measure} the measure that will be replaced
+     */
+    this.getMatchingMeasure = function (measureName) {
+        var replacedName;
+        $.each(MERGE_MAIN.measureMatching, function (key, value) {
+            if (value === measureName) {
+                replacedName = key;
+                return false; // break
+            }
+        });
+
+        // Get the measure object with this name
+        var result;
+        $.each(MERGE_MAIN.availableMeasures, function (key, measureList) {
+            $.each(measureList, function (i, measure) {
+                if (replacedName === measure.measureName) {
+                    result = measure;
+                    return false; // break
+                }
+            });
+        });
+        return result;
+    };
+
+    /**
+     * Get the added default entity from a given dimensionName.
+     *
+     * @param dimensionName
+     * @returns {Entity} the entity that was added
+     */
+    this.getAddedEntity = function (dimensionName) {
+        var entity;
+        $.each(MERGE_MAIN.addedDimensions, function (key, dimensionList) {
+            $.each(dimensionList, function (i, dimension) {
+                if (dimensionName === dimension.dimensionName) {
+                    entity = dimension.entities[0];
+                    return false; // break
+                }
+            });
+        });
+        return entity;
+    };
+
+    /**
      * Delete the dimension-matching of the given dimension (uri).
      *
      * @param dimensionName
      */
     this.undoDimensionMatching = function (dimensionName) {
         delete MERGE_MAIN.dimensionMatching[dimensionName]; // delete to avoid errors when iterating
+    };
+
+    /**
+     * Delete the measure-matching of the given measure (uri).
+     *
+     * @param measureName
+     */
+    this.undoMeasureMatching = function (measureName) {
+        delete MERGE_MAIN.measureMatching[measureName]; // delete to avoid errors when iterating
     };
 
     /**
@@ -532,9 +669,7 @@ var MERGE_MAIN = new function () {
                 }
             });
         });
-        delete MERGE_MAIN.dimensionMatching[dimensionName]; // delete to avoid errors when iterating
     };
-
 
 
     /**
@@ -544,6 +679,14 @@ var MERGE_MAIN = new function () {
      * @returns {Boolean} true if the config is ok
      */
     this.isValidConfiguration = function () {
+
+
+
+
+        
+
+
+
         // TODO!
         return false;
     };

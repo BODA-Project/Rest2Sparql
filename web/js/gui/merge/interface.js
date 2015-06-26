@@ -74,7 +74,7 @@ var MERGE_INTERFACE = new function () {
         // Show the measure Table
         MERGE_INTERFACE.showMeasureStructure();
 
-        // TODO: reset button? info area?
+        // TODO: reset button?
 
         // Update wizard buttons (enable / disable next buttons depending on validity of config)
         MERGE_INTERFACE.updateWizardButtons(1);
@@ -104,16 +104,18 @@ var MERGE_INTERFACE = new function () {
             return alphanumCase(a.label, b.label); // sort by label
         });
         var temp = {};
-        $.each(allDimensions, function (i, dimension) {
-            if (temp[dimension.dimensionName]) {
-                allDimensions.pop(dimension); // no duplicates
+        for (var i = allDimensions.length - 1; i >= 0; i--) {
+            var dim = allDimensions[i];
+            if (temp[dim.dimensionName]) {
+                allDimensions.splice(i, 1); // no duplicates
             }
-            temp[dimension.dimensionName] = true;
-        });
+            temp[dim.dimensionName] = true;
+        }
 
         // Get list of possible match partners for each cube (dimensions that are only on one cube)
-        var cube1MissingList = MERGE_MAIN.computeMissingList(cube1Dimensions, cube2Dimensions);
-        var cube2MissingList = MERGE_MAIN.computeMissingList(cube2Dimensions, cube1Dimensions);
+        var cube1MissingList = MERGE_MAIN.computeMissingDimensions(cube1Dimensions, cube2Dimensions);
+        var cube2MissingList = MERGE_MAIN.computeMissingDimensions(cube2Dimensions, cube1Dimensions);
+
 
         // Build dimension table
         dimensionTable.append($(tableHead));
@@ -136,21 +138,21 @@ var MERGE_INTERFACE = new function () {
 
             if (MERGE_MAIN.dimensionMatching[dimension.dimensionName]) {
                 // Dimension will be replaced, gray out row, no button
-                var replacement = MERGE_MAIN.getMatchedDimension(MERGE_MAIN.dimensionMatching[dimension.dimensionName]);
+                var replacement = MERGE_MAIN.getMatchedDimension(dimension.dimensionName);
                 row.addClass("replaced"); // Gray out
 
                 // Check if dimension is in cube 1
                 if (isInCube1) {
                     cube1Cell.append('<span class="glyphicon glyphicon-ok"></span>');
                 } else {
-                    cube1Cell.append('<span class="glyphicon glyphicon-remove"></span> <b>(' + replacement.label + ')</b');
+                    cube1Cell.append('<span class="glyphicon glyphicon-link"></span> <b>' + replacement.label + ')</b');
                 }
 
                 // Check if dimension is in cube 2
                 if (isInCube2) {
                     cube2Cell.append('<span class="glyphicon glyphicon-ok"></span>');
                 } else {
-                    cube2Cell.append('<span class="glyphicon glyphicon-remove"></span> <b>(' + replacement.label + ')</b');
+                    cube2Cell.append('<span class="glyphicon glyphicon-link"></span> <b>' + replacement.label + ')</b');
                 }
             } else if (isMatched) {
                 // Dimension is a replacement for another
@@ -161,7 +163,7 @@ var MERGE_INTERFACE = new function () {
                 if (isInCube1) {
                     cube1Cell.append('<span class="glyphicon glyphicon-ok"></span>');
                 } else {
-                    cube1Cell.append('<span class="glyphicon glyphicon-ok"></span> <b>(' + replacedDimension.label + ')</b>');
+                    cube1Cell.append('<span class="glyphicon glyphicon-link"></span> <b>' + replacedDimension.label + '</b>');
                 }
 
                 // Check if dimension is in cube 2
@@ -169,19 +171,37 @@ var MERGE_INTERFACE = new function () {
                 if (isInCube2) {
                     cube2Cell.append('<span class="glyphicon glyphicon-ok"></span>');
                 } else {
-                    cube2Cell.append('<span class="glyphicon glyphicon-ok"></span> <b>(' + replacedDimension.label + ')</b>');
+                    cube2Cell.append('<span class="glyphicon glyphicon-link"></span> <b>' + replacedDimension.label + '</b>');
                 }
 
-            } else {
-                // No matching, draw normal cells
+            } else if (isAdded) {
+                // Dimension + Default entity is added
+                var addedEntity = MERGE_MAIN.getAddedEntity(dimension.dimensionName);
 
                 // Check if dimension is in cube 1
                 if (isInCube1) {
                     cube1Cell.addClass("success");
                     cube1Cell.append('<span class="glyphicon glyphicon-ok"></span>');
-                } else if (isAdded) {
+                } else {
                     cube1Cell.addClass("success");
-                    cube1Cell.append('<span class="glyphicon glyphicon-plus"></span>');
+                    cube1Cell.append('<span class="glyphicon glyphicon-plus"></span> <b>' + addedEntity.label + '</b>');
+                }
+
+                // Check if dimension is in cube 2
+                if (isInCube2) {
+                    cube2Cell.addClass("success");
+                    cube2Cell.append('<span class="glyphicon glyphicon-ok"></span>');
+                } else {
+                    cube2Cell.addClass("success");
+                    cube2Cell.append('<span class="glyphicon glyphicon-plus"></span> <b>' + addedEntity.label + '</b>');
+                }
+            } else {
+                // Normal unaltered cells
+
+                // Check if dimension is in cube 1
+                if (isInCube1) {
+                    cube1Cell.addClass("success");
+                    cube1Cell.append('<span class="glyphicon glyphicon-ok"></span>');
                 } else {
                     cube1Cell.addClass("danger");
                     cube1Cell.append('<span class="glyphicon glyphicon-remove"></span>');
@@ -191,9 +211,6 @@ var MERGE_INTERFACE = new function () {
                 if (isInCube2) {
                     cube2Cell.addClass("success");
                     cube2Cell.append('<span class="glyphicon glyphicon-ok"></span>');
-                } else if (isAdded) {
-                    cube2Cell.addClass("success");
-                    cube2Cell.append('<span class="glyphicon glyphicon-plus"></span>');
                 } else {
                     cube2Cell.addClass("danger");
                     cube2Cell.append('<span class="glyphicon glyphicon-remove"></span>');
@@ -234,7 +251,7 @@ var MERGE_INTERFACE = new function () {
                         e.preventDefault();
 
                         // Undo the adding (+ default entity)
-                        MERGE_MAIN.undoDimensionAdding(dimension.dimensionName);
+                        MERGE_MAIN.undoDimensionAdding(dimension.dimensionName); // TODO: test when adding works
 
                         // Update whole overview (rebuild)
                         MERGE_INTERFACE.showStructureOverview();
@@ -248,7 +265,7 @@ var MERGE_INTERFACE = new function () {
                         e.preventDefault();
 
                         // Undo the matching
-                        MERGE_MAIN.undoDimensionMatching(replacedDimension.dimensionName); // TODO: test when adding works
+                        MERGE_MAIN.undoDimensionMatching(replacedDimension.dimensionName);
 
                         // Update whole overview (rebuild)
                         MERGE_INTERFACE.showStructureOverview();
@@ -274,15 +291,9 @@ var MERGE_INTERFACE = new function () {
                     addItemLink.on("click", function (e) {
                         e.preventDefault();
 
-
-
-                        alert("TODO: Popup to add default entity for: " + dimension.label); // TODO disambiguation service?
-
-                        // TODO: popup dialog to type an entity (label) for the new dimension
-
-
-                        // TODO: as callback onSuccess: Update whole overview (rebuild)
-                        MERGE_INTERFACE.showStructureOverview();
+                        // Popup dialog to type an entity (label) for the new dimension or choose an existing one
+                        // As callback onSuccess: Update whole overview (rebuild)
+                        MERGE_INTERFACE.popupDimensionAdding(dimension, cubeMissing, MERGE_INTERFACE.showStructureOverview);
                     });
 
                     // Add possible matching dimensions
@@ -294,7 +305,7 @@ var MERGE_INTERFACE = new function () {
                         var matchItem = $("<li role='presentation'></li>").appendTo(dropdownMenu);
                         var matchItemLink = $("<a role='menuitem' tabindex='-1' href='#'>Match <b>" + label + "</b></a>").appendTo(matchItem);
                         matchItem.attr("data-match-dimension", missingDimension.dimensionName);
-                        matchItem.attr("title", "Dimension <" + dimension.label + "> will be replaced by <" + label + ">");
+                        matchItem.attr("title", 'Dimension "' + dimension.label + '" will be replaced by <' + label + '>');
                         matchItem.tooltip();
                         matchItemLink.on("click", function (e) {
                             e.preventDefault();
@@ -333,13 +344,10 @@ var MERGE_INTERFACE = new function () {
                 $("li[data-match-dimension='" + dimension.dimensionName + "']").addClass("disabled");
             });
         });
-
-        // DEBUG
-        console.log("CURRENT DIMENSION MATCHING: ", MERGE_MAIN.dimensionMatching);
     };
 
     /**
-     * Show the dimension part of the overview
+     * Show the measure part of the overview
      */
     this.showMeasureStructure = function () {
         var cube1 = MERGE_MAIN.cube1;
@@ -362,18 +370,193 @@ var MERGE_INTERFACE = new function () {
             return alphanumCase(a.label, b.label); // sort by label
         });
         var temp = {};
-        $.each(allMeasures, function (i, measure) {
+        for (var i = allMeasures.length - 1; i >= 0; i--) {
+            var measure = allMeasures[i];
             if (temp[measure.measureName]) {
-                allMeasures.pop(measure); // no duplicates
+                allMeasures.splice(i, 1); // no duplicates
             }
             temp[measure.measureName] = true;
-        });
+        }
+
+        // Get list of possible match partners for each cube (measures that are only on one cube)
+        var cube1MissingList = MERGE_MAIN.computeMissingMeasures(cube1Measures, cube2Measures);
+        var cube2MissingList = MERGE_MAIN.computeMissingMeasures(cube2Measures, cube1Measures);
 
         // Build measure table
         measureTable.append($(tableHead));
 
-        // TODO...
+        $.each(allMeasures, function (i, measure) {
 
+            var row = $("<tr>").appendTo(measureTable);
+            var measureNameCell = $("<td>").appendTo(row);
+            var cube1Cell = $("<td>").appendTo(row);
+            var cube2Cell = $("<td>").appendTo(row);
+            var buttonCell = $("<td>").appendTo(row);
+
+            // Set label
+            measureNameCell.text(measure.label);
+
+            // Some quick infos
+            var isInCube1 = MERGE_MAIN.containsMeasure(cube1Measures, measure.measureName);
+            var isInCube2 = MERGE_MAIN.containsMeasure(cube2Measures, measure.measureName);
+            var isMatched = MERGE_MAIN.isMatchedMeasure(measure.measureName);
+
+            if (MERGE_MAIN.measureMatching[measure.measureName]) {
+                // Measure will be replaced, gray out row, no button
+                var replacement = MERGE_MAIN.getMatchedMeasure(measure.measureName);
+                row.addClass("replaced"); // Gray out
+
+                // Check if measure is in cube 1
+                if (isInCube1) {
+                    cube1Cell.append('<span class="glyphicon glyphicon-ok"></span>');
+                } else {
+                    cube1Cell.append('<span class="glyphicon glyphicon-link"></span> <b>' + replacement.label + '</b');
+                }
+
+                // Check if measure is in cube 2
+                if (isInCube2) {
+                    cube2Cell.append('<span class="glyphicon glyphicon-ok"></span>');
+                } else {
+                    cube2Cell.append('<span class="glyphicon glyphicon-link"></span> <b>' + replacement.label + '</b');
+                }
+            } else if (isMatched) {
+                // Measure is a replacement for another
+                var replacedMeasure = MERGE_MAIN.getMatchingMeasure(measure.measureName);
+
+                // Check if measure is in cube 1
+                cube1Cell.addClass("success");
+                if (isInCube1) {
+                    cube1Cell.append('<span class="glyphicon glyphicon-ok"></span>');
+                } else {
+                    cube1Cell.append('<span class="glyphicon glyphicon-link"></span> <b>' + replacedMeasure.label + '</b>');
+                }
+
+                // Check if measure is in cube 2
+                cube2Cell.addClass("success");
+                if (isInCube2) {
+                    cube2Cell.append('<span class="glyphicon glyphicon-ok"></span>');
+                } else {
+                    cube2Cell.append('<span class="glyphicon glyphicon-link"></span> <b>' + replacedMeasure.label + '</b>');
+                }
+
+            } else {
+                // No matching, draw normal cells
+
+                // Check if measure is in cube 1
+                if (isInCube1) {
+                    cube1Cell.addClass("success");
+                    cube1Cell.append('<span class="glyphicon glyphicon-ok"></span>');
+                } else {
+                    cube1Cell.append('<span class="glyphicon glyphicon-remove"></span>');
+                }
+
+                // Check if measure is in cube 2
+                if (isInCube2) {
+                    cube2Cell.addClass("success");
+                    cube2Cell.append('<span class="glyphicon glyphicon-ok"></span>');
+                } else {
+                    cube2Cell.append('<span class="glyphicon glyphicon-remove"></span>');
+                }
+            }
+
+            // Show button if measure is missing in one cube
+            if (!isInCube1 || !isInCube2) {
+
+                // Determine which cube has it and which needs it
+                var cubeOk;
+                var cubeMissing;
+                var missingMeasures;
+                if (isInCube1) {
+                    cubeOk = cube1;
+                    cubeMissing = cube2;
+                    missingMeasures = cube1MissingList;
+                } else {
+                    cubeOk = cube2;
+                    cubeMissing = cube1;
+                    missingMeasures = cube2MissingList;
+                }
+
+                var buttonGroup = $('<div class="btn-group"></div>');
+                var button = $('<button class="btn btn-sm btn-default dropdown-toggle" type="button" data-toggle="dropdown"><span class="glyphicon glyphicon-wrench"></span></button>');
+                buttonGroup.append(button);
+                buttonCell.append(buttonGroup);
+
+                // Add menu to match measures
+                var dropdownMenu = $('<ul class="dropdown-menu dropdown-menu-right" role="menu">').appendTo(buttonGroup);
+
+                // Add menu items depending on the measure's state
+                if (isMatched) {
+                    // Add item to undo matching measures
+                    var replacedMeasure = MERGE_MAIN.getMatchingMeasure(measure.measureName);
+                    var undoItem = $("<li role='presentation'></li>").appendTo(dropdownMenu);
+                    var undoItemLink = $("<a role='menuitem' tabindex='-1' href='#'>Undo Matching <b>" + replacedMeasure.label + "</b></a>").appendTo(undoItem);
+                    undoItemLink.on("click", function (e) {
+                        e.preventDefault();
+
+                        // Undo the matching
+                        MERGE_MAIN.undoMeasureMatching(replacedMeasure.measureName);
+
+                        // Update whole overview (rebuild)
+                        MERGE_INTERFACE.showStructureOverview();
+                    });
+                } else if (MERGE_MAIN.measureMatching[measure.measureName]) {
+                    // Add item to undo matching (for the grayed-out line)
+                    var replacingMeasure = MERGE_MAIN.getMatchedMeasure(measure.measureName);
+                    var undoItem = $("<li role='presentation'></li>").appendTo(dropdownMenu);
+                    var undoItemLink = $("<a role='menuitem' tabindex='-1' href='#'>Undo Matching <b>" + replacingMeasure.label + "</b></a>").appendTo(undoItem);
+                    undoItemLink.on("click", function (e) {
+                        e.preventDefault();
+
+                        // Undo the matching
+                        MERGE_MAIN.undoMeasureMatching(measure.measureName);
+
+                        // Update whole overview (rebuild)
+                        MERGE_INTERFACE.showStructureOverview();
+                    });
+                } else {
+                    // No action so far
+
+                    // Add possible matching measures, if zero remove whole button
+                    if (missingMeasures.length === 0) {
+                        buttonCell.empty();
+                    }
+                    $.each(missingMeasures, function (i, missingMeasure) {
+                        var label = missingMeasure.label;
+                        var matchItem = $("<li role='presentation'></li>").appendTo(dropdownMenu);
+                        var matchItemLink = $("<a role='menuitem' tabindex='-1' href='#'>Match <b>" + label + "</b></a>").appendTo(matchItem);
+                        matchItem.attr("data-match-measure", missingMeasure.measureName);
+                        matchItem.attr("title", 'Measure "' + measure.label + '" will be replaced by <' + label + '>');
+                        matchItem.tooltip();
+                        matchItemLink.on("click", function (e) {
+                            e.preventDefault();
+
+                            // Do nothing if already matched
+                            if (MERGE_MAIN.isMatchedMeasure(missingMeasure.measureName) ||
+                                    MERGE_MAIN.measureMatching[missingMeasure.measureName]) {
+                                return;
+                            }
+
+                            // Add to matching list
+                            MERGE_MAIN.measureMatching[measure.measureName] = missingMeasure.measureName; // dim will be replaced by missing dim
+
+                            // Update whole overview (rebuild)
+                            MERGE_INTERFACE.showStructureOverview();
+                        });
+                    });
+                }
+
+
+            } else if (isInCube1 && isInCube2) {
+                // Nothing to do, both cubes have the measure
+            }
+
+        });
+
+        // Disable all menu items according to current measure matching (both ways).
+        $.each(MERGE_MAIN.measureMatching, function (key, value) {
+            $("li[data-match-measure='" + value + "']").addClass("disabled");
+            $("li[data-match-measure='" + key + "']").addClass("disabled");
+        });
     };
 
 
@@ -449,6 +632,13 @@ var MERGE_INTERFACE = new function () {
             prevCube = MERGE_MAIN.cube2;
             MERGE_MAIN.cube2 = cube;
         }
+
+        // Clear available lists of previously selected cubes
+        if (prevCube) {
+            delete MERGE_MAIN.availableDimensions[prevCube.cubeName];
+            delete MERGE_MAIN.availableMeasures[prevCube.cubeName];
+        }
+
         MERGE_MAIN.entityList[cubeName] = {}; // reset entity list
 
         // reset matching / adding configuration
@@ -585,6 +775,132 @@ var MERGE_INTERFACE = new function () {
         // Remove when finished
         modal.on('hidden.bs.modal', function (e) {
             modal.remove();
+        });
+    };
+
+    /**
+     * Show a popup for adding a dimension's entity.
+     * @param dimension
+     * @param missingCube
+     * @param callback
+     */
+    this.popupDimensionAdding = function (dimension, missingCube, callback) {
+
+        // Add popup to the body
+        var modal = $("#id_addDimensionModal");
+        $("body").append(modal);
+
+        var title = $("#id_addDimensionModal h4");
+        var form = $("#id_addDimensionModal form");
+        var input = $("#id_addDimensionModalInput");
+        var acceptButton = $("#id_addDimensionModalOkay");
+        var dropdownButton = $("#id_addDimensionModalDropdown > button");
+        var dropdownList = $("#id_addDimensionModalDropdown > ul");
+
+        var selectedEntity = undefined; // For selection from existing entities
+
+        // Set title
+        title.text('Add Dimension "' + dimension.label + '"');
+
+        // Clear initial input
+        input.val("");
+
+        // Set button text
+        dropdownButton.empty();
+        var text = $('<span class="button-text"> Select Entity </span>');
+        var caret = $('<span class="caret"></span>');
+        dropdownButton.append(text);
+        dropdownButton.append(caret);
+
+        // Build dropdownlist for dimension
+        var entities;
+        $.each(MERGE_MAIN.entityList, function (key, obj) {
+            if (obj[dimension.dimensionName]) {
+                entities = obj[dimension.dimensionName].list;
+                return false; // break
+            }
+        });
+        dropdownList.empty(); // clear first
+        $.each(entities, function (i, entity) {
+            var item = $("<li role='presentation'></li>").appendTo(dropdownList);
+            var itemLink = $("<a role='menuitem' tabindex='-1' href='#'></a>").appendTo(item);
+            itemLink.text(entity.label);
+            itemLink.on("click", function (e) {
+                e.preventDefault();
+
+                // Select entity
+                selectedEntity = entity;
+
+                // Update button text
+                dropdownButton.children(".button-text").text(entity.label + " ");
+
+                // Clear previously typed Label
+                input.val("");
+            });
+        });
+
+        // Add input actions
+        input.off("change");
+        input.on("change", function (e) {
+
+            // Reset selection from list
+            selectedEntity = undefined;
+
+            // Reset selection button
+            dropdownButton.children(".button-text").text(" Select Entity ");
+
+        });
+
+        // Accept action of popup
+        var accept = function (e) {
+            e.preventDefault();
+
+            // Add dimension, check input field and dropdown list
+
+            if (input.val() !== "") {
+                // Selection from input
+                var label = input.val();
+                alert("ENTERED: " + label + ", TODO: disambiguation service");
+                // TODO: disambiguation service for label?
+
+            } else if (selectedEntity) {
+                // Selection from dropdown
+
+                // Apply new dimension + entity
+                if (!MERGE_MAIN.addedDimensions[missingCube.cubeName]) {
+                    MERGE_MAIN.addedDimensions[missingCube.cubeName] = [];
+                }
+                // selected entity as only element in the list
+                var addedDimension = new Dimension(dimension.dimensionName, dimension.label, [selectedEntity]);
+                MERGE_MAIN.addedDimensions[missingCube.cubeName].push(addedDimension);
+            } else {
+                return; // Do nothing if no user interaction
+            }
+
+            // Execute callback function (usually refresh overview)
+            if (callback) {
+                callback();
+            }
+
+            // Hide the modal
+            modal.modal("hide");
+        };
+
+        // Clear previous listeners
+        acceptButton.off("click");
+        form.off("submit");
+
+        // Add listeners
+        acceptButton.on("click", accept);
+        form.on("submit", accept);
+
+        // Show the popup
+        modal.modal();
+
+        // Focus input field
+        modal.off('shown.bs.modal');
+        modal.on('shown.bs.modal', function (e) {
+            input.focus();
         });
     };
 };

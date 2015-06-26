@@ -462,6 +462,9 @@ a.side-glyph:hover {
     overflow: hidden;
     text-overflow: ellipsis;
 }
+#id_pageTitle img {
+    height: 32px;
+}
 
 .viz-button-area {
     position: absolute;
