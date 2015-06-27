@@ -675,13 +675,10 @@ var MERGE_INTERFACE = new function () {
      */
     this.updateWizardButtons = function (wizardIndex) {
 
-        // TODO: enable disable tabs according to configuration!
-        //
         // Tabs on top
         var tab2 = $("a[href=#id_tab2]").parent();
         var tab3 = $("a[href=#id_tab3]").parent();
         var tab4 = $("a[href=#id_tab4]").parent();
-
 
         // Prev / Next buttons
         switch (wizardIndex) {
@@ -696,13 +693,16 @@ var MERGE_INTERFACE = new function () {
                 }
                 break;
             case 1: // Structure matching
-                // TODO: if all dimensions matched or added: ok
-//                if (ok) {
-//                    $("#id_wizardNext").parent().removeClass("disabled");
-//                } else {
-//                    $("#id_wizardNext").parent().addClass("disabled");
-//                }
-
+                // Allow forwarding
+                if (MERGE_MAIN.isValidConfiguration()) {
+                    $("#id_wizardNext").parent().removeClass("disabled");
+                    tab3.removeClass("disabled");
+                    tab4.removeClass("disabled");
+                } else {
+                    $("#id_wizardNext").parent().addClass("disabled");
+                    tab3.addClass("disabled");
+                    tab4.addClass("disabled");
+                }
                 break;
             case 2: // Visualization
                 // You may always advance from visualization.
@@ -712,10 +712,6 @@ var MERGE_INTERFACE = new function () {
                 // Nothing to do. This is the end.
                 break;
         }
-
-
-
-
 
     };
 

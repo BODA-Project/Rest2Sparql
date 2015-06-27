@@ -674,21 +674,33 @@ var MERGE_MAIN = new function () {
 
     /**
      * Check if the current configuration of matching and adding dimensions is
-     * complete and visualization or storage can be done.
+     * complete and visualization or storage can be done. Only dimensions are
+     * checked, since measure matching is optional.
      *
      * @returns {Boolean} true if the config is ok
      */
     this.isValidConfiguration = function () {
+        var cube1 = MERGE_MAIN.cube1;
+        var cube2 = MERGE_MAIN.cube2;
 
+        var cube1Dimensions = MERGE_MAIN.availableDimensions[cube1.cubeName];
+        var cube2Dimensions = MERGE_MAIN.availableDimensions[cube2.cubeName];
 
+        // Get list of possible match partners for each cube (dimensions / measures that are only on one cube)
+        var cube1MissingDimensions = MERGE_MAIN.computeMissingDimensions(cube1Dimensions, cube2Dimensions);
+        var cube2MissingDimensions = MERGE_MAIN.computeMissingDimensions(cube2Dimensions, cube1Dimensions);
 
-
-        
-
-
-
-        // TODO!
-        return false;
+        // Each missing dimension must either be added or matched (one way)
+        var result = true;
+        $.each(cube1MissingDimensions.concat(cube2MissingDimensions), function (i, dimension) {
+            var matched = MERGE_MAIN.getMatchedDimension(dimension.dimensionName);
+            var matching = MERGE_MAIN.getMatchingDimension(dimension.dimensionName);
+            var added = MERGE_MAIN.getAddedEntity(dimension.dimensionName);
+            if (!matched && !matching && !added) {
+                result = false; // dimension must be fixed first
+            }
+        });
+        return result;
     };
 
 
