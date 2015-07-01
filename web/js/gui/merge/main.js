@@ -29,6 +29,9 @@ var MERGE_MAIN = new function () {
     // Added entities for missing dimensions
     this.addedDimensions = {}; // addedDimensions[cubeName] = [], list of dimensions with 1 (new default) entity
 
+    // Queried results of cubes
+    this.observations = {}; // observations[cubeName] = [], list of results
+
     // Dimension -> label list
 //    this.labelMap = {};
     // List of actually used entities (for the visualization only) with stacked dimensions in every entity (if more than one dimension / axis))
@@ -702,6 +705,108 @@ var MERGE_MAIN = new function () {
         });
         return result;
     };
+
+    /**
+     * Query all observations of a given cube, clean them accoring to the
+     * configuration and save them.
+     *
+     * @param {String} cubeName the cube URI
+     */
+    this.loadObservations = function (cubeName) {
+        var url = TEMPLATES.EXECUTE_URL;
+        url = url.replace("__id__", MERGE_MAIN.ID);
+        url = url.replace("__hash__", MERGE_MAIN.HASH);
+        url = url.replace("__cube__", cubeName);
+
+        // Add each dimension
+        $.each(MERGE_MAIN.availableDimensions[cubeName], function (i, dimension) {
+            url += TEMPLATES.MERGER_DIMENSION_PART_URL.replace("__dimension__", dimension.dimensionName);
+        });
+
+        // Add each measure
+        $.each(MERGE_MAIN.availableMeasures[cubeName], function (i, measure) {
+            url += TEMPLATES.MERGER_MEASURE_PART_URL.replace("__measure__", measure.measureName);
+        });
+
+        var request = $.ajax({
+            url: url,
+            headers: {
+                accept: "application/sparql-results+json"
+            }
+        });
+
+        request.done(function (content) {
+            var obj = $.parseJSON(content);
+            var results = obj.results.bindings;
+
+            // DEBUG
+            console.log("Parsed " + results.length + " observations for cube " + cubeName);
+
+            // Convert to clean result objects
+            var cleanResults = [];
+            $.each(results, function (i, result) {
+                var cleanResult = new Result();
+
+                // Add dimension data
+                $.each(MERGE_MAIN.availableDimensions[cubeName], function (j, dimension) {
+
+                    // TODO Implying dimensions are in the same order as requested
+                    var index = j + 1;
+                    var entityName = result["E_NAME_" + index].value;
+                    var entityLabel = result["L_NAME_" + index].value;
+                    var entity = new Entity(null, entityName, entityLabel);
+                    cleanResult.dimensions[dimension.dimensionName] = entity;
+                });
+
+                // Add manually added dimensions
+                if (MERGE_MAIN.addedDimensions[cubeName]) {
+                    $.each(MERGE_MAIN.addedDimensions[cubeName], function (j, dimension) {
+                        cleanResult.dimensions[dimension.dimensionName] = dimension.entities[0];
+                    });
+                }
+
+                // Replace dimension names according to matching (if given)
+                $.each(MERGE_MAIN.dimensionMatching, function (key, value) {
+                    if (cleanResult.dimensions[key] !== undefined) {
+                        cleanResult.dimensions[value] = cleanResult.dimensions[key];
+                        delete cleanResult.dimensions[key]; // delete old reference
+                    }
+                });
+
+                // Add measure data
+                $.each(MERGE_MAIN.availableMeasures[cubeName], function (j, measure) {
+
+                    // TODO Implying measures are in the same order as requested
+                    var index = j + 1 + MERGE_MAIN.availableDimensions[cubeName].length; // counting after dimensions
+                    var value = result["V_NAME_" + index].value;
+                    if (value) {
+                        value = parseFloat(value);
+                        cleanResult.measures[measure.measureName] = value; // might be 'undefined'
+                    }
+                });
+
+                // Replace measure names according to matching (if given)
+                $.each(MERGE_MAIN.measureMatching, function (key, value) {
+                    if (cleanResult.measures[key] !== undefined) {
+                        cleanResult.measures[value] = cleanResult.measures[key];
+                        delete cleanResult.measures[key]; // delete old reference
+                    }
+                });
+
+                // Add the result
+                cleanResults.push(cleanResult);
+            });
+
+            // Save the results
+            MERGE_MAIN.observations[cubeName] = cleanResults;
+        });
+
+        request.fail(function (jqXHR, textStatus) {
+            bootbox.alert("Error: " + textStatus); // TODO escape
+        });
+
+    };
+
 
 
     // Returns a string like 71,003,345 (adds points and comma)

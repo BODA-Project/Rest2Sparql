@@ -148,6 +148,8 @@
                                 </div>
                                 <div class="panel-body">
 
+                                    <div id="id_visualization"></div>
+
                                     TODO: Visualize matched cube (diff -> overlapps, cube1, cube2)
 
                                 </div>

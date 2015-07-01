@@ -145,3 +145,8 @@ td.danger .glyphicon {
 #id_wizard .pager li > a {
     border-radius: 4px;
 }
+
+/*visualization*/
+#id_visualization {
+    min-height: 200px;
+}

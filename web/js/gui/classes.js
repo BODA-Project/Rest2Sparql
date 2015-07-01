@@ -38,3 +38,9 @@ function Filter(measure, relation, value) {
     this.value = value;                 // e.g. 12345
     this.disabled = false;              // to be set later
 }
+
+// Result class (for merger)
+function Result() {
+    this.dimensions = {};               // dimensions[dimensionName] = Entity
+    this.measures = {};                 // measures[measureName] = value
+}

@@ -4,12 +4,7 @@
 
 var MERGE_INTERFACE = new function () {
 
-    this.clickedTab;
-
-    // For interaction with 3D objects
-//    this.mouseDown = {};
-//    this.mousePressed = false;
-//    this.mousePosition = {}; // absolute mouse position
+    this.clickedTab; // bugfix for wizard
 
     /**
      * Adds listeners to the gui
@@ -62,6 +57,30 @@ var MERGE_INTERFACE = new function () {
 
     };
 
+
+    /**
+     * Queries all observations and shows the visualization.
+     */
+    this.showVisualization = function () {
+
+        // TODO: maybe add button to manually start or skip viz?
+
+        // Query only once
+        var obs1 = MERGE_MAIN.observations[MERGE_MAIN.cube1.cubeName];
+        var obs2 = MERGE_MAIN.observations[MERGE_MAIN.cube2.cubeName];
+        if (!obs1 || !obs2) {
+            // Start the querying for all observations (and modify them according to configuration)
+            MERGE_MAIN.loadObservations(MERGE_MAIN.cube1.cubeName);
+            MERGE_MAIN.loadObservations(MERGE_MAIN.cube2.cubeName);
+
+            // Wait until both cubes have finished loading
+            MERGE_INTERFACE.popupLoadingScreen("Processing...");
+            MERGE_MAIN.waitForAjax(function () {
+                $('#id_loadingModal').modal("hide"); // Close the loading screen
+                MERGE_INTERFACE.visualize(); // visualize
+            });
+        }
+    };
 
     /**
      * Shows the overview of dimensions and measures.
@@ -145,14 +164,14 @@ var MERGE_INTERFACE = new function () {
                 if (isInCube1) {
                     cube1Cell.append('<span class="glyphicon glyphicon-ok"></span>');
                 } else {
-                    cube1Cell.append('<span class="glyphicon glyphicon-link"></span> <b>' + replacement.label + ')</b');
+                    cube1Cell.append('<span class="glyphicon glyphicon-link"></span> <b>' + replacement.label + '</b>');
                 }
 
                 // Check if dimension is in cube 2
                 if (isInCube2) {
                     cube2Cell.append('<span class="glyphicon glyphicon-ok"></span>');
                 } else {
-                    cube2Cell.append('<span class="glyphicon glyphicon-link"></span> <b>' + replacement.label + ')</b');
+                    cube2Cell.append('<span class="glyphicon glyphicon-link"></span> <b>' + replacement.label + '</b>');
                 }
             } else if (isMatched) {
                 // Dimension is a replacement for another
@@ -251,7 +270,10 @@ var MERGE_INTERFACE = new function () {
                         e.preventDefault();
 
                         // Undo the adding (+ default entity)
-                        MERGE_MAIN.undoDimensionAdding(dimension.dimensionName); // TODO: test when adding works
+                        MERGE_MAIN.undoDimensionAdding(dimension.dimensionName);
+
+                        // Discard useless observation (if already queried)
+                        MERGE_MAIN.observations = {};
 
                         // Update whole overview (rebuild)
                         MERGE_INTERFACE.showStructureOverview();
@@ -267,6 +289,9 @@ var MERGE_INTERFACE = new function () {
                         // Undo the matching
                         MERGE_MAIN.undoDimensionMatching(replacedDimension.dimensionName);
 
+                        // Discard useless observation (if already queried)
+                        MERGE_MAIN.observations = {};
+
                         // Update whole overview (rebuild)
                         MERGE_INTERFACE.showStructureOverview();
                     });
@@ -281,6 +306,9 @@ var MERGE_INTERFACE = new function () {
                         // Undo the matching
                         MERGE_MAIN.undoDimensionMatching(dimension.dimensionName);
 
+                        // Discard useless observation (if already queried)
+                        MERGE_MAIN.observations = {};
+
                         // Update whole overview (rebuild)
                         MERGE_INTERFACE.showStructureOverview();
                     });
@@ -293,7 +321,14 @@ var MERGE_INTERFACE = new function () {
 
                         // Popup dialog to type an entity (label) for the new dimension or choose an existing one
                         // As callback onSuccess: Update whole overview (rebuild)
-                        MERGE_INTERFACE.popupDimensionAdding(dimension, cubeMissing, MERGE_INTERFACE.showStructureOverview);
+                        MERGE_INTERFACE.popupDimensionAdding(dimension, cubeMissing, function () {
+
+                            // Discard useless observation (if already queried)
+                            MERGE_MAIN.observations = {};
+
+                            // Update whole overview (rebuild)
+                            MERGE_INTERFACE.showStructureOverview();
+                        });
                     });
 
                     // Add possible matching dimensions
@@ -305,7 +340,7 @@ var MERGE_INTERFACE = new function () {
                         var matchItem = $("<li role='presentation'></li>").appendTo(dropdownMenu);
                         var matchItemLink = $("<a role='menuitem' tabindex='-1' href='#'>Match <b>" + label + "</b></a>").appendTo(matchItem);
                         matchItem.attr("data-match-dimension", missingDimension.dimensionName);
-                        matchItem.attr("title", 'Dimension "' + dimension.label + '" will be replaced by <' + label + '>');
+                        matchItem.attr("title", 'Dimension "' + dimension.label + '" will be replaced by "' + label + '"');
                         matchItem.tooltip();
                         matchItemLink.on("click", function (e) {
                             e.preventDefault();
@@ -319,6 +354,9 @@ var MERGE_INTERFACE = new function () {
 
                             // Add to matching list
                             MERGE_MAIN.dimensionMatching[dimension.dimensionName] = missingDimension.dimensionName; // dim will be replaced by missing dim
+
+                            // Discard useless observation (if already queried)
+                            MERGE_MAIN.observations = {};
 
                             // Update whole overview (rebuild)
                             MERGE_INTERFACE.showStructureOverview();
@@ -410,14 +448,14 @@ var MERGE_INTERFACE = new function () {
                 if (isInCube1) {
                     cube1Cell.append('<span class="glyphicon glyphicon-ok"></span>');
                 } else {
-                    cube1Cell.append('<span class="glyphicon glyphicon-link"></span> <b>' + replacement.label + '</b');
+                    cube1Cell.append('<span class="glyphicon glyphicon-link"></span> <b>' + replacement.label + '</b>');
                 }
 
                 // Check if measure is in cube 2
                 if (isInCube2) {
                     cube2Cell.append('<span class="glyphicon glyphicon-ok"></span>');
                 } else {
-                    cube2Cell.append('<span class="glyphicon glyphicon-link"></span> <b>' + replacement.label + '</b');
+                    cube2Cell.append('<span class="glyphicon glyphicon-link"></span> <b>' + replacement.label + '</b>');
                 }
             } else if (isMatched) {
                 // Measure is a replacement for another
@@ -496,6 +534,9 @@ var MERGE_INTERFACE = new function () {
                         // Undo the matching
                         MERGE_MAIN.undoMeasureMatching(replacedMeasure.measureName);
 
+                        // Discard useless observation (if already queried)
+                        MERGE_MAIN.observations = {};
+
                         // Update whole overview (rebuild)
                         MERGE_INTERFACE.showStructureOverview();
                     });
@@ -509,6 +550,9 @@ var MERGE_INTERFACE = new function () {
 
                         // Undo the matching
                         MERGE_MAIN.undoMeasureMatching(measure.measureName);
+
+                        // Discard useless observation (if already queried)
+                        MERGE_MAIN.observations = {};
 
                         // Update whole overview (rebuild)
                         MERGE_INTERFACE.showStructureOverview();
@@ -525,7 +569,7 @@ var MERGE_INTERFACE = new function () {
                         var matchItem = $("<li role='presentation'></li>").appendTo(dropdownMenu);
                         var matchItemLink = $("<a role='menuitem' tabindex='-1' href='#'>Match <b>" + label + "</b></a>").appendTo(matchItem);
                         matchItem.attr("data-match-measure", missingMeasure.measureName);
-                        matchItem.attr("title", 'Measure "' + measure.label + '" will be replaced by <' + label + '>');
+                        matchItem.attr("title", 'Measure "' + measure.label + '" will be replaced by "' + label + '"');
                         matchItem.tooltip();
                         matchItemLink.on("click", function (e) {
                             e.preventDefault();
@@ -538,6 +582,9 @@ var MERGE_INTERFACE = new function () {
 
                             // Add to matching list
                             MERGE_MAIN.measureMatching[measure.measureName] = missingMeasure.measureName; // dim will be replaced by missing dim
+
+                            // Discard useless observation (if already queried)
+                            MERGE_MAIN.observations = {};
 
                             // Update whole overview (rebuild)
                             MERGE_INTERFACE.showStructureOverview();
@@ -645,6 +692,7 @@ var MERGE_INTERFACE = new function () {
         MERGE_MAIN.dimensionMatching = {};
         MERGE_MAIN.addedDimensions = {};
         MERGE_MAIN.measureMatching = {};
+        MERGE_MAIN.observations = {};
 
         // Query available dimensions and measures and fill the lists
         MERGE_MAIN.loadDimensionList(cubeName);
@@ -728,7 +776,7 @@ var MERGE_INTERFACE = new function () {
                 MERGE_INTERFACE.showStructureOverview();
                 break;
             case 2: // Visualization
-                // TODO
+                MERGE_INTERFACE.showVisualization();
                 break;
             case 3: // Storage
                 // TODO
@@ -898,5 +946,64 @@ var MERGE_INTERFACE = new function () {
         modal.on('shown.bs.modal', function (e) {
             input.focus();
         });
+    };
+
+    /**
+     * Shows a blocking loading screen with a given text.
+     *
+     * @param {String} text
+     */
+    this.popupLoadingScreen = function (text) {
+
+        // Add popup to the body
+        var modal = $(TEMPLATES.MODAL_LOADING_TEMPLATE.replace("__title__", text));
+        $("body").append(modal);
+
+        // Show the popup
+        $('#id_loadingModal').modal({
+            backdrop: 'static',
+            keyboard: false
+        });
+
+        // Remove when finished
+        modal.on('hidden.bs.modal', function (e) {
+            modal.remove();
+        });
+    };
+
+    /**
+     * Visualizes the difference of both cubes. The user can toggle to show all
+     * data, only data about cube1, cube2 or only overlaps of both.
+     */
+    this.visualize = function () {
+        // TODO...
+
+        // Clear old visualization
+        $("#id_visualization").empty();
+
+        // TODO D3 Parallellcoorinates or Radial Chords
+
+        // Add results from cube 1
+        $.each(MERGE_MAIN.observations[MERGE_MAIN.cube1.cubeName], function (i, result) {
+            // TODO
+        });
+
+        // Add results from cube 2
+        $.each(MERGE_MAIN.observations[MERGE_MAIN.cube2.cubeName], function (i, result) {
+            // TODO
+        });
+
+
+        // TEST: first observation from list1
+        var obs1 = MERGE_MAIN.observations[MERGE_MAIN.cube1.cubeName][0];
+        $("#id_visualization").append("<b>First observation (test):</b><br><br>");
+        $.each(obs1.dimensions, function (key, value) {
+            $("#id_visualization").append(key + " = " + value.label + "<br>");
+        });
+        $("#id_visualization").append("<br>");
+        $.each(obs1.measures, function (key, value) {
+            $("#id_visualization").append(key + " = " + value + "<br>");
+        });
+
     };
 };

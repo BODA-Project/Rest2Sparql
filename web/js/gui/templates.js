@@ -20,6 +20,9 @@ var TEMPLATES = new function () {
     this.FILTER_MEASURE_PART_URL = "&m=<__measure__>,select=<false>,filterR=<__filterR__>,filterV=<__filterV__>";
 
     // TODO: observation requests for merger
+    this.MERGER_DIMENSION_PART_URL = "&d=<__dimension__>,select=<true>,group=<false>";
+    this.MERGER_MEASURE_PART_URL = "&m=<__measure__>,select=<true>,group=<false>";
+
 
 
     // HTML Templates
