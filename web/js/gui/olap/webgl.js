@@ -28,7 +28,7 @@ var WEBGL = new function () {
 
     // Mouse interaction
     this.raycaster = new THREE.Raycaster();
-    this.mousePosition = new THREE.Vector2(); // 2D position on canvas
+    this.mousePosition = new THREE.Vector2(-999, 999); // 2D position on canvas
     this.intersected;
 
     // Total cube size
@@ -40,11 +40,16 @@ var WEBGL = new function () {
         WEBGL.scene = new THREE.Scene();
         WEBGL.camera = new THREE.PerspectiveCamera(30, 2 / 1, 0.1, 2000);
 //        WEBGL.camera = new THREE.OrthographicCamera(-(2 / 1) * viewsize / 2, (2 / 1) * viewsize / 2, viewsize / 2, -viewsize / 2, -100, 100);
+
+        // Create the renderer and add its canvas to the page
         WEBGL.renderer = new THREE.WebGLRenderer({antialias: true});
 //        WEBGL.renderer = new THREE.CanvasRenderer();
 //        WEBGL.renderer = new THREE.CSS2DRenderer();
 //        WEBGL.renderer = new THREE.CSS3DRenderer();
 //        WEBGL.renderer = new THREE.SVGRenderer();
+        WEBGL.renderer.setClearColor(0xffffff, 1);
+        $("#id_cube").append(WEBGL.renderer.domElement);
+
         WEBGL.controls = new THREE.OrbitControls(WEBGL.camera, WEBGL.renderer.domElement);
         WEBGL.lighting = new THREE.PointLight(0x202020, 1, 0);
         WEBGL.ambientLight = new THREE.AmbientLight(0xffffff);
@@ -60,11 +65,6 @@ var WEBGL = new function () {
 //        WEBGL.controls.zoomSpeed = 0.5;
         WEBGL.controls.addEventListener('change', WEBGL.onControlMoved, false);
 
-        WEBGL.renderer.setClearColor(0xffffff, 1);
-
-        // Add the canvas to the page
-        $("#id_cube").append(WEBGL.renderer.domElement);
-
         // Raycast for mouse events
         $(WEBGL.renderer.domElement).on("mousemove", INTERFACE.onCanvasMouseMove);
         $(WEBGL.renderer.domElement).on("click", INTERFACE.onCanvasMouseClick);
@@ -74,7 +74,6 @@ var WEBGL = new function () {
         // Start rendering
         WEBGL.resizeVizualisation(); // initially
         WEBGL.animationRequest = requestAnimationFrame(WEBGL.render);
-
     };
 
     // Starts the rendering process of three.js, goes infinitly. Call only once!
@@ -94,7 +93,9 @@ var WEBGL = new function () {
         WEBGL.handleHover(); // TEMP better performance if only done when rendered
     };
 
-    // Stops rendering completely
+    /**
+     * Stops rendering completely.
+     */
     this.stopRendering = function () {
         if (!WEBGL.isPaused && WEBGL.animationRequest) {
             cancelAnimationFrame(WEBGL.animationRequest);
@@ -605,7 +606,7 @@ var WEBGL = new function () {
         var z = WEBGL.totalSize[2];
         var centerPos = new THREE.Vector3(x / 2, y / 2, z / 2);
         var distance = WEBGL.camera.position.distanceTo(centerPos);
-        WEBGL.controls.maxDistance = distance * 1.25; // 25% zoom out max
+        WEBGL.controls.maxDistance = distance * 1.4; // 40% zoom out max
     };
 
     // Creates an entity label with different drawing modes (bold, normal, ...)

@@ -953,8 +953,8 @@ var INTERFACE = new function () {
         modal.on('shown.bs.modal', function (e) {
             $('#id_loginModalID').focus();
 
-            // Stop background rendering
-            WEBGL.stopRendering();
+            // Stop background rendering (rotating demo-cube is ok)
+            // WEBGL.stopRendering();
 
         });
 
@@ -2266,8 +2266,8 @@ var INTERFACE = new function () {
         var node = $(WEBGL.renderer.domElement);
         var x = event.pageX - node.position().left;
         var y = event.pageY - node.position().top;
-        INTERFACE.mousePosition.x = event.pageX;
-        INTERFACE.mousePosition.y = event.pageY;
+//        INTERFACE.mousePosition.x = event.pageX;
+//        INTERFACE.mousePosition.y = event.pageY;
         WEBGL.mousePosition.x = (x / node.width()) * 2 - 1;
         WEBGL.mousePosition.y = -(y / node.height()) * 2 + 1;
     };
@@ -2300,8 +2300,8 @@ var INTERFACE = new function () {
         event.preventDefault();
 
         var node = $(WEBGL.renderer.domElement);
-        INTERFACE.mousePosition.x = event.pageX;
-        INTERFACE.mousePosition.y = event.pageY;
+//        INTERFACE.mousePosition.x = event.pageX;
+//        INTERFACE.mousePosition.y = event.pageY;
         WEBGL.mousePosition.x = -999;
         WEBGL.mousePosition.y = 999;
 
