@@ -1,4 +1,4 @@
-/* global THREE, WEBGL, INTERFACE, TEMPLATES, bootbox, d3 */
+/* global THREE, WEBGL, INTERFACE, TEMPLATES, bootbox, d3, BOOKMARK */
 // Custom script for the Rest2Sparql GUI
 
 // Main namespace
@@ -32,7 +32,7 @@ var MAIN = new function () {
         "#d871b5",
         "#aaaaaa"
     ];
-    this.BOOKMARK_SIGN = "#bookmark=";
+    this.BOOKMARK_SIGN = "?bookmark=";
     this.SCALE_LOG = 0;
     this.SCALE_LINEAR = 1;
 
@@ -74,10 +74,6 @@ var MAIN = new function () {
     // Cache olap results
     this.resultCache = {}; // Map (url: content)
 
-
-    // TODO: max-size of Undo / Redo / resultCache
-
-
     // Initialization
     $(document).ready(function () {
         MAIN.init();
@@ -88,17 +84,18 @@ var MAIN = new function () {
     /**
      * Try to log a user with given id in. the given callback function (optional) is executed after the user's cubes have been loaded.
      *
-     * @param {type} id user id
-     * @param {type} callback function to execute after cubes have been loaded
+     * @param {String} id user id
+     * @param {Boolean} manually whether the login was called manually (after logout)
+     * @param {Function} callback function to execute after cubes have been loaded
      */
-    this.loginUser = function (id, callback) {
+    this.loginUser = function (id, manually, callback) {
         var urlHash = TEMPLATES.GET_HASH_URL.replace("__id__", id);
         var requestHash = $.ajax({
             url: urlHash
         });
 
         requestHash.done(function (hash) {
-            console.log(id + ", HASH = " + hash); // DEBUG id + hash
+            console.log("ID: " + id, "HASH: " + hash); // DEBUG id + hash
 
             // Also check if given user has any cubes
             var urlCubes = TEMPLATES.CUBE_URL.replace("__id__", id);
@@ -135,6 +132,11 @@ var MAIN = new function () {
 
                     // Close the login popup
                     $('#id_loginModal').modal('hide');
+
+                    // Show the welcome/help page after manual login
+                    if (manually) {
+                        INTERFACE.popupHelp();
+                    }
 
                     // Load users cubes...
                     MAIN.loadCubeList(callback);
@@ -224,14 +226,14 @@ var MAIN = new function () {
         INTERFACE.initTooltips();
 
         // Load a given bookmark / shared url
-        if (window.location.href.contains(MAIN.BOOKMARK_SIGN)) {
-            MAIN.loadURL(window.location.href);
+        if (typeof BOOKMARK !== "undefined") {
+            MAIN.loadBookmark(BOOKMARK); // checked previously in jsp page (part after "?bookmark="
         } else {
             // Check if session is open already and login
             if ($.cookie("ID") === undefined) {
                 INTERFACE.popupLogin(); // Show login prompt
             } else {
-                MAIN.loginUser($.cookie("ID"));
+                MAIN.loginUser($.cookie("ID"), false);
             }
         }
     };
@@ -239,12 +241,11 @@ var MAIN = new function () {
     /**
      * Load a given url bookmark as a model and visualize it right away.
      *
-     * @param {string} url
+     * @param {string} bookmark part of the url
      */
-    this.loadURL = function (url) {
-        var decodedURL = decodeURIComponent(url); // cross browser compatible
+    this.loadBookmark = function (bookmark) {
+        var decodedURL = decodeURIComponent(bookmark); // cross browser compatible
         var urlParts = decodedURL.split("&");
-
         var cubeName;
         var id;
         $.each(urlParts, function (i, part) {
@@ -262,7 +263,7 @@ var MAIN = new function () {
         });
 
         // Login with callback function
-        MAIN.loginUser(id, function () {
+        MAIN.loginUser(id, false, function () {
 
             // look for cube in available list by cubeName
             var cube;
@@ -363,7 +364,7 @@ var MAIN = new function () {
      *
      * @returns {String} the generated url to bookmark or share
      */
-    this.saveURL = function () {
+    this.saveBookmark = function () {
         var origin = window.location.protocol + '//' + window.location.hostname + (window.location.port ? ':' + window.location.port : '') + window.location.pathname;
         var urlParts = MAIN.currentURL.split("&");
         var finalURL = "";
@@ -389,11 +390,10 @@ var MAIN = new function () {
                 finalURL += part + "&";
             }
         });
-        finalURL = origin + MAIN.BOOKMARK_SIGN + finalURL.substring(2, finalURL.length - 1); // remove first "./" and last "&"
+//        finalURL = origin + MAIN.BOOKMARK_SIGN + finalURL.substring(2, finalURL.length - 1); // remove first "./" and last "&"
+        finalURL = origin + MAIN.BOOKMARK_SIGN + encodeURIComponent(finalURL.substring(2, finalURL.length - 1)); // remove first "./" and last "&"
         return finalURL;
     };
-
-    // TODO: loading screen text for visualizetion
 
     /**
      * Visualize the given url
@@ -417,15 +417,13 @@ var MAIN = new function () {
 
             // Stop and notify if no results
             if (results.length === 0) {
-
-                // TODO texture for rotating cube "0 Results" instead of popup
                 WEBGL.showLoadingScreen("No Results for the given query.");
 
                 // Disable chart and reset view button
                 $("#id_chartButton").addClass("disabled");
                 $("#id_resetViewButton").addClass("disabled");
 
-                bootbox.alert("No results for the given query.");
+                bootbox.alert("<b>No results for the given query.</b><br>Please refine your selection of entities");
                 return;
             }
 
@@ -567,8 +565,8 @@ var MAIN = new function () {
             // Draw a grid for better orientation
             WEBGL.addGrid();
 
-//            console.log("lowest measure: ", lowestMeasures, ", highest: ", highestMeasures, ", #results: ", results.length); // DEBUG
-
+            // Limit min max zooming
+            WEBGL.updateControlLimits();
         };
 
         // Prefer the already cached result if no "random sample" aggregation wanted
@@ -600,7 +598,8 @@ var MAIN = new function () {
             });
             request.fail(function (jqXHR, textStatus) {
                 // too many entities in bigdata -> "error"
-                if (textStatus === "error") {
+
+                if (textStatus === "error" || textStatus === "") {
                     bootbox.alert("<b>Error:</b><br><br>Too many entities selected. Please select fewer (or all) entities of a dimension.");
                 } else {
                     bootbox.alert("<b>Error:</b><br><br>" + textStatus);
@@ -937,7 +936,7 @@ var MAIN = new function () {
                 if (val.value === dimension.dimensionName) {
 
                     var entityName = ""; // empty uri for grouped entity
-                    var label = "(" + dimension.entities.length + ") " + dimension.label; // TODO: (x) trennen für verschiedene Farben
+                    var label = "(" + dimension.entities.length + ") " + dimension.label;
                     entity = new Entity(dimension.dimensionName, entityName, label);
                     entity.rollupLabels = [];
                     $.each(dimension.entities, function (i, subEntity) {

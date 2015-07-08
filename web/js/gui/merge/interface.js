@@ -274,6 +274,7 @@ var MERGE_INTERFACE = new function () {
 
                         // Discard useless observation (if already queried)
                         MERGE_MAIN.observations = {};
+                        $("#id_visualization").empty();
 
                         // Update whole overview (rebuild)
                         MERGE_INTERFACE.showStructureOverview();
@@ -291,6 +292,7 @@ var MERGE_INTERFACE = new function () {
 
                         // Discard useless observation (if already queried)
                         MERGE_MAIN.observations = {};
+                        $("#id_visualization").empty();
 
                         // Update whole overview (rebuild)
                         MERGE_INTERFACE.showStructureOverview();
@@ -308,6 +310,7 @@ var MERGE_INTERFACE = new function () {
 
                         // Discard useless observation (if already queried)
                         MERGE_MAIN.observations = {};
+                        $("#id_visualization").empty();
 
                         // Update whole overview (rebuild)
                         MERGE_INTERFACE.showStructureOverview();
@@ -325,6 +328,7 @@ var MERGE_INTERFACE = new function () {
 
                             // Discard useless observation (if already queried)
                             MERGE_MAIN.observations = {};
+                            $("#id_visualization").empty();
 
                             // Update whole overview (rebuild)
                             MERGE_INTERFACE.showStructureOverview();
@@ -357,6 +361,7 @@ var MERGE_INTERFACE = new function () {
 
                             // Discard useless observation (if already queried)
                             MERGE_MAIN.observations = {};
+                            $("#id_visualization").empty();
 
                             // Update whole overview (rebuild)
                             MERGE_INTERFACE.showStructureOverview();
@@ -536,6 +541,7 @@ var MERGE_INTERFACE = new function () {
 
                         // Discard useless observation (if already queried)
                         MERGE_MAIN.observations = {};
+                        $("#id_visualization").empty();
 
                         // Update whole overview (rebuild)
                         MERGE_INTERFACE.showStructureOverview();
@@ -553,6 +559,7 @@ var MERGE_INTERFACE = new function () {
 
                         // Discard useless observation (if already queried)
                         MERGE_MAIN.observations = {};
+                        $("#id_visualization").empty();
 
                         // Update whole overview (rebuild)
                         MERGE_INTERFACE.showStructureOverview();
@@ -585,6 +592,7 @@ var MERGE_INTERFACE = new function () {
 
                             // Discard useless observation (if already queried)
                             MERGE_MAIN.observations = {};
+                            $("#id_visualization").empty();
 
                             // Update whole overview (rebuild)
                             MERGE_INTERFACE.showStructureOverview();
@@ -810,10 +818,6 @@ var MERGE_INTERFACE = new function () {
         // Focus input field
         modal.on('shown.bs.modal', function (e) {
             $('#id_loginModalID').focus();
-
-            // TEMP for testing purpose ##############################################
-            $('#id_loginModalID').val("https://github.com/bayerls");
-//            $('#id_loginModalID').val("8023903");
         });
 
         // Remove when finished

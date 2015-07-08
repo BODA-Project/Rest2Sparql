@@ -419,7 +419,7 @@ a.side-glyph:hover {
 #id_zButtonArea > .btn-group,
 #id_filterButtonArea > .btn-group,
 #id_entityModalBody > .btn-group {
-    margin-bottom: 5px;
+    padding-bottom: 5px;
 }
 
 .overlay-menu {
@@ -508,6 +508,24 @@ a.side-glyph:hover {
     position: absolute;
     z-index: 50;
 }*/
+
+/*Help text*/
+#id_helpModal h5 {
+    font-weight: bold;
+}
+
+body.lightModal > .modal-backdrop {
+    background-color: rgba(32,32,32,0.6);
+}
+
+#id_chartInfoButton {
+    margin-right: 10px;
+}
+
+#id_chartInfoButton > span.glyphicon {
+    font-size: 16px;
+}
+
 
 /* Three.js Styling */
 

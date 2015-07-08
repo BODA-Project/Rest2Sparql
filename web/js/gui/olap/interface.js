@@ -4,7 +4,7 @@
 
 var INTERFACE = new function () {
 
-    this.NUM_ENTITIES = 10; // TODO: which ones? how many?
+    this.NUM_ENTITIES = 10; // Number of entities shown per dimension initially
 
     // For interaction with 3D objects
     this.mouseDown = {};
@@ -72,6 +72,12 @@ var INTERFACE = new function () {
 
         // Merge button
 //        $("#id_mergeButton").on('click', TODO);
+
+        // Help button
+        $("#id_helpButton").on("click", function (e) {
+            e.preventDefault();
+            INTERFACE.popupHelp(true);
+        });
 
         // Cancel and Apply
         $("#id_cancelButton").on('click', function (e) {
@@ -180,8 +186,6 @@ var INTERFACE = new function () {
         MAIN.loadDimensionList();
         MAIN.loadMeasureList();
 
-        // TODO evtl "MAIN.clearState()" methode
-
         // Reset filters
         MAIN.filters = [];
         INTERFACE.clearFilters();
@@ -192,7 +196,7 @@ var INTERFACE = new function () {
         MAIN.availableMeasures = [];
         MAIN.currentURL = "";
 
-        // Clear undo / redo stacks TODO warnung vorher
+        // Clear undo / redo stacks
         MAIN.undoStack = [];
         MAIN.redoStack = [];
         MAIN.currentState = undefined;
@@ -321,7 +325,7 @@ var INTERFACE = new function () {
 
     };
 
-    // TODO "addMeasureButton" erstmal nicht benutzt, da bug (?) in API und nur 1 measure möglich
+    // BUG: "addMeasureButton" not used, bug (?) in API, only 1 measure possible
     // Adds a measure button and its menu after the measure was selected.
     this.addMeasureButton = function (measure) {
         var plusButton = $("#id_measurePlus");
@@ -912,11 +916,13 @@ var INTERFACE = new function () {
         $("#id_infoDimension").attr('data-content', TEMPLATES.HINT_DIMENSION);
         $("#id_infoMeasure").attr('data-content', TEMPLATES.HINT_MEASURE);
         $("#id_infoFilter").attr('data-content', TEMPLATES.HINT_FILTER);
+        $("#id_chartInfoButton").attr('data-content', TEMPLATES.HINT_CHART);
 
         // add tooltips
         $('[data-toggle="tooltip"]').tooltip();
 
         // add popovers
+        $("#id_chartInfoButton").popover({container: 'body', placement: "bottom"});
         $('[data-toggle="popover"]').popover({container: 'body', placement: "auto right"});
     };
 
@@ -932,7 +938,7 @@ var INTERFACE = new function () {
             e.preventDefault();
             // Try to login the user with the given ID
             var id = $("#id_loginModalID").val();
-            MAIN.loginUser(id);
+            MAIN.loginUser(id, true);
         };
         $("#id_loginModalOkay").on("click", submitLogin);
         $('#id_loginModal form').on("submit", submitLogin);
@@ -946,10 +952,6 @@ var INTERFACE = new function () {
         // Focus input field
         modal.on('shown.bs.modal', function (e) {
             $('#id_loginModalID').focus();
-
-            // TEMP for testing purpose ##############################################
-            $('#id_loginModalID').val("https://github.com/bayerls");
-//            $('#id_loginModalID').val("8023903");
 
             // Stop background rendering
             WEBGL.stopRendering();
@@ -988,7 +990,7 @@ var INTERFACE = new function () {
     this.popupWhileAjax = function (callback) {
         WEBGL.stopRendering();
         INTERFACE.popupLoadingScreen("Processing...");
-        $(document).ajaxStop(function () { // TODO problematisch: nach ajax fehler cube wechseln -> kaputt
+        $(document).ajaxStop(function () {
             console.log("All ajax done");
             $(document).off('ajaxStop'); // remove handler
 
@@ -1054,12 +1056,57 @@ var INTERFACE = new function () {
     };
 
     /**
+     * Shows a popup containing some help about interaction.
+     *
+     * @param {Boolean} manually whether the help is shown initially after login or manually
+     */
+    this.popupHelp = function (manually) {
+        var modal = $("#id_helpModal");
+        var modalTitle = $("#id_helpModalTitle");
+        $("body").append(modal);
+
+        // Help after login or manually clicked help?
+        if (!manually) {
+            modalTitle.text("Welcome");
+            $("#id_helpInfo").css("display", "");
+
+            // Change backdrop a little
+            $("body").addClass("lightModal");
+        } else {
+            modalTitle.text("Help");
+            $("#id_helpInfo").css("display", "none");
+
+            // Pause rendering in background
+            WEBGL.stopRendering();
+        }
+
+        // Resume visualization when finished
+        modal.off('hidden.bs.modal');
+        modal.on('hidden.bs.modal', function (e) {
+            if (!manually) {
+                // Remove css tweak
+                $("body").removeClass("lightModal");
+            } else {
+                // Resume rendering again
+                WEBGL.resumeRendering();
+            }
+        });
+
+        // Show the popup
+        var backdrop = manually ? true : "static";
+        modal.removeData('bs.modal'); // initialize again
+        modal.modal({
+            backdrop: backdrop
+        });
+    };
+
+    /**
      * Shows a popup for bookmarking or sharing the current state as a link.
      *
      */
     this.popupBookmark = function () {
 
-        var url = MAIN.saveURL();
+        var url = MAIN.saveBookmark();
         var modal = $("#id_bookmarkModal");
         $("body").append(modal);
         var modalBookmarkLink = $("#id_bookmarkLink");
@@ -1580,6 +1627,9 @@ var INTERFACE = new function () {
 
         // Show the popup
         modal.modal();
+
+        // Configure the help message
+        $("#id_chartInfoButton").attr('data-content', TEMPLATES.HINT_CHART.replace("__dimension__", lastDimension.label));
 
         // Resize chart when the modal is finished (fixes chart)
         modal.off('hown.bs.modal');
@@ -2233,7 +2283,7 @@ var INTERFACE = new function () {
         var y = event.pageY - node.position().top;
 
         // cancel if dragged a certain min distance
-        var distance = 6; // TODO: no raotation below
+        var distance = 6; // TODO: no ratation below
         if (Math.abs(x - INTERFACE.mouseDown.x) > distance || Math.abs(y - INTERFACE.mouseDown.y) > distance) {
             return;
         }

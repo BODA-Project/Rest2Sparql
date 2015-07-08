@@ -55,7 +55,7 @@ var WEBGL = new function () {
         WEBGL.controls.noKeys = true;
 //        WEBGL.controls.noPan = true;
         WEBGL.controls.minDistance = 15;
-//        WEBGL.controls.maxDistance = 40;
+//        WEBGL.controls.maxDistance = Infinity;
         WEBGL.controls.rotateSpeed = 0.75;
 //        WEBGL.controls.zoomSpeed = 0.5;
         WEBGL.controls.addEventListener('change', WEBGL.onControlMoved, false);
@@ -243,8 +243,8 @@ var WEBGL = new function () {
 //        var cubeSize = 0.90 + 0.10 * ratio;
         var cubeSize = 0.95;
 //        var cubeSize = 1;
-        var geometry = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize); // TODO nicht würfel sonder etwas flacherer quader -> ca 3x3x2
-        var texture = WEBGL.createSqareLabelTexture(value, ratio); // TEMP only first value for now ( or: "1st \n 2nd")
+        var geometry = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
+        var texture = WEBGL.createSqareLabelTexture(value, ratio); // TEMP only first value for now
         var material = new THREE.MeshLambertMaterial({map: texture});
 
         material.shading = THREE.NoShading;
@@ -426,9 +426,6 @@ var WEBGL = new function () {
         lines.position.y -= 0.5;
         lines.position.z -= 0.5;
         WEBGL.scene.add(lines);
-
-        // TODO no grid for gaps (difficult)
-
     };
 
     // Shows a surrounding transparent cube of a selected label
@@ -597,6 +594,18 @@ var WEBGL = new function () {
         WEBGL.controls.dollyOut(1.10);
         WEBGL.controls.update();
 
+    };
+
+    /**
+     * Sets the limits of zooming (min, max) according to the size of the visualization.
+     */
+    this.updateControlLimits = function () {
+        var x = WEBGL.totalSize[0];
+        var y = WEBGL.totalSize[1];
+        var z = WEBGL.totalSize[2];
+        var centerPos = new THREE.Vector3(x / 2, y / 2, z / 2);
+        var distance = WEBGL.camera.position.distanceTo(centerPos);
+        WEBGL.controls.maxDistance = distance * 1.25; // 25% zoom out max
     };
 
     // Creates an entity label with different drawing modes (bold, normal, ...)
@@ -824,8 +833,6 @@ var WEBGL = new function () {
      */
     this.createSqareLabelTexture = function (text, ratio) {
 
-        // TODO better wrapping, 6 different sides for unequal shaped cube
-
         // round numbers to 2 digits
         if ($.isNumeric(text)) {
             text = MAIN.formatNumber(text, 1);
@@ -884,9 +891,7 @@ var WEBGL = new function () {
 
         // Show loading sign as texture
         if (loadingMessage !== undefined) {
-
             // TODO ...
-
         }
 
         var geometry = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
@@ -913,6 +918,8 @@ var WEBGL = new function () {
         WEBGL.controls.autoRotateSpeed = 5;
         WEBGL.controls.noPan = true;
         WEBGL.controls.update();
+        WEBGL.controls.minDistance = 50;
+        WEBGL.controls.maxDistance = 200;
 
         // Resume if webGL was paused
         WEBGL.resumeRendering();
@@ -936,6 +943,8 @@ var WEBGL = new function () {
         // Reset controls
         WEBGL.controls.autoRotate = false;
         WEBGL.controls.noPan = false;
+        WEBGL.controls.minDistance = 15;
+        WEBGL.controls.maxDistance = Infinity;
     };
 
     // Executes hover events on threejs objects

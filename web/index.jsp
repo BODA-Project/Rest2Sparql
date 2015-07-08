@@ -56,6 +56,8 @@
 
                     <button type="button" class="btn btn-link btn-sm navbar-btn" id="id_mergeButton">
                         <span class="glyphicon glyphicon-link"></span> Merge...</button>
+                    <button type="button" class="btn btn-link btn-sm navbar-btn" id="id_helpButton">
+                        <span class="glyphicon glyphicon-question-sign"></span> Help</button>
                     <button type="button" class="btn btn-link btn-sm navbar-btn" id="id_changeUserButton">
                         <span class="glyphicon glyphicon-log-out"></span> Change User ID...</button>
                 </div>
@@ -275,15 +277,17 @@
                             <h3 id="id_pageTitle"><img src="img/logo_100_3.png"> Rest2Sparql</h3>
                             <div class="viz-button-area">
                                 <a href="#" id="id_resetViewButton" class="fade btn btn-link"><span class="glyphicon glyphicon-eye-open"></span> Reset View</a>
-                                <a href="#" id="id_chartButton" class="fade btn btn-link"><span class="glyphicon glyphicon-stats"></span> Chart</a>
+                                <a href="#" id="id_chartButton" class="fade btn btn-link"><span class="glyphicon glyphicon-stats"></span> Charts</a>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div id="id_cube">
-                    <!--<div style="position:relative;width:5px;height:5px;background-color:#ff0000" id="pointerID"></div>-->
-                </div>
+                <div id="id_cube"></div>
+
+                <!--<div id="id_initialHelp">TEST <br>TEST <br>TEST <br></div>-->
+                <!--TODO: lieber popup zu beginn -->
+
 
             </div>
 
@@ -442,6 +446,9 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <button type="button" id="id_chartInfoButton" class="close" data-toggle="popover" data-delay="200" data-trigger="hover" title="Chart Visualization">
+                            <span class="glyphicon glyphicon-info-sign"></span>
+                        </button>
                         <h4 class="modal-title"></h4>
                     </div>
                     <div class="modal-body">
@@ -478,6 +485,46 @@
                         <div id="id_chart">
                             <!--C3-Chart here-->
                         </div>
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Help Modal (hidden by default) -->
+        <div class="modal fade fade" id="id_helpModal">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title" id="id_helpModalTitle">Welcome</h4>
+                    </div>
+                    <div class="modal-body">
+
+                        <p>
+                            Rest2Sparql is an interactive, multi-dimensional data visualization prototype based on the
+                            <a href="http://www.w3.org/TR/vocab-data-cube/">RDF Data Cube Vocabulary</a> and the principles of OLAP (Online Analytical Processing).
+                        </p>
+
+                        <h5>First Steps</h5>
+                        <p>
+                            You can select a dataset in the left panel. The dataset will be visualized right away with some pre-chosen dimensions and a measure.
+                            You can then interact with your data.
+                        </p>
+
+                        <h5>Interaction</h5>
+                        <p>
+                            Both the side panel and the cube visualization can be used to interact with the given data. Use the <i>left mouse button</i>
+                            or a one-finger-gesture (on mobile devices) to either select objects in the visualization or to rotate the view. To zoom in and out
+                            use the <i>scrollwheel</i> or a two-finger-gesture. To pan (move) the current view use the <i>right mouse button</i> or a three-finger gesture.
+                        </p>
+
+                        <p id="id_helpInfo">
+                            This help page can be shown again by clicking the help button in the top navigation.
+                        </p>
 
                     </div>
                     <div class="modal-footer">
@@ -527,5 +574,20 @@
         <script src="js/gui/olap/main.js"></script>
         <script src="js/gui/olap/webgl.js"></script>
         <script src="js/gui/olap/interface.js"></script>
+
+        <!--Read bookmark parameter if given-->
+        <%
+            String bookmark = request.getParameter("bookmark");
+            if (bookmark != null && bookmark != "") {
+        %>
+        <script type="text/javascript">
+            var BOOKMARK = '<%=bookmark%>'; // Global bookmark variable
+        </script>
+        <%
+            }
+        %>
+
+
+
     </body>
 </html>

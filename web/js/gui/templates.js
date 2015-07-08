@@ -42,5 +42,5 @@ var TEMPLATES = new function () {
     this.HINT_DIMENSION = "Assign dimensions to up to three axes. Use the plus icon to add dimensions and drag & drop to move them up or down. Select a dimension's entities to regulate the number of results. For a conventional tabular layout just use the X and Y axes.";
     this.HINT_MEASURE = "Select a measure to be displayed. Higher values will be closer to the currently selected accent color.";
     this.HINT_FILTER = "Add filters to downsize the number of results. Note that filtering is applied at observation level (before any aggregation).";
-    this.HINT_VIZ = "TODO"; // TODO
+    this.HINT_CHART = 'The shown chart displays all given combinations of dimensions (the observations) as rows. The last dimension of all the axes lists is encoded in color - in this case the dimension "__dimension__".';
 };

@@ -270,14 +270,16 @@
         <!--Default first cube if given-->
         <%
             String cube1 = request.getParameter("cube1");
+            if (cube1 != null && cube1 != "") {
         %>
         <script type="text/javascript">
             var CUBE_1 = '<%=cube1%>';
-            if (CUBE_1 !== "null" && CUBE_1 !== "") {
-                // TODO cube given
-                alert("cube #1 is '" + CUBE_1 + "'");
-            }
+            // TODO cube given
+            alert("cube #1 is '" + CUBE_1 + "'");
         </script>
+        <%
+            }
+        %>
 
     </body>
 </html>
