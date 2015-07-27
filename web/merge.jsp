@@ -13,6 +13,7 @@
         <link href="css/bootstrap/bootstrap.min.css" rel="stylesheet">
         <link href="css/bootstrap/bootstrap-theme.min.css" rel="stylesheet">
         <link href="css/gui/merge/main.css" rel="stylesheet">
+        <link href="css/d3/d3.parcoords.css" rel="stylesheet">
 
     </head>
     <body>
@@ -148,9 +149,7 @@
                                 </div>
                                 <div class="panel-body">
 
-                                    <div id="id_visualization"></div>
-
-                                    TODO: Visualize matched cube (diff -> overlapps, cube1, cube2)
+                                    <div id="id_visualization" class="parcoords"></div>
 
                                 </div>
                             </div>
@@ -254,10 +253,10 @@
         <script src="js/bootstrap/bootbox.min.js"></script>
         <script src="js/bootstrap/jquery.bootstrap.wizard.min.js"></script>
 
-        <!-- THREE.js -->
-        <script src="js/threejs/three.js"></script>
-        <!--<script src="js/threejs/three.min.js"></script>-->
-        <script src="js/threejs/controls/OrbitControls.js"></script>
+        <!-- D3.js -->
+        <script src="js/d3/d3.min.js"></script>
+        <script src="js/d3/d3.parcoords.js"></script>
+        <script src="js/d3/d3.svg.multibrush.js"></script>
 
         <!-- Custom Scripts -->
         <script src="js/gui/classes.js"></script>

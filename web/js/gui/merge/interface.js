@@ -743,26 +743,31 @@ var MERGE_INTERFACE = new function () {
                 if (MERGE_MAIN.cube1 && MERGE_MAIN.cube2) {
                     $("#id_wizardNext").parent().removeClass("disabled");
                     tab2.removeClass("disabled");
+                    tab3.removeClass("disabled");
                 } else {
                     $("#id_wizardNext").parent().addClass("disabled");
                     tab2.addClass("disabled");
+                    tab3.addClass("disabled");
                 }
                 break;
             case 1: // Structure matching
                 // Allow forwarding
                 if (MERGE_MAIN.isValidConfiguration()) {
+                    tab4.removeClass("disabled");
+                } else {
+                    tab4.addClass("disabled");
+                }
+                // You may always advance to visualization (but not to storage)
+                $("#id_wizardNext").parent().removeClass("disabled");
+                break;
+            case 2: // Visualization
+                if (MERGE_MAIN.isValidConfiguration()) {
                     $("#id_wizardNext").parent().removeClass("disabled");
-                    tab3.removeClass("disabled");
                     tab4.removeClass("disabled");
                 } else {
                     $("#id_wizardNext").parent().addClass("disabled");
-                    tab3.addClass("disabled");
                     tab4.addClass("disabled");
                 }
-                break;
-            case 2: // Visualization
-                // You may always advance from visualization.
-                $("#id_wizardNext").parent().removeClass("disabled");
                 break;
             case 3: // Storage
                 // Nothing to do. This is the end.
@@ -980,34 +985,279 @@ var MERGE_INTERFACE = new function () {
      * data, only data about cube1, cube2 or only overlaps of both.
      */
     this.visualize = function () {
-        // TODO...
+        var cube1 = MERGE_MAIN.cube1;
+        var cube2 = MERGE_MAIN.cube2;
+        var cube1Dimensions = MERGE_MAIN.availableDimensions[cube1.cubeName];
+        var cube2Dimensions = MERGE_MAIN.availableDimensions[cube2.cubeName];
+        var cube1Measures = MERGE_MAIN.availableMeasures[cube1.cubeName];
+        var cube2Measures = MERGE_MAIN.availableMeasures[cube2.cubeName];
 
         // Clear old visualization
         $("#id_visualization").empty();
 
-        // TODO D3 Parallellcoorinates or Radial Chords
 
-        // Add results from cube 1
-        $.each(MERGE_MAIN.observations[MERGE_MAIN.cube1.cubeName], function (i, result) {
-            // TODO
+        /*
+         * TODO:
+         *
+         *   + height = max#dimEntities * 10px + 30px
+         *
+         *   ? bundling? maybe by measures
+         *   ? text color (transparent, black on hover)
+         *   ? types...  (measure must be number)
+         *
+         *   + button for: only show overlap / only cube1 / only cube2 / all
+         *   + hover for lines (or list below)
+         *   + calculate Overlap in percent (of all observations)
+         *   + total overlap in %
+         *
+         */
+
+
+        console.log("OBS CUBE1", MERGE_MAIN.observations[cube1.cubeName][0]);
+        console.log("OBS CUBE2", MERGE_MAIN.observations[cube2.cubeName][0]);
+
+
+        // Create sorted list of all dimensions of both cubes (without replaced ones)
+        var allDimensions = cube1Dimensions.concat(cube2Dimensions); // may be fully or partially matched
+        allDimensions.sort(function (a, b) {
+            return alphanumCase(a.label, b.label); // sort by label
+        });
+        for (var i = allDimensions.length - 1; i >= 0; i--) {
+            var dim = allDimensions[i];
+            if (allDimensions[dim.dimensionName]) {
+                allDimensions.splice(i, 1); // no duplicates
+            } else if (MERGE_MAIN.dimensionMatching[dim.dimensionName] !== undefined) {
+                allDimensions.splice(i, 1); // dimension is replaced by another
+            } else {
+                allDimensions[dim.dimensionName] = dim; // for quick access
+            }
+        }
+
+        // Create sorted list of all measures of both cubes (without replaced ones)
+        var allMeasures = cube1Measures.concat(cube2Measures); // may be fully or partially matched
+        allMeasures.sort(function (a, b) {
+            return alphanumCase(a.label, b.label); // sort by label
+        });
+        for (var i = allMeasures.length - 1; i >= 0; i--) {
+            var meas = allMeasures[i];
+            if (allMeasures[meas.measureName]) {
+                allMeasures.splice(i, 1); // no duplicates
+            } else if (MERGE_MAIN.measureMatching[meas.measureName] !== undefined) {
+                allMeasures.splice(i, 1); // dimension is replaced by another
+            } else {
+                allMeasures[meas.measureName] = meas; // for quick access
+            }
+        }
+
+        // Create a list of dimensions that both cubes have, for overlap determination. Compare 1st observations of both cubes.
+        var sharedDimensions = [];
+        var obsC1 = MERGE_MAIN.observations[cube1.cubeName][0];
+        var obsC2 = MERGE_MAIN.observations[cube2.cubeName][0];
+        $.each(obsC1.dimensions, function (key, dimension) {
+            if (obsC2.dimensions[key]) {
+                sharedDimensions.push(allDimensions[key]); // shared, add to list
+            }
         });
 
-        // Add results from cube 2
-        $.each(MERGE_MAIN.observations[MERGE_MAIN.cube2.cubeName], function (i, result) {
-            // TODO
+
+        // Create separate lists for observations of overlaps, cube1 ok, cube2 ok
+        var cube1Obs = []; // cube 1 observations WITHOUT overlaps
+        var cube2Obs = []; // cube 2 observations WITHOUT overlaps
+        var overlapObs = [];
+
+        /**
+         * Create lists of data for the graph and compute overlap. only data from the first list of observations
+         * will be added, the second list is for overlap computing.
+         *
+         * @param observationsA the list of observations to add
+         * @param observationsB the second list for computing overlap
+         */
+        var computeOverlap = function (observationsA, observationsB) {
+            var okList = (observationsA === MERGE_MAIN.observations[cube1.cubeName]) ? cube1Obs : cube2Obs;
+            $.each(observationsA, function (i, resultA) {
+                var overlap = false; // Initially
+                var data = [];
+
+                // Fill the data cell
+                $.each(allDimensions, function (j, dimension) {
+                    if (resultA.dimensions[dimension.dimensionName] === undefined) {
+                        data.push("?"); // TODO empty entity? "not yet defined"
+                    } else {
+                        var label = resultA.dimensions[dimension.dimensionName].label;
+                        if (label.length > 20) {
+                            label = label.substr(0, 19) + "\u2026";
+                            // TODO: tooltip
+                        }
+                        data.push(label); // Add entity label
+                    }
+                });
+                $.each(allMeasures, function (j, measure) {
+                    if (resultA.measures[measure.measureName] === undefined) {
+                        data.push(0); // TODO missing measure? "not yet defined" ? or: 0
+                    } else {
+                        data.push(resultA.measures[measure.measureName]); // Add measure value
+                    }
+                });
+                // TODO specify measures type in graph as NUMBERS (1st obs' measure might be undefined)
+
+
+                // Remember which cube the data belongs to
+                if (observationsA === MERGE_MAIN.observations[cube1.cubeName]) {
+//                    data.cube1 = true; // flag for grouping and green color // TODO: parcoords doesnt allow array member
+                } else {
+//                    data.cube2 = true; // flag for grouping and blue color // TODO: parcoords doesnt allow array member
+                }
+
+                // TODO kubische laufzeit! -> map
+
+                // Check if overlap exists in any other observation of other cube
+                $.each(observationsB, function (j, resultB) {
+
+                    // Check if matched dimensions overlap
+                    var sameDimensions = true;
+                    $.each(sharedDimensions, function (k, dimension) {
+                        var entityA = resultA.dimensions[dimension.dimensionName];
+                        var entityB = resultB.dimensions[dimension.dimensionName];
+                        if (entityA.entityName !== entityB.entityName) {
+                            sameDimensions = false;
+                            return false; // break
+                        }
+                    });
+                    if (!sameDimensions) {
+                        return true; // Skip result, no overlap possible here
+                    }
+
+                    // Check if both observations have the same measure values
+                    var sameMeasures = true;
+                    $.each(allMeasures, function (k, measure) {
+                        var valueA = resultA.measures[measure.measureName];
+                        var valueB = resultB.measures[measure.measureName];
+                        if (valueA !== valueB) {
+                            sameMeasures = false;
+                            return false; // break
+                        }
+                    });
+                    if (sameMeasures) {
+                        return false; // Stop, since overlap would be ok
+                    }
+
+                    // The results are in conflict
+                    overlap = true;
+                    return false; // break
+                });
+
+                // is observation overlapping?
+                if (overlap) {
+//                    data.overlap = true; // flag for color // TODO: parcoords doesnt allow array member
+                    overlapObs.push(data); // Add to overlapping list
+                } else {
+                    okList.push(data);// Add to cube list
+                }
+
+            });
+        };
+
+        // Add results from both cubes
+        computeOverlap(MERGE_MAIN.observations[cube1.cubeName], MERGE_MAIN.observations[cube2.cubeName]);
+//        computeOverlap(MERGE_MAIN.observations[cube2.cubeName], MERGE_MAIN.observations[cube1.cubeName]); // TODO: both ways
+
+        // Create a list of axis titles for the graph
+        var dimTitles = {};
+        $.each(allDimensions, function (i, dimension) {
+            var label = dimension.label;
+            if (label.length > 20) {
+                label = label.substr(0, 29) + "\u2026";
+                // TODO: tooltip
+            }
+            dimTitles[i] = label;
+        });
+        $.each(allMeasures, function (i, measure) {
+            var label = measure.label;
+            if (label.length > 20) {
+                label = label.substr(0, 29) + "\u2026";
+                // TODO: tooltip
+            }
+            dimTitles[allDimensions.length + i] = label;
         });
 
 
-        // TEST: first observation from list1
-        var obs1 = MERGE_MAIN.observations[MERGE_MAIN.cube1.cubeName][0];
-        $("#id_visualization").append("<b>First observation (test):</b><br><br>");
-        $.each(obs1.dimensions, function (key, value) {
-            $("#id_visualization").append(key + " = " + value.label + "<br>");
-        });
-        $("#id_visualization").append("<br>");
-        $.each(obs1.measures, function (key, value) {
-            $("#id_visualization").append(key + " = " + value + "<br>");
+        // Color the lines according to the overlap
+        var setColor = function (data) {
+            if (data.overlap) {
+                if (MERGE_MAIN.isValidConfiguration()) {
+                    return "rgba(255,0,0,0.6)"; // Red
+                } else {
+                    return "rgba(240,140,0,0.6)"; // Orange
+                }
+            } else if (data.cube1) {
+                return "rgba(128,192,255,0.3)"; // Light green
+            } else if (data.cube2) {
+                return "rgba(150,220,128,0.3)"; // Light blue
+            } else {
+                return "rgba(128,128,128,0.3)"; // Gray, should never happen :)
+            }
+        };
+
+        // Find the dimension with the most entities (in total) for calculating the graph height
+        // TODO merge entity lists + count...
+//        var graphHeight = 10 * 30 + 100; // e.g.
+        var graphHeight = 1000; // e.g.
+
+
+        // Concatinate the result lists
+        var allData = cube1Obs.concat(cube2Obs).concat(overlapObs); // TODO: separate lists for turning on / off (ALL cube1 + overlaps)
+
+        // DEBUG
+        console.log("only Cube 1", cube1Obs.length, "only Cube 2", cube2Obs.length, "overlaps", overlapObs.length);
+        console.log(allData)
+        console.log(JSON.stringify(allData.slice(0,500)));
+
+        // Create the graph
+        var parcoords = d3.parcoords({dimensionTitles: dimTitles});
+        parcoords("#id_visualization");
+        parcoords.data(allData);
+
+        // Set coloring
+        parcoords.color(setColor);
+//        parcoords.alpha(1);
+//        var types = {};
+//        $.each(dimTitles, function (i, title) {
+//            types[title] = "number";
+//        });
+//        parcoords.types(types);
+
+//        parcoords.bundlingStrength(0.1)
+//        parcoords.smoothness(0.2)
+//        parcoords.bundleDimension("Random");
+
+        parcoords.render();
+        parcoords.createAxes();
+
+        // DEBUG
+        console.log("TYPES", parcoords.types())
+
+        // Render continuously
+        parcoords.mode("queue");
+        parcoords.rate(50); // TODO
+
+        // Set the graph size
+        parcoords.height(graphHeight); // TODO
+        $("#id_visualization").css("height", graphHeight);
+        parcoords.margin({
+            top: 30,
+            left: 50,
+            right: 0,
+            bottom: 30
         });
 
+        // Enable brushing and reordering
+        parcoords.brushMode("1D-axes");
+        parcoords.reorderable();
+
+        parcoords.render(); // Fix
+
+        // Set fonts
+        parcoords.svg.selectAll("g.tick > text").style("font", "8px sans-serif");
+        parcoords.svg.selectAll("g.axis > text").style("font", "bold 10px sans-serif");
     };
 };

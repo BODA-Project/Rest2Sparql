@@ -32,13 +32,6 @@ var MERGE_MAIN = new function () {
     // Queried results of cubes
     this.observations = {}; // observations[cubeName] = [], list of results
 
-    // Dimension -> label list
-//    this.labelMap = {};
-    // List of actually used entities (for the visualization only) with stacked dimensions in every entity (if more than one dimension / axis))
-//    this.entityMap = {};
-    // Cache olap results
-//    this.resultCache = {}; // Map (url: content)
-
     // Initialization
     $(document).ready(function () {
         MERGE_MAIN.init();

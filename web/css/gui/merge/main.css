@@ -150,3 +150,12 @@ td.danger .glyphicon {
 #id_visualization {
     min-height: 200px;
 }
+
+/*g.tick > text {
+    opacity: 0.1;
+}
+
+g.tick > text:hover {
+    opacity: 1;
+    fill: red;
+}*/
