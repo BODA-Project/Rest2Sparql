@@ -591,6 +591,22 @@
             parcoords.svg.selectAll("g.tick > text").style("font", "10px sans-serif");
             parcoords.svg.selectAll("g.axis > text").style("font", "bold 10px sans-serif");
 
+            // Test hover
+            var labels = $(parcoords.svg.selectAll("g.tick > text")[0])
+            $.each(labels, function (i, element) {
+                element.onmouseenter = function (e) {
+//                    element.style.setProperty("fill", "red");
+                    element.style.setProperty("font", "bold 18px sans-serif");
+                    element.style.setProperty("cursor", "none");
+                };
+                element.onmouseleave = function (e) {
+//                    element.style.setProperty("fill", "blue");
+                    element.style.setProperty("font", "10px sans-serif");
+                    element.style.setProperty("cursor", "default");
+                };
+            });
+
+
             // bundling
 //            parcoords.bundleDimension("Anzahl");
 //            parcoords.smoothness(0.1);
