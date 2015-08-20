@@ -46,4 +46,26 @@
         <url-pattern>/merger</url-pattern>
     </servlet-mapping>
 
+    <!--Disambiguation-->
+    <servlet>
+        <servlet-name>Disambiguation</servlet-name>
+        <servlet-class>de.uni_passau.fim.dimis.rest2sparql.rest.DisambiguationServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>Disambiguation</servlet-name>
+        <url-pattern>/disambiguate</url-pattern>
+    </servlet-mapping>
+
+    <!--Merger Storage-->
+    <servlet>
+        <servlet-name>Storage</servlet-name>
+        <servlet-class>de.uni_passau.fim.dimis.rest2sparql.rest.MergerServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>Storage</servlet-name>
+        <url-pattern>/store</url-pattern>
+    </servlet-mapping>
+
+    <!--TODO: init parameters for disambiguation service-->
+
 </web-app>

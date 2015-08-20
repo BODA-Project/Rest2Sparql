@@ -151,6 +151,43 @@ td.danger .glyphicon {
     min-height: 200px;
 }
 
+/*info table below visualization*/
+#id_visInfo td:first-child {
+    text-align: right;
+}
+#id_visInfo td:nth-child(2) {
+    text-align: left;
+}
+
+#id_visInfo td input[type=checkbox] {
+    vertical-align: top;
+    margin-right: 8px;
+}
+
+#id_visInfo td.cube1obs {
+    color: #89C875
+}
+#id_visInfo td.cube2obs {
+    color: #6CA9E6
+}
+#id_visInfo td.overlap {
+    color: #CC3636
+}
+#id_visInfo td.overlap.incomplete {
+    color: #E17220
+}
+
+/*tooltips*/
+.secretTooltip {
+    width: 1px;
+    height: 1px;
+    position: absolute;
+}
+.tooltip.fade {
+    transition: opacity .025s linear;
+    pointer-events: none;
+}
+
 /*g.tick > text {
     opacity: 0.1;
 }

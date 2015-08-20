@@ -31,6 +31,7 @@ var MERGE_MAIN = new function () {
 
     // Queried results of cubes
     this.observations = {}; // observations[cubeName] = [], list of results
+    this.rawObservations = {}; // rawObservations[cubeName] = [], list of raw downloaded results
 
     // Initialization
     $(document).ready(function () {
@@ -721,17 +722,8 @@ var MERGE_MAIN = new function () {
             url += TEMPLATES.MERGER_MEASURE_PART_URL.replace("__measure__", measure.measureName);
         });
 
-        var request = $.ajax({
-            url: url,
-            headers: {
-                accept: "application/sparql-results+json"
-            }
-        });
-
-        request.done(function (content) {
-            var obj = $.parseJSON(content);
-            var results = obj.results.bindings;
-
+        // manipulate and save downloaded results
+        var callback = function (results) {
             // DEBUG
             console.log("Parsed " + results.length + " observations for cube " + cubeName);
 
@@ -792,12 +784,34 @@ var MERGE_MAIN = new function () {
 
             // Save the results
             MERGE_MAIN.observations[cubeName] = cleanResults;
-        });
+        };
 
-        request.fail(function (jqXHR, textStatus) {
-            bootbox.alert("Error: " + textStatus); // TODO escape
-        });
+        // Only download once and cache for future access
+        if (!MERGE_MAIN.rawObservations[cubeName]) {
+            var request = $.ajax({
+                url: url,
+                headers: {
+                    accept: "application/sparql-results+json"
+                }
+            });
+            request.done(function (content) {
+                var obj = $.parseJSON(content);
+                var results = obj.results.bindings;
 
+                // Cache results for future access
+                MERGE_MAIN.rawObservations[cubeName] = results;
+
+                // Process results
+                callback(results);
+            });
+            request.fail(function (jqXHR, textStatus) {
+                bootbox.alert("Error: " + textStatus); // TODO escape
+            });
+        } else {
+
+            // Process results right away
+            callback(MERGE_MAIN.rawObservations[cubeName]);
+        }
     };
 
 

@@ -33,6 +33,7 @@ var TEMPLATES = new function () {
     this.MODAL_RESULT_TEMPLATE = '<div class="modal fade" id="id_resultModal"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button><h4 class="modal-title">Data Cell Summary</h4></div><div class="modal-body" id="id_resultModalBody"></div><div class="modal-footer"><button type="button" class="btn btn-default" data-dismiss="modal">Close</button></div></div></div></div>';
 
     this.MERGE_TABLE_HEAD = '<tr><th></th><th>__cube1__</th><th>__cube2__</th><th></th></tr>';
+    this.MERGE_TABLE_VIS_INFO = '<table class="table table-bordered table-striped"> <tr> <td>Cube 1: __cube1__</td> <td class="cube1obs">__cube1obs__ Observations</td> </tr>  <tr> <td>Cube 2: __cube2__</td>  <td class="cube2obs">__cube2obs__ Observations</td> </tr> <tr> <td>__overlapTitle__</td> <td class="overlap">__overlap__</td>  </tr> </table>';
 
     // Text Templates
 

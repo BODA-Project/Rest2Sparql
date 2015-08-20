@@ -164,10 +164,9 @@ var INTERFACE = new function () {
     };
 
     /**
-     * Select a given cub
+     * Select a given cube
      * @param {type} cubeName
-     * @param {type} label
-     * @param {type} comment
+     * @param {type} callback
      */
     this.selectCube = function (cube, callback) {
         var cubeName = cube.cubeName;
@@ -1697,8 +1696,8 @@ var INTERFACE = new function () {
 
             // Add change listeners to enable or disable the accept button
             button.on("change", function (e) {
+                $("#id_entityModalOkay").addClass("disabled");
                 $("input[data-entity-name]").each(function (i, elem) {
-                    $("#id_entityModalOkay").addClass("disabled");
                     if ($(elem).prop("checked")) {
                         $("#id_entityModalOkay").removeClass("disabled");
                         return false; // break

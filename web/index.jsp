@@ -534,8 +534,6 @@
             </div>
         </div>
 
-        <!--TODO finished version: minified versions, no autologin (merger+olap), remove link to old page, mobile fixes, ... -->
-
         <!-- JavaScript -->
 
         <!-- alphanum sorting -->

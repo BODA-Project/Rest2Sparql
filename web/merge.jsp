@@ -12,8 +12,8 @@
         <!-- CSS -->
         <link href="css/bootstrap/bootstrap.min.css" rel="stylesheet">
         <link href="css/bootstrap/bootstrap-theme.min.css" rel="stylesheet">
-        <link href="css/gui/merge/main.css" rel="stylesheet">
         <link href="css/d3/d3.parcoords.css" rel="stylesheet">
+        <link href="css/gui/merge/main.css" rel="stylesheet">
 
     </head>
     <body>
@@ -149,7 +149,11 @@
                                 </div>
                                 <div class="panel-body">
 
+                                    <div class="btn-group">
+                                        <button id="id_sizeButton" class="btn btn-default btn-sm" type="button" id="id_cubeButton1">Full Size</button>
+                                    </div>
                                     <div id="id_visualization" class="parcoords"></div>
+                                    <div id="id_visInfo"></div>
 
                                 </div>
                             </div>
@@ -164,7 +168,21 @@
                                 </div>
                                 <div class="panel-body">
 
-                                    TODO: Enter name to save (uri auto-generated)
+                                    <form>
+                                        <div class="form-group">
+                                            <label for="id_mergedCubeNameInput" class="control-label">Enter a Name for the merged Cube:</label>
+                                            <input type="text" class="form-control" id="id_mergedCubeNameInput">
+                                        </div>
+                                    </form>
+
+                                    TODO: radio buttons for preference
+
+                                    <br>
+                                    <br>
+
+                                    <div class="btn-group">
+                                        <button class="btn btn-default dropdown-toggle" type="button" id="id_acceptMergeButton">Save Cube</button>
+                                    </div>
 
                                 </div>
                             </div>
