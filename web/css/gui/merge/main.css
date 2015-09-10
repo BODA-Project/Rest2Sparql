@@ -188,6 +188,16 @@ td.danger .glyphicon {
     pointer-events: none;
 }
 
+
+text.overlap {
+    fill: "rgba(200,0,0,1)";
+    text-shadow: "1px 1px 0 white";
+}
+
+text.overlap.invalid {
+    fill: "rgba(180,100,0,1)";
+}
+
 /*g.tick > text {
     opacity: 0.1;
 }

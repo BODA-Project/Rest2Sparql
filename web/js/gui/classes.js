@@ -22,11 +22,14 @@ function Measure(measureName, label, agg) {
     this.agg = agg;                     // e.g. sum
 }
 
+// TODO: add isDefinedBy (resource) to all entities?
+
 // Entity class (getEntities)
-function Entity(dimensionName, entityName, label) {
+function Entity(dimensionName, entityName, label, resource) {
     this.dimensionName = dimensionName; // e.g. http://code-research.eu/resource/Country
     this.entityName = entityName;       // e.g. http://code-research.eu/resource/Entity-1b7500d2-6e12-42f0-a006-f38ae763418f
     this.label = label;                 // e.g. Netherlands
+    this.resource = entityName;         // e.g. http://code-research.eu/resource/Germany
     this.position;                      // x, y or z coordinate (to be set later)
     this.rollupLabels;                  // to be set later (list of entities' labels)
 }

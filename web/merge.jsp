@@ -168,17 +168,23 @@
                                 </div>
                                 <div class="panel-body">
 
-                                    <form>
+                                    <form id="id_mergeStoreForm">
                                         <div class="form-group">
-                                            <label for="id_mergedCubeNameInput" class="control-label">Enter a Name for the merged Cube:</label>
-                                            <input type="text" class="form-control" id="id_mergedCubeNameInput">
+                                            <label for="id_mergedCubeNameInput" class="control-label">Name for the merged Cube:</label>
+                                            <input type="text" class="form-control" id="id_mergedCubeNameInput" placeholder="e.g. MergedCube">
+                                        </div>
+
+                                        <div class="form-group">
+
+                                            <label class="control-label">Preference in Case of Overlap:</label>
+                                            <div id="id_prefereCubeArea"></div>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label class="control-label" for="id_mergeComment">Comment:</label>
+                                            <textarea name="commentArea" class="form-control" id="id_mergeComment" placeholder="Optional Comment" rows="5"></textarea>
                                         </div>
                                     </form>
-
-                                    TODO: radio buttons for preference
-
-                                    <br>
-                                    <br>
 
                                     <div class="btn-group">
                                         <button class="btn btn-default dropdown-toggle" type="button" id="id_acceptMergeButton">Save Cube</button>
@@ -253,9 +259,53 @@
             </div>
         </div>
 
+        <!-- Distinction Modal to add a new dimension to both cubes (hidden by default) -->
+        <div class="modal fade" id="id_distinctionModal">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title">Add a new Dimension</h4>
+                    </div>
+                    <div class="modal-body">
+                        <form>
+                            <div class="form-group">
+                                <label for="id_distinctionDimensionInput" class="control-label">Enter a Dimension Label:</label>
+                                <input type="text" class="form-control" id="id_distinctionDimensionInput">
+                            </div>
+                            <div class="form-group">
+                                <label for="id_distinctionEntity1Input" class="control-label"></label>
+                                <input type="text" class="form-control" id="id_distinctionEntity1Input">
+                            </div>
+                            <div class="form-group">
+                                <label for="id_distinctionEntity2Input" class="control-label"></label>
+                                <input type="text" class="form-control" id="id_distinctionEntity2Input">
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" id="id_distinctionModalOkay">Apply</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!--TODO: minified versions-->
 
         <!-- JavaScript -->
+
+        <!--Default first cube if given-->
+        <%
+            String cube1 = request.getParameter("cube1");
+            if (cube1 != null && cube1 != "") {
+        %>
+        <script type="text/javascript">
+            var CUBE_1 = '<%=cube1%>';
+        </script>
+        <%
+            }
+        %>
 
         <!-- alphanum sorting -->
         <script src="js/alphanum.js"></script>
@@ -281,22 +331,6 @@
         <script src="js/gui/templates.js"></script>
         <script src="js/gui/merge/main.js"></script>
         <script src="js/gui/merge/interface.js"></script>
-
-
-
-        <!--Default first cube if given-->
-        <%
-            String cube1 = request.getParameter("cube1");
-            if (cube1 != null && cube1 != "") {
-        %>
-        <script type="text/javascript">
-            var CUBE_1 = '<%=cube1%>';
-            // TODO cube given
-            alert("cube #1 is '" + CUBE_1 + "'");
-        </script>
-        <%
-            }
-        %>
 
     </body>
 </html>

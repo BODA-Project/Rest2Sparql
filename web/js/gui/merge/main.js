@@ -5,9 +5,6 @@
 
 var MERGE_MAIN = new function () {
 
-    // Constants
-    this.COLOR_OVERLAP = "#ea5f5f";
-
     // Globas vars
     this.ID = "";
     this.HASH = "";
@@ -28,6 +25,16 @@ var MERGE_MAIN = new function () {
 
     // Added entities for missing dimensions
     this.addedDimensions = {}; // addedDimensions[cubeName] = [], list of dimensions with 1 (new default) entity
+
+    // To distinguish 2 datasets with an additional dimension with 2 entities for both cubes
+    this.distinctionDimension; // TODO avoid adding an EXISTING dimension?
+
+    // In case of overlap this cube is preferred
+    this.preferedCube; // reference to cube1 or cube2
+
+    // Information for the merged cube
+    this.newCubeLabel;
+    this.newCubeComment;
 
     // Queried results of cubes
     this.observations = {}; // observations[cubeName] = [], list of results
@@ -72,8 +79,6 @@ var MERGE_MAIN = new function () {
         } else {
             MERGE_MAIN.loginUser($.cookie("ID"));
         }
-
-        // TODO ...
 
     };
 
@@ -617,19 +622,20 @@ var MERGE_MAIN = new function () {
     /**
      * Get the added default entity from a given dimensionName.
      *
+     * @param cubeName
      * @param dimensionName
-     * @returns {Entity} the entity that was added
+     * @returns {Entity} the entity that was added, or undefined if not added
      */
-    this.getAddedEntity = function (dimensionName) {
+    this.getAddedEntity = function (cubeName, dimensionName) {
         var entity;
-        $.each(MERGE_MAIN.addedDimensions, function (key, dimensionList) {
-            $.each(dimensionList, function (i, dimension) {
+        if (MERGE_MAIN.addedDimensions[cubeName]) {
+            $.each(MERGE_MAIN.addedDimensions[cubeName], function (i, dimension) {
                 if (dimensionName === dimension.dimensionName) {
                     entity = dimension.entities[0];
                     return false; // break
                 }
             });
-        });
+        }
         return entity;
     };
 
@@ -689,12 +695,22 @@ var MERGE_MAIN = new function () {
 
         // Each missing dimension must either be added or matched (one way)
         var result = true;
-        $.each(cube1MissingDimensions.concat(cube2MissingDimensions), function (i, dimension) {
+        $.each(cube1MissingDimensions, function (i, dimension) {
             var matched = MERGE_MAIN.getMatchedDimension(dimension.dimensionName);
             var matching = MERGE_MAIN.getMatchingDimension(dimension.dimensionName);
-            var added = MERGE_MAIN.getAddedEntity(dimension.dimensionName);
+            var added = MERGE_MAIN.getAddedEntity(cube1.cubeName, dimension.dimensionName);
             if (!matched && !matching && !added) {
                 result = false; // dimension must be fixed first
+                return false; // break
+            }
+        });
+        $.each(cube2MissingDimensions, function (i, dimension) {
+            var matched = MERGE_MAIN.getMatchedDimension(dimension.dimensionName);
+            var matching = MERGE_MAIN.getMatchingDimension(dimension.dimensionName);
+            var added = MERGE_MAIN.getAddedEntity(cube2.cubeName, dimension.dimensionName);
+            if (!matched && !matching && !added) {
+                result = false; // dimension must be fixed first
+                return false; // break
             }
         });
         return result;
@@ -748,6 +764,20 @@ var MERGE_MAIN = new function () {
                     $.each(MERGE_MAIN.addedDimensions[cubeName], function (j, dimension) {
                         cleanResult.dimensions[dimension.dimensionName] = dimension.entities[0];
                     });
+                }
+
+                // Add destinction dimension (new dimension for both cubes)
+                if (MERGE_MAIN.distinctionDimension) {
+                    var dim = MERGE_MAIN.distinctionDimension;
+                    var entity1 = dim.entities[0];
+                    var entity2 = dim.entities[1];
+
+                    // Cube 1 or 2?
+                    if (MERGE_MAIN.cube1.cubeName === cubeName) {
+                        cleanResult.dimensions[dim.dimensionName] = entity1;
+                    } else if (MERGE_MAIN.cube2.cubeName === cubeName) {
+                        cleanResult.dimensions[dim.dimensionName] = entity2;
+                    }
                 }
 
                 // Replace dimension names according to matching (if given)
@@ -814,7 +844,158 @@ var MERGE_MAIN = new function () {
         }
     };
 
+    /**
+     * Generate a json config from the given configuration to send to the server for merging.
+     *
+     * @returns {Object}
+     */
+    this.createMergeConfig = function () {
+        var config = {
+            id: MERGE_MAIN.ID,
+            hash: MERGE_MAIN.HASH,
+            cube1: MERGE_MAIN.cube1.cubeName,
+            cube2: MERGE_MAIN.cube2.cubeName,
+            preference: MERGE_MAIN.preferedCube.cubeName,
+            label: MERGE_MAIN.newCubeLabel,
+            comment: MERGE_MAIN.newCubeComment,
+            dimensions: [],
+            measures: []
 
+        };
+
+        // Add missing dimension to one of the cubes
+        $.each(MERGE_MAIN.addedDimensions, function (cubeName, dimensionList) {
+            $.each(dimensionList, function (i, dim) {
+                var entity = dim.entities[0];
+
+                var dimConfig = {};
+                dimConfig.dimension = dim.dimensionName;
+                dimConfig.entity = entity.entityName;
+                dimConfig.entityLabel = entity.label;
+                config.dimensions.push(dimConfig);
+            });
+        });
+
+        // Add additional dimension to both cubes
+        if (MERGE_MAIN.distinctionDimension) {
+            var dim = MERGE_MAIN.distinctionDimension;
+            var entity1 = dim.entities[0];
+            var entity2 = dim.entities[1];
+
+            var dimConfig = {};
+            dimConfig.dimension = dim.dimensionName;
+            dimConfig.label = dim.label;
+            dimConfig.entity = entity1.entityName;
+            dimConfig.entityLabel = entity1.label;
+            dimConfig.entity2 = entity2.entityName;
+            dimConfig.entity2Label = entity2.label;
+            config.dimensions.push(dimConfig);
+        }
+
+        // Match (replace) dimensions
+        $.each(MERGE_MAIN.dimensionMatching, function (dim1, dim2) {
+
+            var dimConfig = {};
+            dimConfig.dimension = dim1.dimensionName;
+            dimConfig.dimensionMatch = dim2.dimensionName;
+            config.dimensions.push(dimConfig);
+        });
+
+        // Match (replace) measures
+        $.each(MERGE_MAIN.measureMatching, function (measure1, measure2) {
+
+            var measureConfig = {};
+            measureConfig.measure = measure1.measureName;
+            measureConfig.measureMatch = measure2.measureName;
+            config.measures.push(measureConfig);
+        });
+        return config;
+    };
+
+    /**
+     * Queries the disambiguation server (indirectly) for the given label and
+     * returns list of resource URIs. (or null?)
+     *
+     * @param {String} label
+     * @returns {Array} a list of resource results
+     */
+    this.disambiguate = function (label) {
+        var result = [];
+
+        var url = TEMPLATES.MERGER_DISAMBIGUATE_URL.replace("__entity__", label);
+        var request = $.ajax({
+            url: url
+        });
+        request.done(function (content) {
+
+
+
+
+
+
+
+            // TODO
+            var obj;
+            try {
+                obj = $.parseJSON(content);
+
+                // TODO:
+//                result = obj.list
+
+            } catch (error) {
+                bootbox.alert("Error: " + error);
+            }
+
+
+
+
+
+
+
+
+
+
+        });
+        request.fail(function (jqXHR, textStatus) {
+            bootbox.alert("Error: " + textStatus); // TODO escape
+        });
+
+        return result;
+    };
+
+    /**
+     * Sends the configuration to the server which merges and stores the new
+     * cube accoring to this config.
+     */
+    this.mergeAndStoreCube = function () {
+        var config = MERGE_MAIN.createMergeConfig();
+        var request = $.ajax({
+            type: "post",
+            url: TEMPLATES.MERGER_STORE_URL,
+            dataType: 'JSON',
+            data: {
+                config: JSON.stringify(config)
+            }
+        });
+        request.done(function (content) {
+            var obj;
+            try {
+                obj = $.parseJSON(content);
+            } catch (e) {
+                bootbox.alert("Error: " + content);
+                return;
+            }
+
+            // Show success message and refresh
+            bootbox.alert("Your cube was successfully merged and can now be browsed", function () {
+                window.location = "./"; // Refresh page
+            });
+
+        });
+        request.fail(function (jqXHR, textStatus) {
+            bootbox.alert("Error: " + textStatus);
+        });
+    };
 
     // Returns a string like 71,003,345 (adds points and comma)
     this.formatNumber = function (num, nrDigits) {

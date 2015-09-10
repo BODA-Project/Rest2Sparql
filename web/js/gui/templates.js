@@ -19,11 +19,11 @@ var TEMPLATES = new function () {
     this.FILTER_DIMENSION_PART_URL = "&d=<__dimension__>,select=<false>,group=<false>,fix=<__fix__>";
     this.FILTER_MEASURE_PART_URL = "&m=<__measure__>,select=<false>,filterR=<__filterR__>,filterV=<__filterV__>";
 
-    // TODO: observation requests for merger
     this.MERGER_DIMENSION_PART_URL = "&d=<__dimension__>,select=<true>,group=<false>";
     this.MERGER_MEASURE_PART_URL = "&m=<__measure__>,select=<true>,group=<false>";
+    this.MERGER_DISAMBIGUATE_URL = "./disambiguate?entity=__entity__";
 
-
+    this.MERGER_STORE_URL = "./store";
 
     // HTML Templates
 
@@ -34,8 +34,6 @@ var TEMPLATES = new function () {
 
     this.MERGE_TABLE_HEAD = '<tr><th></th><th>__cube1__</th><th>__cube2__</th><th></th></tr>';
     this.MERGE_TABLE_VIS_INFO = '<table class="table table-bordered table-striped"> <tr> <td>Cube 1: __cube1__</td> <td class="cube1obs">__cube1obs__ Observations</td> </tr>  <tr> <td>Cube 2: __cube2__</td>  <td class="cube2obs">__cube2obs__ Observations</td> </tr> <tr> <td>__overlapTitle__</td> <td class="overlap">__overlap__</td>  </tr> </table>';
-
-    // Text Templates
 
     // Info tooltip messages
 

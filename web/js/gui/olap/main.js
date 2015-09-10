@@ -390,7 +390,6 @@ var MAIN = new function () {
                 finalURL += part + "&";
             }
         });
-//        finalURL = origin + MAIN.BOOKMARK_SIGN + finalURL.substring(2, finalURL.length - 1); // remove first "./" and last "&"
         finalURL = origin + MAIN.BOOKMARK_SIGN + encodeURIComponent(finalURL.substring(2, finalURL.length - 1)); // remove first "./" and last "&"
         return finalURL;
     };

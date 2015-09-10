@@ -1,5 +1,7 @@
 package de.uni_passau.fim.dimis.rest2sparql.rest;
 
+import com.google.gson.Gson;
+import de.uni_passau.fim.dimis.rest2sparql.merging.MergeConfig;
 import java.io.IOException;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -27,7 +29,6 @@ public class MergerServlet extends HttpServlet {
      */
     @Override
     public void init(ServletConfig servletConfig) throws ServletException {
-
         /*
          TODO:
 
@@ -64,7 +65,8 @@ public class MergerServlet extends HttpServlet {
     }
 
     /**
-     * TODO
+     * Handle the request and send the response back to the web application
+     * after finishing merging.
      *
      * @param request
      * @param response
@@ -72,10 +74,11 @@ public class MergerServlet extends HttpServlet {
      * @throws IOException
      */
     private void handleRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        /*
-         TODO:
 
-         check for parameters (d,match,entity,m,...)
-         */
+        // Load central configuration from json
+        Gson gson = new Gson();
+        MergeConfig config = gson.fromJson(request.getParameter("config"), MergeConfig.class);
+
+        // TODO merging with jena...
     }
 }

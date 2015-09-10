@@ -1,4 +1,4 @@
-/* global TEMPLATES, MERGE_MAIN, bootbox, d3 */
+/* global TEMPLATES, MERGE_MAIN, bootbox, d3, CUBE_1 */
 
 // Namespace for events and html interface code
 
@@ -31,10 +31,6 @@ var MERGE_INTERFACE = new function () {
             e.preventDefault();
             MERGE_INTERFACE.clickedTab = $(this); // bugfix to detect which tab was clicked last
         });
-
-        // Resize visualization on browser resize
-//        $(window).on('resize', WEBGL.resizeVizualisation);
-//        $(window).on('resize', INTERFACE.onScreenResize);
 
     };
 
@@ -98,13 +94,119 @@ var MERGE_INTERFACE = new function () {
      * or cube 2 should be preferred in case of overlaps.
      */
     this.showStorage = function () {
+        var cube1 = MERGE_MAIN.cube1;
+        var cube2 = MERGE_MAIN.cube2;
 
-        // TODO show total overlap again?
-        // TODO radio button for cube preference
-        // TODO name input for new generated cube
-
+        var form = $("#id_mergeStoreForm");
+        var radioArea = $("#id_prefereCubeArea");
         var nameInput = $("#id_mergedCubeNameInput");
         var saveButton = $("#id_acceptMergeButton");
+        var commentArea = $("#id_mergeComment");
+
+        // Add labes / description to the buttons
+        cube1.label;
+        cube2.label;
+
+        // Clean previous radio buttons
+        radioArea.empty();
+
+        // Create Radio buttons for preference
+        var cont1 = $('<div class="radio"></div>');
+        var label1 = $('<label></label>');
+        var cont2 = $('<div class="radio"></div>');
+        var label2 = $('<label></label>');
+
+        var radio1 = $('<input type="radio" name="cubePreference" id="optionsRadios1" value="1" checked>');
+        var radio2 = $('<input type="radio" name="cubePreference" id="optionsRadios2" value="2">');
+
+        // Comment area
+        if (commentArea.val() === "") {
+            commentArea.val("Merged from '" + cube1.label + "' and '" + cube2.label + "'");
+        }
+
+        // Select cube1 initially, set label and comment
+        MERGE_MAIN.preferedCube = cube1;
+        MERGE_MAIN.newCubeLabel = nameInput.val();
+        MERGE_MAIN.newCubeComment = commentArea.val();
+
+        label1.append(radio1);
+        label1.append("Cube 1: " + cube1.label);
+        cont1.append(label1);
+        label2.append(radio2);
+        label2.append("Cube 2: " + cube2.label);
+        cont2.append(label2);
+        radioArea.append(cont1);
+        radioArea.append(cont2);
+
+        // Add listeners for buttons and input
+        radio1.on("change", function (e) {
+            if (radio1.prop("checked")) {
+                MERGE_MAIN.preferedCube = cube1;
+            }
+        });
+        radio2.on("change", function (e) {
+            if (radio2.prop("checked")) {
+                MERGE_MAIN.preferedCube = cube2;
+            }
+        });
+        nameInput.off("keyup");
+        nameInput.on("keyup", function (e) {
+            MERGE_MAIN.newCubeLabel = nameInput.val();
+
+            // Enable save button?
+            if (!isValidStorageInput()) {
+                saveButton.addClass("disabled");
+            } else {
+                saveButton.removeClass("disabled");
+            }
+        });
+        commentArea.off("keyup");
+        commentArea.on("keyup", function (e) {
+            MERGE_MAIN.newCubeComment = commentArea.val();
+        });
+
+        // Check if name (and comment?) given
+        var isValidStorageInput = function () {
+            return nameInput.val() !== "";
+        };
+
+        // Sends the config to the server which merges and stores the new cube
+        var save = function () {
+
+            // Valid config?
+            if (!isValidStorageInput()) {
+                bootbox.alert("Please enter a Name for the new Cube")
+                return;
+            }
+
+            // Store the cube
+            MERGE_MAIN.mergeAndStoreCube();
+
+            // Show loading screen while server merges and saves cube
+            MERGE_INTERFACE.popupLoadingScreen("Saving merged Cube...");
+            MERGE_MAIN.waitForAjax(function () {
+                $('#id_loadingModal').modal("hide"); // Close the loading screen
+            });
+        };
+
+        // Enable initially?
+        if (!isValidStorageInput()) {
+            saveButton.addClass("disabled");
+        } else {
+            saveButton.removeClass("disabled");
+        }
+
+        // Confirm actions
+        saveButton.off("click");
+        saveButton.on("click", function (e) {
+            save();
+        });
+
+        // Disable storage by hitting enter key
+        form.off("submit");
+        form.on("submit", function (e) {
+            e.preventDefault();
+        });
 
     };
 
@@ -219,13 +321,13 @@ var MERGE_INTERFACE = new function () {
 
             } else if (isAdded) {
                 // Dimension + Default entity is added
-                var addedEntity = MERGE_MAIN.getAddedEntity(dimension.dimensionName);
 
                 // Check if dimension is in cube 1
                 if (isInCube1) {
                     cube1Cell.addClass("success");
                     cube1Cell.append('<span class="glyphicon glyphicon-ok"></span>');
                 } else {
+                    var addedEntity = MERGE_MAIN.getAddedEntity(cube1.cubeName, dimension.dimensionName);
                     cube1Cell.addClass("success");
                     cube1Cell.append('<span class="glyphicon glyphicon-plus"></span> <b>' + addedEntity.label + '</b>');
                 }
@@ -235,6 +337,7 @@ var MERGE_INTERFACE = new function () {
                     cube2Cell.addClass("success");
                     cube2Cell.append('<span class="glyphicon glyphicon-ok"></span>');
                 } else {
+                    var addedEntity = MERGE_MAIN.getAddedEntity(cube2.cubeName, dimension.dimensionName);
                     cube2Cell.addClass("success");
                     cube2Cell.append('<span class="glyphicon glyphicon-plus"></span> <b>' + addedEntity.label + '</b>');
                 }
@@ -411,6 +514,75 @@ var MERGE_INTERFACE = new function () {
                 $("li[data-match-dimension='" + dimension.dimensionName + "']").addClass("disabled");
             });
         });
+
+        // Show an additional dimension line to distinguish 2 datasets
+
+        var row = $("<tr>").appendTo(dimensionTable);
+        var dimNameCell = $("<td>").appendTo(row);
+        var cube1Cell = $("<td>").appendTo(row);
+        var cube2Cell = $("<td>").appendTo(row);
+        var buttonCell = $("<td>").appendTo(row);
+
+        // Button for adding or undoing
+        var buttonGroup = $('<div class="btn-group"></div>');
+        var button = $('<button class="btn btn-sm btn-default dropdown-toggle" type="button" data-toggle="dropdown"><span class="glyphicon glyphicon-wrench"></span></button>');
+        buttonGroup.append(button);
+        buttonCell.append(buttonGroup);
+        var dropdownMenu = $('<ul class="dropdown-menu dropdown-menu-right" role="menu">').appendTo(buttonGroup);
+
+        if (MERGE_MAIN.distinctionDimension) {
+            // Dimension was already added
+
+            var addedDim = MERGE_MAIN.distinctionDimension;
+            var addedEntity1 = addedDim.entities[0];
+            var addedEntity2 = addedDim.entities[1];
+
+            dimNameCell.text(addedDim.label);
+            cube1Cell.addClass("success");
+            cube1Cell.append('<span class="glyphicon glyphicon-plus"></span> <b>' + addedEntity1.label + '</b>');
+            cube2Cell.addClass("success");
+            cube2Cell.append('<span class="glyphicon glyphicon-plus"></span> <b>' + addedEntity2.label + '</b>');
+
+            // Add undo events to the button
+            var undoItem = $("<li role='presentation'></li>").appendTo(dropdownMenu);
+            var undoItemLink = $("<a role='menuitem' tabindex='-1' href='#'>Remove Dimension <b>" + addedDim.label + "</b></a>").appendTo(undoItem);
+            undoItemLink.on("click", function (e) {
+                e.preventDefault();
+
+                // Undo the new dimension
+                MERGE_MAIN.distinctionDimension = undefined;
+
+                // Discard useless observation (if already queried)
+                MERGE_MAIN.observations = {};
+                $("#id_visualization").empty();
+
+                // Update whole overview (rebuild)
+                MERGE_INTERFACE.showStructureOverview();
+            });
+
+        } else {
+            // Nothing added yet, add dropdown item to do so if wished
+
+            var addItem = $("<li role='presentation'></li>").appendTo(dropdownMenu);
+            var addItemLink = $("<a role='menuitem' tabindex='-1' href='#'>Add a Dimension</a>").appendTo(addItem);
+            addItemLink.on("click", function (e) {
+                e.preventDefault();
+
+                // Popup dialog to type a new dimension and 2 entities (labels) for the new dimension
+                // As callback onSuccess: Update whole overview (rebuild)
+                MERGE_INTERFACE.popupDistinctionDimensionAdding(function () {
+
+                    // Discard useless observation (if already queried)
+                    MERGE_MAIN.observations = {};
+                    $("#id_visualization").empty();
+
+                    // Update whole overview (rebuild)
+                    MERGE_INTERFACE.showStructureOverview();
+                });
+            });
+
+        }
+
     };
 
     /**
@@ -624,7 +796,6 @@ var MERGE_INTERFACE = new function () {
                     });
                 }
 
-
             } else if (isInCube1 && isInCube2) {
                 // Nothing to do, both cubes have the measure
             }
@@ -663,22 +834,28 @@ var MERGE_INTERFACE = new function () {
             var item1 = $("<li role='presentation' data-cube-name='" + cubeName + "'></li>");
             item1.append(itemLink);
             var item2 = item1.clone();
+            var itemLink2 = item2.children("a[role=menuitem]")
             $("#id_cubeList1").append(item1);
             $("#id_cubeList2").append(item2);
 
             // Enable tooltips
             itemLink.tooltip();
-            item2.children("a[role=menuitem]").tooltip();
+            itemLink2.tooltip();
 
             // Add on-click handler for chosen cubes
             itemLink.on("click", function (e) {
                 e.preventDefault();
                 MERGE_INTERFACE.selectCube(1, cube);
             });
-            item2.children("a[role=menuitem]").on("click", function (e) {
+            itemLink2.on("click", function (e) {
                 e.preventDefault();
                 MERGE_INTERFACE.selectCube(2, cube);
             });
+
+            // Preselect a given cube
+            if (typeof CUBE_1 !== 'undefined' && cube.cubeName === CUBE_1) {
+                itemLink.click();
+            }
 
         });
 
@@ -723,8 +900,12 @@ var MERGE_INTERFACE = new function () {
         // reset matching / adding configuration
         MERGE_MAIN.dimensionMatching = {};
         MERGE_MAIN.addedDimensions = {};
+        MERGE_MAIN.distinctionDimension = undefined;
         MERGE_MAIN.measureMatching = {};
         MERGE_MAIN.observations = {};
+        MERGE_MAIN.preferedCube = {};
+        MERGE_MAIN.newCubeLabel = undefined;
+        MERGE_MAIN.newCubeComment = undefined;
 
         // Query available dimensions and measures and fill the lists
         MERGE_MAIN.loadDimensionList(cubeName);
@@ -882,7 +1063,7 @@ var MERGE_INTERFACE = new function () {
         var selectedEntity = undefined; // For selection from existing entities
 
         // Set title
-        title.text('Add Dimension "' + dimension.label + '"');
+        title.text('Add Dimension "' + dimension.label + '" to cube "' + missingCube.label + '"');
 
         // Clear initial input
         input.val("");
@@ -941,9 +1122,79 @@ var MERGE_INTERFACE = new function () {
 
             if (input.val() !== "") {
                 // Selection from input
+
                 var label = input.val();
-                alert("ENTERED: " + label + ", TODO: disambiguation service");
-                // TODO: disambiguation service for label?
+
+
+                // Search for a concept that the entered label describes
+                var resourceList = MERGE_MAIN.disambiguate(label); // returned after ajax is done
+//                var entity = MERGE_MAIN.disambiguate(label); // returned after ajax is done
+
+                // Show a popup while the request is being processed
+                MERGE_INTERFACE.popupLoadingScreen("Searching...");
+                MERGE_MAIN.waitForAjax(function () {
+                    $('#id_loadingModal').modal("hide"); // Close the loading screen
+
+
+                    // Apply entity in config if successful
+                    if (resourceList.length === 0) {
+                        // TODO nothing found?
+                        bootbox.alert("Error: Nothing found");
+
+                        // TODO if not found suggest "http://code-research.eu/resource/ + RESOURCE"
+
+                    } else {
+
+                        // Apply new dimension + entity
+                        if (!MERGE_MAIN.addedDimensions[missingCube.cubeName]) {
+                            MERGE_MAIN.addedDimensions[missingCube.cubeName] = [];
+                        }
+
+
+
+
+
+
+                        // Disambiguated entity as the only element in the list
+                        var resource = resourceList[0]; // TODO show list instead of 1st item ##############
+
+                        // TODO
+                        var entity = new Entity(dimension.dimensionName, resource, label); // here entityName field is no UUID but the resource!
+
+                        var addedDimension = new Dimension(dimension.dimensionName, dimension.label, [entity]);
+                        MERGE_MAIN.addedDimensions[missingCube.cubeName].push(addedDimension);
+
+
+
+
+
+
+
+
+
+                        // TODO: present dropdown list of possible URIs and THEN accept > refresh UI
+
+                        // Execute callback function (usually refresh overview)
+                        if (callback) {
+                            callback();
+                        }
+
+                        // Hide the modal
+                        modal.modal("hide");
+
+
+
+
+                    }
+
+                });
+
+
+
+
+
+
+
 
             } else if (selectedEntity) {
                 // Selection from dropdown
@@ -952,20 +1203,21 @@ var MERGE_INTERFACE = new function () {
                 if (!MERGE_MAIN.addedDimensions[missingCube.cubeName]) {
                     MERGE_MAIN.addedDimensions[missingCube.cubeName] = [];
                 }
-                // selected entity as only element in the list
+                // Selected entity as the only element in the list
                 var addedDimension = new Dimension(dimension.dimensionName, dimension.label, [selectedEntity]);
                 MERGE_MAIN.addedDimensions[missingCube.cubeName].push(addedDimension);
+
+                // Execute callback function (usually refresh overview)
+                if (callback) {
+                    callback();
+                }
+
+                // Hide the modal
+                modal.modal("hide");
+
             } else {
                 return; // Do nothing if no user interaction
             }
-
-            // Execute callback function (usually refresh overview)
-            if (callback) {
-                callback();
-            }
-
-            // Hide the modal
-            modal.modal("hide");
         };
 
         // Clear previous listeners
@@ -983,6 +1235,124 @@ var MERGE_INTERFACE = new function () {
         modal.off('shown.bs.modal');
         modal.on('shown.bs.modal', function (e) {
             input.focus();
+        });
+    };
+
+    /**
+     * Show a popup for adding a dimension and 2 entities for distinction.
+     * @param callback
+     */
+    this.popupDistinctionDimensionAdding = function (callback) {
+        var cube1 = MERGE_MAIN.cube1;
+        var cube2 = MERGE_MAIN.cube2;
+
+        // Add popup to the body
+        var modal = $("#id_distinctionModal");
+        $("body").append(modal);
+
+        var form = $("#id_distinctionModal form");
+        var inputDim = $("#id_distinctionDimensionInput");
+        var inputEntity1 = $("#id_distinctionEntity1Input");
+        var inputEntity2 = $("#id_distinctionEntity2Input");
+        var acceptButton = $("#id_distinctionModalOkay");
+
+        // Clear initial input
+        inputDim.val("");
+        inputEntity1.val("");
+        inputEntity2.val("");
+
+        // Set input description
+        var descC1 = inputEntity1.parent().children("label");
+        var descC2 = inputEntity2.parent().children("label");
+        descC1.text("Enter an Entity Label (Cube 1: " + cube1.label + "):");
+        descC2.text("Enter an Entity Label (Cube 2: " + cube2.label + "):");
+
+        // Accept action of popup
+        var accept = function (e) {
+            e.preventDefault();
+
+            // Get user input
+            var labelDim = inputDim.val();
+            var labelEntity1 = inputEntity1.val();
+            var labelEntity2 = inputEntity2.val();
+
+
+            // All fields filled?
+            if (labelDim !== "" && labelEntity1 !== "" && labelEntity2 !== "") {
+
+                // TODO Make 3 disambiguation calls (returned after ajax is done)
+                var resourceListD = MERGE_MAIN.disambiguate(labelDim);
+                var resourceListE1 = MERGE_MAIN.disambiguate(labelEntity1);
+                var resourceListE2 = MERGE_MAIN.disambiguate(labelEntity2);
+
+                // Show a popup while the requests are being processed
+                MERGE_INTERFACE.popupLoadingScreen("Searching...");
+                MERGE_MAIN.waitForAjax(function () {
+                    $('#id_loadingModal').modal("hide"); // Close the loading screen
+
+
+                    // Apply entity in config if successful
+                    if (resourceListD.length === 0 || resourceListE1.length === 0 || resourceListE2.length === 0) {
+                        // TODO nothing found?
+                        bootbox.alert("Error: Nothing found");
+
+                        // TODO if not found suggest "http://code-research.eu/resource/RESOURCE"
+
+                    } else {
+
+
+
+
+                        // TODO show list instead of 1st item ##############
+                        var resourceDim = resourceListD[0];
+                        var resourceE1 = resourceListE1[0];
+                        var resourceE2 = resourceListE2[0];
+
+                        // Create new dimension
+                        var entity1 = new Entity(resourceDim, resourceE1, labelEntity1);
+                        var entity2 = new Entity(resourceDim, resourceE2, labelEntity2);
+                        var dim = new Dimension(resourceDim, labelDim, [entity1, entity2]);
+
+                        // Add dimension to the configuration
+                        MERGE_MAIN.distinctionDimension = dim;
+
+
+
+
+
+                        // TODO: present dropdown list of possible URIs and THEN accept > refresh UI
+
+                        // Execute callback function (usually refresh overview)
+                        if (callback) {
+                            callback();
+                        }
+
+                        // Hide the modal
+                        modal.modal("hide");
+
+                    }
+
+                });
+
+            }
+
+        };
+
+        // Clear previous listeners
+        acceptButton.off("click");
+        form.off("submit");
+
+        // Add listeners
+        acceptButton.on("click", accept);
+        form.on("submit", accept);
+
+        // Show the popup
+        modal.modal();
+
+        // Focus input field
+        modal.off('shown.bs.modal');
+        modal.on('shown.bs.modal', function (e) {
+            inputDim.focus();
         });
     };
 
@@ -1031,13 +1401,10 @@ var MERGE_INTERFACE = new function () {
          *
          *   ? bundling? maybe by measures
          *
-         *   ? label color according to c1,c2,overlap
-         *
          *   ? types...  (measure must be number), dimension can be strings (OR number? -> e.g. Year)
          *
          *   + hover for lines (or list below)
          *   + if numerical entities (e.g. Year) set graph tick to show every label
-         *   + short label / small font -> longer label for tooltip (maybe fill with spaces)
          *
          *   ? order of dimensions (maybe C1 then C2 then measures C1 + C2) (for distinct dimensions)
          *
@@ -1106,7 +1473,7 @@ var MERGE_INTERFACE = new function () {
             var key = "";
             $.each(sharedDimensions, function (k, dimension) {
 //                key += obs.dimensions[dimension.dimensionName].entityName;
-                key += obs.dimensions[dimension.dimensionName].label; // TODO replace label with isDefinedBy #############################################################
+                key += obs.dimensions[dimension.dimensionName].label; // TODO replace label with isDefinedBy?
             });
             map[key] = obs;
         };
@@ -1134,13 +1501,9 @@ var MERGE_INTERFACE = new function () {
                 // Fill the data cell
                 $.each(allDimensions, function (j, dimension) {
                     if (obs.dimensions[dimension.dimensionName] === undefined) {
-                        data.push("?"); // TODO empty entity? "not yet defined" / Dimension can be numerical too -> "0"
+                        data.push("UNKNOWN"); // TODO empty entity? "not yet defined" / Dimension can be numerical too -> "0" -> dimensioninfo > type string/number
                     } else {
                         var label = obs.dimensions[dimension.dimensionName].label;
-                        if (label.length > 20) {
-                            label = label.substr(0, 19) + "\u2026";
-                            // TODO: tooltip
-                        }
                         data.push(label); // Add entity label
                     }
                 });
@@ -1163,7 +1526,7 @@ var MERGE_INTERFACE = new function () {
                 var key = "";
                 $.each(sharedDimensions, function (k, dimension) {
 //                    key += obs.dimensions[dimension.dimensionName].entityName;
-                    key += obs.dimensions[dimension.dimensionName].label; // TODO replace label with isDefinedBy #############################################################
+                    key += obs.dimensions[dimension.dimensionName].label; // TODO replace label with isDefinedBy?
                 });
 
                 var overlappingObs = obsMap[key];
@@ -1213,14 +1576,16 @@ var MERGE_INTERFACE = new function () {
             showOverlaps: true
         };
 
+        // TODO button for "popout" -> full width and height from other button
+
         // Configure resize button to show compact or full height
-        $("#id_sizeButton").text("Full Size");
+        $("#id_sizeButton").text("Full Height");
         $("#id_sizeButton").off("click");
         $("#id_sizeButton").on("click", function (e) {
             e.preventDefault();
 
             config.fullSize = !config.fullSize;
-            var newText = config.fullSize ? "Compact Size" : "Full Size";
+            var newText = config.fullSize ? "Page Height" : "Full Height";
             $("#id_sizeButton").text(newText);
 
             // Repaint the graph
@@ -1277,10 +1642,12 @@ var MERGE_INTERFACE = new function () {
             dimTitles[allDimensions.length + i] = label;
         });
 
+        var isValidConfig = MERGE_MAIN.isValidConfiguration();
+
         // Color the lines according to the overlap
         var setColor = function (data, i) {
             if (overlapObs.indexOf(data) >= 0 && $("#id_overlapCheckbox").prop("checked")) {
-                if (MERGE_MAIN.isValidConfiguration()) {
+                if (isValidConfig) {
                     return "rgba(255,0,0,0.6)"; // Red
                 } else {
                     return "rgba(240,140,0,0.6)"; // Orange
@@ -1373,6 +1740,7 @@ var MERGE_INTERFACE = new function () {
         parcoords.render(); // Fix
 
         // Set the font size of the labels
+        var axes = $(parcoords.svg.selectAll("g.dimension > g.axis")[0]);
         var fontSize;
         if (fullSize) {
             fontSize = 10;
@@ -1380,7 +1748,6 @@ var MERGE_INTERFACE = new function () {
         } else {
 
             // Compute font size according to fixed height
-            var axes = $(parcoords.svg.selectAll("g.dimension > g.axis")[0]);
             parcoords.svg.selectAll("g.tick > text").style("cursor", "none");
             $.each(axes, function (i, element) {
 
@@ -1392,27 +1759,64 @@ var MERGE_INTERFACE = new function () {
                 $.each(textLabels, function (j, label) {
                     $(label).css("font", fontSize + "px sans-serif");
                 });
-
             });
         }
-        parcoords.svg.selectAll("g.tick > text").style("fill", "rgba(0,0,0,0.75)");
+
+        // Color labels according to overlap (nominal dimensions only)
+        var colorBlack = "rgba(0, 0, 0, 0.75)";
+        var colorRed = "rgba(200, 0, 0, 1)";
+        var colorOrange = "rgba(180, 100, 0, 1)";
+        parcoords.svg.selectAll("g.tick > text").style("fill", colorBlack); // all others opaque
+        $.each(axes, function (i, element) {
+            var textLabels = $(element).find("g.tick > text");
+            if (i < allDimensions.length && parcoords.types()[i] === "string") {
+                $.each(textLabels, function (j, label) {
+                    $.each(overlapObs, function (k, dataCell) {
+//                            console.log($(label).text(), dataCell[i])
+                        if ($(label).text() === dataCell[i]) {
+                            $(label).data("overlap", true); // remember overlap
+                            var color;
+                            if (isValidConfig) {
+                                color = colorRed; // Red
+                            } else {
+                                color = colorOrange; // Orange
+                            }
+                            $(label).css("fill", color);
+                            $(label).css("text-shadow", "1px 1px 0 white");
+                            return false; // break
+                        }
+                    });
+                });
+            }
+        });
 
         // Dimension titles
         parcoords.svg.selectAll("g.axis > text").style("font", "bold 10px sans-serif");
 
         // Add tooltips for small labels
-        var labels = $(parcoords.svg.selectAll("g.tick > text")[0]); // TODO only nominal axis' labels
+        var labels = $(parcoords.svg.selectAll("g.tick > text")[0]);
         $.each(labels, function (i, element) {
-
-            // TODO: full name without "..."
-            // TODO: if overlap: red font
-
             var labelFontSize = parseInt($(element).css("font-size").replace("px", ""));
-            if (labelFontSize >= 10) {
-                return true; // Skip label
-                // TODO: falls eine dimension klein -> alle tooltip (ausser measure)
+            var maxLabelLength = Math.floor(20 * (10 / labelFontSize));
+
+            // Save the full text
+            var fullText = $(element).text();
+            $(element).data("fullText", fullText);
+
+            // Shorten the label length if too long
+            var shortened = false;
+            if (fullText.length > maxLabelLength) {
+                $(element).text(fullText.substr(0, maxLabelLength - 1) + "\u2026");
+                shortened = true;
             }
 
+            // Dont show tooltip if readable anyway
+            if (labelFontSize >= 10 && !shortened) {
+                return true; // Skip label
+            }
+
+            var overlapColor = isValidConfig ? "#FF2020" : "#FF9F19";
+            var overlapColorDark = isValidConfig ? "#e00000" : "#CC7700";
             element.onmouseenter = function (e) {
                 var rect = element.getBoundingClientRect();
                 var pos = $(element).offset();
@@ -1429,16 +1833,23 @@ var MERGE_INTERFACE = new function () {
                     element.tooltip.attr("pointer-events", "none");
                     element.tooltip.appendTo("body");
 
-                    var ele1 = $(element).parent().next().next().children("text").text(); // TODO full name from observation
-                    var ele2 = $(element).parent().next().children("text").text();
-                    var ele3 = $(element).parent().prev().children("text").text();
-                    var ele4 = $(element).parent().prev().prev().children("text").text();
-                    // TODO red color when overlap (in tooltip)
-                    ele1 = ele1 + "<br>";
-                    ele2 = ele2 + "<br>";
-                    ele3 = "<br>" + ele3;
-                    ele4 = "<br>" + ele4 + "<br>";
-                    var tooltipContent = ele1 + ele2 + "<span style='color: white; font-weight: bold; font-size: 14px'>" + $(element).text() + "</span>" + ele3 + ele4;
+                    // Show 2 labels above and below
+                    var ele1 = $(element).parent().next().next().children("text");
+                    var ele2 = $(element).parent().next().children("text");
+                    var ele3 = $(element).parent().prev().children("text");
+                    var ele4 = $(element).parent().prev().prev().children("text");
+
+                    // Return colored html string of the label
+                    var buildLabelString = function (svgElement, primary) {
+                        var color = primary ? overlapColor : overlapColorDark;
+                        return $(svgElement).data("overlap") ? "<span style='color: " + color + "'>" + $(svgElement).data("fullText") + "</span>" : $(svgElement).data("fullText");
+                    };
+
+                    var text1 = buildLabelString(ele1) + "<br>";
+                    var text2 = buildLabelString(ele2) + "<br>";
+                    var text3 = "<br>" + buildLabelString(ele3);
+                    var text4 = "<br>" + buildLabelString(ele4);
+                    var tooltipContent = text1 + text2 + "<span style='color: white; font-weight: bold; font-size: 14px'>" + buildLabelString(element, true) + "</span>" + text3 + text4;
                     element.tooltip.attr("title", "<span style='color: #a0a0a0; font-size: 10px'>" + tooltipContent + "</span>");
                 }
 
@@ -1465,6 +1876,7 @@ var MERGE_INTERFACE = new function () {
         var cube2 = MERGE_MAIN.cube2;
         var cube1Observations = MERGE_MAIN.observations[cube1.cubeName];
         var cube2Observations = MERGE_MAIN.observations[cube2.cubeName];
+        var isValidConfig = MERGE_MAIN.isValidConfiguration();
 
         // Extract config
         var overlapObs = config.overlapObs;
@@ -1476,13 +1888,13 @@ var MERGE_INTERFACE = new function () {
         $("#id_visInfo").empty();
 
         // Add info lines below chart
-        var overlapPercent = MERGE_MAIN.formatNumber((overlapObs.length / (cube1Observations.length + cube1Observations.length)) * 100, 2);
+        var overlapPercent = MERGE_MAIN.formatNumber((overlapObs.length / (cube1Observations.length + cube2Observations.length)) * 100, 2);
         var info = TEMPLATES.MERGE_TABLE_VIS_INFO
                 .replace("__cube1__", cube1.label)
                 .replace("__cube2__", cube2.label)
                 .replace("__cube1obs__", cube1Observations.length)
                 .replace("__cube2obs__", cube2Observations.length)
-                .replace("__overlapTitle__", MERGE_MAIN.isValidConfiguration() ? "Overlap" : "Potential Overlap")
+                .replace("__overlapTitle__", isValidConfig ? "Overlap" : "Potential Overlap")
                 .replace("__overlap__", overlapObs.length + " Observations (" + overlapPercent + "%)");
         $("#id_visInfo").html(info);
 
@@ -1498,7 +1910,7 @@ var MERGE_INTERFACE = new function () {
         if (overlapObs.length === 0) {
             $("#id_visInfo").find("td.overlap").removeClass("overlap");
             checkboxOverlap.remove();
-        } else if (!MERGE_MAIN.isValidConfiguration()) {
+        } else if (!isValidConfig) {
             $("#id_visInfo").find("td.overlap").addClass("incomplete"); // Orange if dimensions are not matched yet
         }
 

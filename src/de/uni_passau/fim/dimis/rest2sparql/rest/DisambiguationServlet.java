@@ -24,7 +24,7 @@ public class DisambiguationServlet extends HttpServlet {
 
     private final static String REQUEST_PREFIX = "{\"documentUri\": null, \"surfaceFormsToDisambiguate\": [{\"selectedText\":\"";
     private final static String REQUEST_SUFFIX = "\", \"context\":\"\",\"position\": []}]}";
-    private final static String DISAMBIGUATION_SERVER = "http://zaire.dimis.fim.uni-passau.de:8181/code-server/disambiguation/disambiguate";
+    private final static String DISAMBIGUATION_SERVER = "http://zaire.dimis.fim.uni-passau.de:8181/code-server/disambiguation/disambiguate"; // TODO config file / init params
 
     private final static String PARAMETER_ENTITY = "entity";
 
@@ -76,7 +76,7 @@ public class DisambiguationServlet extends HttpServlet {
     }
 
     /**
-     * TODO
+     * Handle the request and send the list as response back to the web application.
      *
      * @param request
      * @param response
@@ -84,21 +84,32 @@ public class DisambiguationServlet extends HttpServlet {
      * @throws IOException
      */
     private void handleRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        response.setContentType("text/plain");
+        response.setCharacterEncoding("UTF-8");
+
         String entity = request.getParameter(PARAMETER_ENTITY);
         String result = getDisambiguation(entity);
 
+        // TODO: create JSON list of available resources
+
+        // TEST:
+
         ServletOutputStream out = response.getOutputStream();
-        out.println(entity);
+        out.println("1: " + entity);
         out.println("\n");
-        out.println(REQUEST_PREFIX + entity + REQUEST_SUFFIX);
+        out.println("2: " + REQUEST_PREFIX + entity + REQUEST_SUFFIX);
         out.println("\n");
-        out.println(result);
+        out.println("3: " + result);
         out.flush();
         out.close();
-        response.setContentType("text/plain");
-        response.setCharacterEncoding("UTF-8");
     }
 
+    /**
+     *
+     * @param label
+     * @return
+     * @throws IOException
+     */
     public String getDisambiguation(String label) throws IOException {
 
         //{

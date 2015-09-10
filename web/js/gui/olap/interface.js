@@ -71,7 +71,11 @@ var INTERFACE = new function () {
         });
 
         // Merge button
-//        $("#id_mergeButton").on('click', TODO);
+        $("#id_mergeButton").on('click', function (e) {
+            e.preventDefault();
+            var cube = MAIN.currentCube.cubeName;
+            window.open("./merge?cube1=" + cube, "_blank"); // Open in new Tab
+        });
 
         // Help button
         $("#id_helpButton").on("click", function (e) {
