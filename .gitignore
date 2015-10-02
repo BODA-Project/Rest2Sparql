@@ -8,3 +8,5 @@ out/*
 /web/WEB-INF/lib/CopyLibs/
 /web/WEB-INF/lib/nblibraries.properties
 /build.xml
+/target/
+/nb-configuration.xml
