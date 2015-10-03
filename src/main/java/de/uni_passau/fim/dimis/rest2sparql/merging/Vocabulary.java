@@ -7,12 +7,11 @@ import org.apache.jena.rdf.model.Resource;
 
 /**
  * CODE RDF Datacube vocabulary. VA and DC properties are copied from original.
- * TODO: No 42data vocabulary?
+ * TODO: No 42data vocabulary? "cubeDimensionNumeric" ok?
  */
 public class Vocabulary {
 
     // TODO: rdfs:isDefinedBy?
-    
     // Prefixes and URIs
     public static final String QB_PREFIX = "qb";
     public static final String QB_URI = "http://purl.org/linked-data/cube#";
@@ -53,4 +52,8 @@ public class Vocabulary {
     public static final String CODE_IMPORTER = CODE_URI + "Importer-";
     public static final String CODE_ENTITY = CODE_URI + "Entity-";
 
+    // VA vocabulary
+    public static final String VA_OBSERVATION_NUMBER = VA_URI + "cubeObservationNumber";
+    public static final String VA_DIMENSION_NOMINAL = VA_URI + "cubeDimensionNominal";
+    public static final String VA_DIMENSION_NUMERIC = VA_URI + "cubeDimensionNumeric";
 }

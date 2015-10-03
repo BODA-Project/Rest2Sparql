@@ -1,28 +1,28 @@
 package de.uni_passau.fim.dimis.rest2sparql.merging.dto;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * Observation
+ * Dataset Structure Definition
  */
-public class Observation {
+public class DatasetStructureDefinition {
 
     private String resource;
-    private final Map<String, String> dimensions = new HashMap(); // dimResource -> entityUUID
-    private final Map<String, Double> measures = new HashMap();
+    private final List<String> dimensions = new ArrayList();
+    private final List<String> measures = new ArrayList();
 
     /**
      * @return the dimensions
      */
-    public Map<String, String> getDimensions() {
+    public List<String> getDimensions() {
         return dimensions;
     }
 
     /**
      * @return the measures
      */
-    public Map<String, Double> getMeasures() {
+    public List<String> getMeasures() {
         return measures;
     }
 

@@ -35,21 +35,16 @@ public class MergeService {
         List<Entity> entitiesC2 = dao.getEntities(config.getCube2());
 
         // TODO: load other meta info (DSD, Dataset, Importer, ...)
-
         // Map UUID of entity to actual entity objects
         Map<String, Entity> entityMap = new HashMap();
-        entityMap.putAll(dao.computeEntityMap(entitiesC1));
-        entityMap.putAll(dao.computeEntityMap(entitiesC2));
+        entityMap.putAll(computeEntityMap(entitiesC1));
+        entityMap.putAll(computeEntityMap(entitiesC2));
 
         // Load all observations
         List<Observation> observationsC1 = dao.getObservations(config.getCube1());
         List<Observation> observationsC2 = dao.getObservations(config.getCube2());
 
-
-
-
         // TODO:
-
         // Add dimensions
         for (DimensionConfig dimConf : config.getDimensions()) {
             String dim = dimConf.getDimension();
@@ -76,6 +71,20 @@ public class MergeService {
             // Replace measure URI
         }
 
+    }
+
+    /**
+     * Creates a map from UUIDs to entity objects for easier access.
+     *
+     * @param entities
+     * @return
+     */
+    private Map<String, Entity> computeEntityMap(List<Entity> entities) {
+        Map<String, Entity> entityMap = new HashMap();
+        for (Entity entity : entities) {
+            entityMap.put(entity.getResource(), entity);
+        }
+        return entityMap;
     }
 
     /**

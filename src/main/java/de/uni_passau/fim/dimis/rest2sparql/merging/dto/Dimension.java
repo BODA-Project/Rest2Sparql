@@ -1,8 +1,7 @@
 package de.uni_passau.fim.dimis.rest2sparql.merging.dto;
 
 /**
- *
- * @author toniw
+ * Dimension
  */
 public class Dimension {
 
