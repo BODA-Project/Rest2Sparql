@@ -9,10 +9,10 @@ PREFIX dc:    <http://purl.org/dc/elements/1.1/>
 SELECT ?component ?concept
 WHERE {
     GRAPH ?g {
-        ?d      rdf:type        qb:DataSet ;
-                qb:structure    ?dsd .
-        ?dsd    rdf:type        qb:DataStructureDefinition ;
-                qb:component    ?comp .
-        ?comp   ?component      ?concept
+        ?d rdf:type qb:DataSet .
+        ?d qb:structure ?dsd .
+        ?dsd rdf:type qb:DataStructureDefinition .
+        ?dsd qb:component ?comp .
+        ?comp ?component ?concept
     }
 }

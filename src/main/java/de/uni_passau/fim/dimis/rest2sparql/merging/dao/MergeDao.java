@@ -1,6 +1,7 @@
 package de.uni_passau.fim.dimis.rest2sparql.merging.dao;
 
 import de.uni_passau.fim.dimis.rest2sparql.merging.Vocabulary;
+import de.uni_passau.fim.dimis.rest2sparql.merging.dto.Cube;
 import de.uni_passau.fim.dimis.rest2sparql.merging.dto.Dataset;
 import de.uni_passau.fim.dimis.rest2sparql.merging.dto.DatasetStructureDefinition;
 import de.uni_passau.fim.dimis.rest2sparql.merging.dto.Dimension;
@@ -13,6 +14,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
@@ -20,17 +22,25 @@ import org.apache.jena.query.QueryFactory;
 import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ResultSet;
 import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.RDFNode;
+import org.apache.jena.riot.Lang;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * Class for database access (reading and writing) using Apache Jena.
+ * Class for database access (reading and writing) using Apache Jena. When
+ * reading, the resource UUIDs are generally not returned since they will be
+ * rewritten anyway, except when they are needed (Observations to Entities).
  */
 public class MergeDao {
+
+    private final Logger logger = LoggerFactory.getLogger(MergeDao.class);
+    // TODO: log errors! + add try catch on queries!
 
     // TEMP: for testing purpose
     public static void main(String[] args) {
 
-        // TODO: Importer, Import, DSD, Dataset
         MergeDao dao = new MergeDao();
 
         List<Observation> obs = dao.getObservations("http://code-research.eu/resource/Dataset-1fb732fc-647d-4747-847d-c73eabbc737a");
@@ -70,7 +80,7 @@ public class MergeDao {
         System.out.println("========DIMENSIONS========");
         List<Dimension> dimensions = dao.getDimensions("http://code-research.eu/resource/Dataset-1fb732fc-647d-4747-847d-c73eabbc737a");
         System.out.println(dimensions.size());
-        System.out.println("==========================");
+        System.out.println("--------------------------");
         for (Dimension dim : dimensions) {
             System.out.println(dim.getLabel() + "  =  " + dim.getSubpropertyOf() + "  =  " + dim.getResource());
         }
@@ -78,17 +88,29 @@ public class MergeDao {
         System.out.println("=========MEASURES=========");
         List<Measure> measures = dao.getMeasures("http://code-research.eu/resource/Dataset-1fb732fc-647d-4747-847d-c73eabbc737a");
         System.out.println(measures.size());
-        System.out.println("==========================");
+        System.out.println("--------------------------");
         for (Measure measure : measures) {
             System.out.println(measure.getLabel() + "  =  " + measure.getSubpropertyOf() + "  =  " + measure.getResource());
         }
+        System.out.println("");
+        System.out.println("=========DATASET==========");
+        Dataset ds = dao.getDataset("http://code-research.eu/resource/Dataset-1fb732fc-647d-4747-847d-c73eabbc737a");
+        System.out.println("getComment " + ds.getComment());
+        System.out.println("getFormat " + ds.getFormat());
+        System.out.println("getGeneratedBy " + ds.getGeneratedBy());
+        System.out.println("getLabel " + ds.getLabel());
+        System.out.println("getRelation " + ds.getRelation());
+        System.out.println("getResource " + ds.getResource());
+        System.out.println("getSource " + ds.getSource());
+        System.out.println("getStructure " + ds.getStructure());
+        System.out.println("auth / import label " + ds.getImport().getLabel());
     }
 
     /**
-     * Get all entities of the given graph
+     * Get all dimension-entities of the given graph
      *
-     * @param graph
-     * @return
+     * @param graph the named graph
+     * @return list of entities
      */
     public List<Entity> getEntities(String graph) {
         MergeProperties properties = MergeProperties.getInstance();
@@ -119,8 +141,8 @@ public class MergeDao {
     /**
      * Get all observations of the given graph
      *
-     * @param graph
-     * @return
+     * @param graph the named graph
+     * @return list of observations
      */
     public List<Observation> getObservations(String graph) {
         MergeProperties properties = MergeProperties.getInstance();
@@ -169,8 +191,8 @@ public class MergeDao {
     /**
      * Get all dimensions of the given graph
      *
-     * @param graph
-     * @return
+     * @param graph the named graph
+     * @return list of dimensions
      */
     public List<Dimension> getDimensions(String graph) {
         MergeProperties properties = MergeProperties.getInstance();
@@ -201,8 +223,8 @@ public class MergeDao {
     /**
      * Get all measures of the given graph
      *
-     * @param graph
-     * @return
+     * @param graph the named graph
+     * @return list of measures
      */
     public List<Measure> getMeasures(String graph) {
         MergeProperties properties = MergeProperties.getInstance();
@@ -231,27 +253,66 @@ public class MergeDao {
     }
 
     /**
+     * Get the cube metadata (including the importer label)
+     *
+     * @param graph the named graph
+     * @return the cube metadata
+     */
+    public Dataset getDataset(String graph) {
+        MergeProperties properties = MergeProperties.getInstance();
+        String tripleStore = properties.getTripleStore();
+        String queryFile = properties.getDatasetQuery();
+
+        // Prepare a query for the measures
+        String queryString = QueryFactory.read(queryFile).toString();
+        ParameterizedSparqlString preparedQuery = new ParameterizedSparqlString(queryString);
+        preparedQuery.setIri("g", graph);
+
+        QueryExecution qe = QueryExecutionFactory.sparqlService(tripleStore, preparedQuery.toString());
+        ResultSet rs = qe.execSelect();
+        Dataset ds = new Dataset();
+        while (rs.hasNext()) {
+            QuerySolution result = rs.next();
+            ds.setComment(result.get("comment").toString());
+            ds.setFormat(result.get("format").toString());
+            ds.setLabel(result.get("label").toString());
+            ds.setRelation(result.get("relation").toString());
+            ds.setSource(result.get("source").toString());
+            Import imp = new Import();
+            imp.setLabel(result.get("auth").toString());
+            ds.setImport(imp);
+        }
+        qe.close();
+        return ds;
+    }
+
+    /**
      * Stores the given merged configuration by creating Jena Models and storing
      * them to the triple store.
      *
-     * @param ds the dataset metadata about the cube
-     * @param dsd the dataset structure definition
-     * @param imp the import information
-     * @param dimensions all dimensions
-     * @param measures all measures
-     * @param entities all dimension entities
-     * @param observations all observations
+     * @param cube the cube, containing all data.
      */
-    public void store(Dataset ds, DatasetStructureDefinition dsd, Import imp, List<Dimension> dimensions, List<Measure> measures, List<Entity> entities, List<Observation> observations) {
+    public void store(Cube cube) {
+
+        Dataset dataset = cube.getDataset();
+        Import imp = cube.getDataset().getImport();
+        DatasetStructureDefinition dsd = cube.getDsd();
+        List<Dimension> dimensions = cube.getDimensions();
+        List<Measure> measures = cube.getMeasures();
+        List<Entity> entities = cube.getEntities();
+        List<Observation> observations = cube.getObservations();
+
+        Model rootModel = ModelFactory.createDefaultModel();
 
 //        RDFDataMgr.write(System.out, model, Lang.TURTLE);
-//   or:  model.write(System.out, "TURTLE") ;
-//        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-//        model.write(baos, Lang.N3.getName());
-//        String data = baos.toString();
-        Model m;
+        rootModel.write(System.out, "TURTLE"); // TODO TEST
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        rootModel.write(baos, Lang.N3.getName());
+        String data = baos.toString();
 
+        // TODO send "data" to triple store
         // Context uri = new UUID
+        // TODO: create DSD from dimensions and measures!
 
         /* TODO: store:
          Prefixes
@@ -260,9 +321,7 @@ public class MergeDao {
          Entities
          Observations
          Dataset-Infos
-         Datastructure-definition
-         Import
-         Importer
+         Dataset-structure-definition
          */
         // TODO: return value? success / fail?
     }
@@ -277,7 +336,7 @@ public class MergeDao {
     private Map<String, String> getComponentMap(String graph) {
         MergeProperties properties = MergeProperties.getInstance();
         String tripleStore = properties.getTripleStore();
-        String queryFile = properties.getComponentQuery();
+        String queryFile = properties.getDSDQuery();
 
         Map<String, String> components = new HashMap();
 

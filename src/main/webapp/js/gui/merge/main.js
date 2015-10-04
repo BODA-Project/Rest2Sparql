@@ -896,8 +896,8 @@ var MERGE_MAIN = new function () {
         $.each(MERGE_MAIN.dimensionMatching, function (dim1, dim2) {
 
             var dimConfig = {};
-            dimConfig.dimension = dim1.dimensionName;
-            dimConfig.dimensionMatch = dim2.dimensionName;
+            dimConfig.dimension = dim1;
+            dimConfig.dimensionMatch = dim2;
             config.dimensions.push(dimConfig);
         });
 
@@ -905,10 +905,14 @@ var MERGE_MAIN = new function () {
         $.each(MERGE_MAIN.measureMatching, function (measure1, measure2) {
 
             var measureConfig = {};
-            measureConfig.measure = measure1.measureName;
-            measureConfig.measureMatch = measure2.measureName;
+            measureConfig.measure = measure1;
+            measureConfig.measureMatch = measure2;
             config.measures.push(measureConfig);
         });
+
+        // DEBUG: log generated configuration
+        console.log("DEBUG: CONFIG", JSON.stringify(config))
+
         return config;
     };
 

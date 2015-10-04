@@ -23,6 +23,10 @@ public class Vocabulary {
     public static final String PROV_URI = "http://www.w3.org/ns/prov#";
     public static final String DC_PREFIX = "dc";
     public static final String DC_URI = "http://purl.org/dc/elements/1.1/";
+    public static final String RDF_PREFIX = "rdf";
+    public static final String RDF_URI = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
+    public static final String RDFS_PREFIX = "rdfs";
+    public static final String RDFS_URI = "http://www.w3.org/2000/01/rdf-schema#";
 
     private static final Model model = ModelFactory.createDefaultModel();
 

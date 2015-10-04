@@ -9,6 +9,7 @@ import java.util.Map;
 public class Observation {
 
     private String resource;
+    private String dataset;
     private final Map<String, String> dimensions = new HashMap(); // dimResource -> entityUUID
     private final Map<String, Double> measures = new HashMap();
 
@@ -38,5 +39,19 @@ public class Observation {
      */
     public void setResource(String resource) {
         this.resource = resource;
+    }
+
+    /**
+     * @return the dataset
+     */
+    public String getDataset() {
+        return dataset;
+    }
+
+    /**
+     * @param dataset the dataset to set
+     */
+    public void setDataset(String dataset) {
+        this.dataset = dataset;
     }
 }

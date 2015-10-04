@@ -1,12 +1,3 @@
-bin/*
-out/*
-.idea/
-/build/
-/nbproject/
-/dist/
-/web/WEB-INF/lib/javaee-endorsed-api-6.0/
-/web/WEB-INF/lib/CopyLibs/
-/web/WEB-INF/lib/nblibraries.properties
-/build.xml
 /target/
+.idea/
 /nb-configuration.xml

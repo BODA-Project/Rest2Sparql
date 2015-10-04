@@ -1,7 +1,7 @@
 package de.uni_passau.fim.dimis.rest2sparql.merging.dto;
 
 /**
- * Import and Importer information
+ * Import and Importer information. Contained in the Dataset DTO.
  */
 public class Import {
 

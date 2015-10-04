@@ -12,7 +12,8 @@ public class Dataset {
     private String relation;
     private String source;
     private String structure;
-    private String GeneratedBy;
+    private String generatedBy;
+    private Import imp;
 
     /**
      * @return the label
@@ -102,14 +103,14 @@ public class Dataset {
      * @return the GeneratedBy
      */
     public String getGeneratedBy() {
-        return GeneratedBy;
+        return generatedBy;
     }
 
     /**
-     * @param GeneratedBy the GeneratedBy to set
+     * @param generatedBy the GeneratedBy to set
      */
-    public void setGeneratedBy(String GeneratedBy) {
-        this.GeneratedBy = GeneratedBy;
+    public void setGeneratedBy(String generatedBy) {
+        this.generatedBy = generatedBy;
     }
 
     /**
@@ -124,6 +125,20 @@ public class Dataset {
      */
     public void setResource(String resource) {
         this.resource = resource;
+    }
+
+    /**
+     * @return the imp
+     */
+    public Import getImport() {
+        return imp;
+    }
+
+    /**
+     * @param imp the imp to set
+     */
+    public void setImport(Import imp) {
+        this.imp = imp;
     }
 
 }

@@ -67,14 +67,6 @@ public class MergeProperties {
      *
      * @return
      */
-    public String getComponentQuery() {
-        return getClass().getResource("/queries/components.sparql").getFile();
-    }
-
-    /**
-     *
-     * @return
-     */
     public String getDimensionQuery() {
         return getClass().getResource("/queries/dimensions.sparql").getFile();
     }
@@ -95,5 +87,20 @@ public class MergeProperties {
         return getClass().getResource("/queries/measures.sparql").getFile();
     }
 
-    // TODO more queries: DSD, Importer, Import, Dataset, ...
+    /**
+     *
+     * @return
+     */
+    public String getDatasetQuery() {
+        return getClass().getResource("/queries/dataset.sparql").getFile();
+    }
+
+    /**
+     *
+     * @return
+     */
+    public String getDSDQuery() {
+        return getClass().getResource("/queries/dsd.sparql").getFile();
+    }
+
 }

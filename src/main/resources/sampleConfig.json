@@ -1,0 +1,21 @@
+{
+    "id": "8023903",
+    "hash": "7fb2f0dd7d608ea6b82eaa9b6e38aa80e1b266d8f8610a2c4c2671368df2b7bc",
+    "cube1": "http://code-research.eu/resource/Dataset-5ef38ab8-b30b-462d-826f-bf5f15c1121b",
+    "cube2": "http://code-research.eu/resource/Dataset-4ceb25f2-cc72-4aa3-954c-b0f2509c1e96",
+    "preference": "http://code-research.eu/resource/Dataset-4ceb25f2-cc72-4aa3-954c-b0f2509c1e96",
+    "label": "MergedCubeNameHaha",
+    "comment": "Merged from 'fish_ld_belgium.xlsx' and 'fish_ld_germany.xlsx'",
+    "dimensions": [{
+            "dimension": "http://code-research.eu/resource/sedfrsdfdfg",
+            "label": "sedfrsdfdfg",
+            "entity": "http://code-research.eu/resource/kfgjfghjghj",
+            "entityLabel": "kfgjfghjghj",
+            "entity2": "http://code-research.eu/resource/h6513415",
+            "entity2Label": "h6513415"
+        }, {
+            "dimension": "http://code-research.eu/resource/Species",
+            "dimensionMatch": "http://code-research.eu/resource/Fish"
+        }],
+    "measures": []
+}
