@@ -20,13 +20,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The merge business object
  */
 public class MergeService {
 
-    // FOR TESTING
+    private final Logger logger = LoggerFactory.getLogger(getClass());
+
+    // TEMP: FOR TESTING
     public static void main(String[] args) {
         Gson gson = new Gson();
         InputStream str = MergeService.class.getResourceAsStream("/sampleConfig.json");
@@ -61,26 +65,31 @@ public class MergeService {
         List<Observation> observationsC1 = dao.getObservations(config.getCube1());
         List<Observation> observationsC2 = dao.getObservations(config.getCube2());
 
-        // Map UUID of entity to actual entity objects
-        List<Entity> prefEntities = config.getPreference().equals(config.getCube1()) ? entitiesC1 : entitiesC2; // preferred in case of overlap
-        List<Entity> otherEntities = config.getPreference().equals(config.getCube1()) ? entitiesC2 : entitiesC1;
-        Map<String, Entity> entityResMap = new HashMap(); // UUID -> Entity
-        for (Entity entity : otherEntities) {
-            entityResMap.put(entity.getResource(), entity);
-        }
-        for (Entity entity : prefEntities) {
-            entityResMap.put(entity.getResource(), entity);
+        // Preferred and unprederred entities
+        List<Entity> prefEntities = isCube1Preferred(config) ? entitiesC1 : entitiesC2; // preferred in case of overlap
+        List<Entity> otherEntities = isCube1Preferred(config) ? entitiesC2 : entitiesC1;
+        List<Entity> allEntities = new ArrayList();
+        allEntities.addAll(otherEntities);
+        allEntities.addAll(prefEntities);
+
+        // Map definition (isDefinedBy) + label of entity to actual entity objects (for entitiy collision detection)
+        Map<String, Entity> entityDefMap = new HashMap(); // def + label -> Entity
+        for (Entity entity : allEntities) {
+            String key = entity.getDefinedBy() + entity.getLabel(); // Hack, use label in case definition is missing
+            entityDefMap.put(key, entity);
         }
 
-        // Map definition (isDefinedBy) + label of entity to actual entity objects (for overlap detection)
-        Map<String, Entity> entityDefMap = new HashMap(); // def + label -> Entity
-        for (Entity entity : otherEntities) {
-            String key = entity.getDefinedBy() + entity.getLabel(); // Hack, use label in case definition is missing
-            entityDefMap.put(key, entity);
+        // Map UUID of entity to actual entity objects (only used for already existing entities)
+        Map<String, Entity> entityResMap = new HashMap(); // UUID -> Entity
+        for (Entity entity : allEntities) {
+            String key = entity.getDefinedBy() + entity.getLabel();
+            entityResMap.put(entity.getResource(), entityDefMap.get(key)); // merges same entities
         }
-        for (Entity entity : prefEntities) {
-            String key = entity.getDefinedBy() + entity.getLabel(); // Hack, use label in case definition is missing
-            entityDefMap.put(key, entity);
+
+        // Change the UUID of all entities, key of map stays the same to access them
+        for (Map.Entry<String, Entity> entrySet : entityResMap.entrySet()) {
+            Entity entity = entrySet.getValue();
+            entity.setResource(Vocabulary.CODE_OBS + getRandomId());
         }
 
         // Generate new IDs for metadata
@@ -162,14 +171,23 @@ public class MergeService {
             newDsd.getMeasures().add(measure.getResource());
         }
 
-        // TODO: rename existing entity UUIDs ? -> fill empty list when merging observations!!!
         // Prepare the observations according to the new DSD
         List<Observation> allObservations = new ArrayList();
-        allObservations.addAll(observationsC1);
-        allObservations.addAll(observationsC2);
+        List<Observation> prefObservations = isCube1Preferred(config) ? observationsC1 : observationsC2;
+        List<Observation> otherObservations = isCube1Preferred(config) ? observationsC2 : observationsC1;
+        allObservations.addAll(otherObservations);
+        allObservations.addAll(prefObservations); // Add preferred observations last to override unpreferred
         for (Observation obs : allObservations) {
             obs.setDataset(idDataset);
-            obs.setResource(Vocabulary.CODE_OBS + getRandomId()); // TODO counter instead?
+            obs.setResource(Vocabulary.CODE_OBS + getRandomId());
+
+            // Apply changed UUID of entities
+            for (Map.Entry<String, String> entrySet : obs.getDimensions().entrySet()) {
+                String dimRes = entrySet.getKey();
+                String entityRes = entrySet.getValue();
+                String newUUID = entityResMap.get(entityRes).getResource();
+                obs.getDimensions().put(dimRes, newUUID);
+            }
 
             // Replace dimensions (URIs)
             for (Map.Entry<String, String> entrySet : obs.getDimensions().entrySet()) {
@@ -247,10 +265,35 @@ public class MergeService {
             }
         }
 
-        // Merge the observations and create a list of actually used Entities
-        List<Observation> prefObservations = isCube1Preferred(config) ? observationsC1 : observationsC2;
-        List<Observation> otherObservations = isCube1Preferred(config) ? observationsC2 : observationsC1;
-        // TODO...
+        // Create list of actually used entities
+        List<Entity> newEntities = new ArrayList(entityDefMap.values());
+
+        // Map combination of entities to observation to detect collision
+        Map<String, Observation> overlapMap = new HashMap();
+
+        // Merge observations by adding unpreferred first and overriding given components
+        List<Observation> newObservations = new ArrayList();
+        for (Observation obs : allObservations) {
+
+            // Key = combination of all entity URIs
+            String key = "";
+            for (Dimension dim : newDimensions) {
+                key += obs.getDimensions().get(dim.getResource());
+            }
+            Observation overlapObs = overlapMap.get(key);
+            if (overlapObs == null) {
+                // Save the observation to map for collision detection
+                overlapMap.put(key, obs);
+                newObservations.add(obs);
+            } else {
+                // Override the already added observation (add / overwrite measure data)
+                for (Map.Entry<String, Double> entrySet : obs.getMeasures().entrySet()) {
+                    String measureRes = entrySet.getKey();
+                    Double measureValue = entrySet.getValue();
+                    overlapObs.getMeasures().put(measureRes, measureValue); // Override
+                }
+            }
+        }
 
         // Combine the merged data
         Cube cube = new Cube();
@@ -258,14 +301,26 @@ public class MergeService {
         cube.setDsd(newDsd);
         cube.setDimensions(newDimensions);
         cube.setMeasures(newMeasures);
-        cube.setEntities(null);
-        cube.setObservations(null);
+        cube.setEntities(newEntities);
+        cube.setObservations(newObservations);
 
-        // TEST: check objects
-//        System.out.println("AS JSON: " + new Gson().toJson(entityDefMap));
+        // Log some information
+        logger.info("Merged Cubes " + config.getCube1() + " and " + config.getCube2());
+        logger.info("Dimensions Cube #1: " + dimensionsC1.size());
+        logger.info("Dimensions Cube #2: " + dimensionsC2.size());
+        logger.info("Dimensions Merged: " + newDimensions.size());
+        logger.info("Measures Cube #1: " + meauresC1.size());
+        logger.info("Measures Cube #2: " + meauresC2.size());
+        logger.info("Measures Merged: " + newMeasures.size());
+        logger.info("Entities Cube #1: " + entitiesC1.size());
+        logger.info("Entities Cube #2: " + entitiesC2.size());
+        logger.info("Entities Merged: " + newEntities.size());
+        logger.info("Observations Cube #1: " + observationsC1.size());
+        logger.info("Observations Cube #2: " + observationsC2.size());
+        logger.info("Observations Merged: " + newObservations.size());
+
         // Store the merged cube
-        dao.store(cube); // TODO return value? success / fail?
-        // return RETURN_SUCCES; // TODO...
+        dao.store(cube); // TODO: throws database-exception -> throw to servlet
     }
 
     /**

@@ -7,12 +7,12 @@
     "label": "MergedCubeNameHaha",
     "comment": "Merged from 'fish_ld_belgium.xlsx' and 'fish_ld_germany.xlsx'",
     "dimensions": [{
-            "dimension": "http://code-research.eu/resource/sedfrsdfdfg",
+            "dimension": "http://code-research.eu/resource/NewDimension",
             "label": "sedfrsdfdfg",
-            "entity": "http://code-research.eu/resource/kfgjfghjghj",
-            "entityLabel": "kfgjfghjghj",
-            "entity2": "http://code-research.eu/resource/h6513415",
-            "entity2Label": "h6513415"
+            "entity": "http://code-research.eu/resource/differ1",
+            "entityLabel": "differ1",
+            "entity2": "http://code-research.eu/resource/differ2",
+            "entity2Label": "differ2"
         }, {
             "dimension": "http://code-research.eu/resource/Species",
             "dimensionMatch": "http://code-research.eu/resource/Fish"

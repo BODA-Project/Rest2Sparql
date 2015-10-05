@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
  */
 public class MergeDao {
 
-    private final Logger logger = LoggerFactory.getLogger(MergeDao.class);
+    private final Logger logger = LoggerFactory.getLogger(getClass());
     // TODO: log errors! + add try catch on queries!
 
     // TEMP: for testing purpose
@@ -304,6 +304,7 @@ public class MergeDao {
 
         Model rootModel = ModelFactory.createDefaultModel();
 
+        // TODO: create jena models / graphs ...
 //        RDFDataMgr.write(System.out, model, Lang.TURTLE);
         rootModel.write(System.out, "TURTLE"); // TODO TEST
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
