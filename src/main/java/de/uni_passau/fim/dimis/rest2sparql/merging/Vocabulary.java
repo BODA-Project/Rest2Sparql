@@ -44,9 +44,13 @@ public class Vocabulary {
     public static final Property QB_DATASET_PROPERTY = model.createProperty(QB_URI + "dataSet");
 
     // PROV vocabulary
-    public static final Property WAS_DERIVED_FROM = model.createProperty(PROV_URI + "wasDerivedFrom");
-    public static final Property WAS_GENERATED_BY = model.createProperty(PROV_URI + "wasGeneratedBy");
-    public static final Property WAS_STARTED_BY = model.createProperty(PROV_URI + "wasStartedBy");
+    public static final Property PROV_WAS_DERIVED_FROM = model.createProperty(PROV_URI + "wasDerivedFrom");
+    public static final Property PROV_WAS_GENERATED_BY = model.createProperty(PROV_URI + "wasGeneratedBy");
+    public static final Property PROV_WAS_STARTED_BY = model.createProperty(PROV_URI + "wasStartedBy");
+
+    // DC vocabulary
+    public static final Property DC_FORMAT = model.createProperty(DC_URI + "format");
+    public static final Property DC_SOURCE = model.createProperty(DC_URI + "source");
 
     // CODE vocabulary (need UUID as suffix)
     public static final String CODE_DATASET = CODE_URI + "Dataset-";

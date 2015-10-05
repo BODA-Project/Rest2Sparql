@@ -21,10 +21,15 @@ import org.apache.jena.query.QueryExecutionFactory;
 import org.apache.jena.query.QueryFactory;
 import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ResultSet;
+import org.apache.jena.rdf.model.Literal;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.RDFNode;
+import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.riot.Lang;
+import org.apache.jena.vocabulary.RDF;
+import org.apache.jena.vocabulary.RDFS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -295,23 +300,33 @@ public class MergeDao {
     public void store(Cube cube) {
 
         Dataset dataset = cube.getDataset();
-        Import imp = cube.getDataset().getImport();
         DatasetStructureDefinition dsd = cube.getDsd();
         List<Dimension> dimensions = cube.getDimensions();
         List<Measure> measures = cube.getMeasures();
         List<Entity> entities = cube.getEntities();
         List<Observation> observations = cube.getObservations();
 
-        Model rootModel = ModelFactory.createDefaultModel();
+        // Create jena models
+        Model datasetModel = createDatasetModel(dataset);
+        Model dsdModel = createDSDModel(dsd);
+        Model dimensionModel = createDimensionModel(dimensions);
+        Model measureModel = createMeasureModel(measures);
+        Model entityModel = createEntityModel(entities);
+        Model observationModel = createObservationModel(observations);
 
+        // Combine the models into a single graph
+        Model rootModel = ModelFactory.createDefaultModel();
+        rootModel.add(observationModel);
+
+//        rootModel.
         // TODO: create jena models / graphs ...
-//        RDFDataMgr.write(System.out, model, Lang.TURTLE);
+        //        RDFDataMgr.write(System.out, model, Lang.TURTLE);
         rootModel.write(System.out, "TURTLE"); // TODO TEST
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         rootModel.write(baos, Lang.N3.getName());
         String data = baos.toString();
 
-        // TODO send "data" to triple store
+        // TODO send "data" to triple storew
         // Context uri = new UUID
         // TODO: create DSD from dimensions and measures!
 
@@ -353,6 +368,145 @@ public class MergeDao {
         }
         qe.close();
         return components;
+    }
+
+    /**
+     * Set the needed prefixes for the given model
+     *
+     * @param model the rdf model
+     * @return the same model
+     */
+    private Model setNamespaces(Model model) {
+        model.setNsPrefix(Vocabulary.QB_PREFIX, Vocabulary.QB_URI);
+        model.setNsPrefix(Vocabulary.CODE_PREFIX, Vocabulary.CODE_URI);
+        model.setNsPrefix(Vocabulary.RDF_PREFIX, Vocabulary.RDF_URI);
+        model.setNsPrefix(Vocabulary.RDFS_PREFIX, Vocabulary.RDFS_URI);
+        model.setNsPrefix(Vocabulary.VA_PREFIX, Vocabulary.VA_URI);
+        model.setNsPrefix(Vocabulary.PROV_PREFIX, Vocabulary.PROV_URI);
+        model.setNsPrefix(Vocabulary.DC_PREFIX, Vocabulary.DC_URI);
+        return model;
+    }
+
+    /**
+     * Creates a jena model of the given observations.
+     *
+     * @param observations the list of observations
+     * @return a model of the given observations
+     */
+    private Model createObservationModel(List<Observation> observations) {
+        Model model = ModelFactory.createDefaultModel();
+        for (Observation obs : observations) {
+
+            // Define Observation resource
+            Resource obsResource = model.createResource(obs.getResource());
+            obsResource.addProperty(RDF.type, Vocabulary.QB_OBSERVATION);
+            obsResource.addProperty(Vocabulary.QB_DATASET_PROPERTY, obs.getDataset());
+
+            // Add dimensions
+            for (String dimRes : obs.getDimensions().keySet()) {
+                Resource entityResource = model.createResource(obs.getDimensions().get(dimRes));
+                Property dimProperty = model.createProperty(dimRes);
+                obsResource.addProperty(dimProperty, entityResource);
+            }
+
+            // Add measures
+            for (String measureRes : obs.getMeasures().keySet()) {
+                Literal literal = model.createTypedLiteral(obs.getMeasures().get(measureRes)); // TODO: XSDDatatype.XSDdouble;?
+                Property measureProperty = model.createProperty(measureRes);
+                obsResource.addLiteral(measureProperty, literal);
+            }
+        }
+        return model;
+    }
+
+    /**
+     * Creates a jena model of the given dataset
+     *
+     * @param dataset the dataset information
+     * @return a model of the given dataset
+     */
+    private Model createDatasetModel(Dataset dataset) {
+        Import imp = dataset.getImport();
+        Model model = ModelFactory.createDefaultModel();
+        Resource datasetResource = model.createResource();
+        Resource structureResource = model.createResource(dataset.getStructure());
+        Resource importResource = model.createResource(imp.getResource());
+        Resource importerResource = model.createResource(imp.getStartedBy());
+        importerResource.addLiteral(RDFS.label, imp.getLabel());
+        importResource.addProperty(Vocabulary.PROV_WAS_STARTED_BY, importerResource);
+        datasetResource.addProperty(RDF.type, Vocabulary.QB_DATASET);
+        datasetResource.addProperty(RDFS.comment, dataset.getComment());
+        datasetResource.addProperty(RDFS.label, dataset.getLabel());
+        datasetResource.addProperty(Vocabulary.DC_FORMAT, dataset.getFormat());
+        datasetResource.addProperty(Vocabulary.DC_SOURCE, dataset.getSource());
+        datasetResource.addProperty(Vocabulary.QB_STRUCTURE, structureResource);
+        datasetResource.addProperty(Vocabulary.PROV_WAS_GENERATED_BY, importResource);
+        return model;
+    }
+
+    /**
+     * Creates a jena model of the given dataset structure definition
+     *
+     * @param dsd the dataset structure definition
+     * @return a model of the given dataset structure definition
+     */
+    private Model createDSDModel(DatasetStructureDefinition dsd) {
+        Model model = ModelFactory.createDefaultModel();
+        Resource dsdResource = model.createResource(dsd.getResource());
+        dsdResource.addProperty(RDF.type, Vocabulary.QB_DSD);
+
+        // Add dimension components
+        for (String dim : dsd.getDimensions()) {
+            Resource tmp = model.createResource();
+            Resource dimResource = model.createResource(dim);
+            tmp.addProperty(Vocabulary.QB_DIMENSION, dimResource);
+            dsdResource.addProperty(Vocabulary.QB_COMPONENT, tmp);
+        }
+
+        // Add measure components
+        for (String measure : dsd.getMeasures()) {
+            Resource tmp = model.createResource();
+            Resource measureResource = model.createResource(measure);
+            tmp.addProperty(Vocabulary.QB_MEASURE, measureResource);
+            dsdResource.addProperty(Vocabulary.QB_COMPONENT, tmp);
+        }
+
+        return model;
+    }
+
+    /**
+     * Creates a jena model of the given dimensions
+     *
+     * @param dimensions the dimensions
+     * @return a model of the given dimensions
+     */
+    private Model createDimensionModel(List<Dimension> dimensions) {
+        Model model = ModelFactory.createDefaultModel();
+        return model;
+
+    }
+
+    /**
+     * Creates a jena model of the given measures
+     *
+     * @param measures the measures
+     * @return a model of the given measures
+     */
+    private Model createMeasureModel(List<Measure> measures) {
+        Model model = ModelFactory.createDefaultModel();
+        return model;
+
+    }
+
+    /**
+     * Creates a jena model of the given entities
+     *
+     * @param entities the entities
+     * @return a model of the given entities
+     */
+    private Model createEntityModel(List<Entity> entities) {
+        Model model = ModelFactory.createDefaultModel();
+        return model;
     }
 
 }
