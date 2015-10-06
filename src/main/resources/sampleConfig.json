@@ -1,21 +1,18 @@
 {
     "id": "8023903",
     "hash": "7fb2f0dd7d608ea6b82eaa9b6e38aa80e1b266d8f8610a2c4c2671368df2b7bc",
-    "cube1": "http://code-research.eu/resource/Dataset-5ef38ab8-b30b-462d-826f-bf5f15c1121b",
-    "cube2": "http://code-research.eu/resource/Dataset-4ceb25f2-cc72-4aa3-954c-b0f2509c1e96",
-    "preference": "http://code-research.eu/resource/Dataset-4ceb25f2-cc72-4aa3-954c-b0f2509c1e96",
-    "label": "MergedCubeNameHaha",
+    "cube1": "http://code-research.eu/resource/Dataset-1fb732fc-647d-4747-847d-c73eabbc737a",
+    "cube2": "http://code-research.eu/resource/Dataset-67ccca51-f762-494c-a054-51f92d00974c",
+    "preference": "http://code-research.eu/resource/Dataset-1fb732fc-647d-4747-847d-c73eabbc737a",
+    "label": "Merged-Belgium-Germany",
     "comment": "Merged from 'fish_ld_belgium.xlsx' and 'fish_ld_germany.xlsx'",
     "dimensions": [{
-            "dimension": "http://code-research.eu/resource/NewDimension",
-            "label": "sedfrsdfdfg",
-            "entity": "http://code-research.eu/resource/differ1",
-            "entityLabel": "differ1",
-            "entity2": "http://code-research.eu/resource/differ2",
-            "entity2Label": "differ2"
-        }, {
-            "dimension": "http://code-research.eu/resource/Species",
-            "dimensionMatch": "http://code-research.eu/resource/Fish"
+            "dimension": "http://code-research.eu/resource/Country",
+            "label": "Country",
+            "entity": "http://code-research.eu/resource/Def-Belgium",
+            "entityLabel": "Belgium",
+            "entity2": "http://code-research.eu/resource/Def-Germany",
+            "entity2Label": "Germany"
         }],
     "measures": []
 }

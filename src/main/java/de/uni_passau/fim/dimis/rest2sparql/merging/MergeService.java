@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
  */
 public class MergeService {
 
+    private final static String DATASET_RELATION = "Cube was merged with the CubeMerger (Rest2Sparql)";
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     // TEMP: FOR TESTING
@@ -89,7 +90,7 @@ public class MergeService {
         // Change the UUID of all entities, key of map stays the same to access them
         for (Map.Entry<String, Entity> entrySet : entityResMap.entrySet()) {
             Entity entity = entrySet.getValue();
-            entity.setResource(Vocabulary.CODE_OBS + getRandomId());
+            entity.setResource(Vocabulary.CODE_ENTITY + getRandomId());
         }
 
         // Generate new IDs for metadata
@@ -108,7 +109,7 @@ public class MergeService {
         newDataset.setGeneratedBy(idImport);
         Dataset prefDataset = isCube1Preferred(config) ? datasetC1 : datasetC2; // preferred in case of overlap
         newDataset.setFormat(prefDataset.getFormat());
-        newDataset.setRelation(prefDataset.getRelation());
+        newDataset.setRelation(DATASET_RELATION);
         newDataset.setSource(prefDataset.getSource());
         Import newImport = new Import();
         newImport.setLabel(prefDataset.getImport().getLabel());
@@ -158,6 +159,7 @@ public class MergeService {
             // Measure replacement, remove old measure from map, replacement happens at observations
             measureMap.remove(mc.getMeasure());
         }
+
         // Convert to list
         List<Measure> newMeasures = new ArrayList(measureMap.values());
 
@@ -190,30 +192,24 @@ public class MergeService {
             }
 
             // Replace dimensions (URIs)
-            for (Map.Entry<String, String> entrySet : obs.getDimensions().entrySet()) {
-                String dimRes = entrySet.getKey();
-                String entityRes = entrySet.getValue();
-                for (DimensionConfig dc : config.getDimensions()) {
-                    if (dc.getDimensionMatch() != null && dc.getDimension().equals(dimRes)) {
-                        // Replace dimension resource (and clear old one)
-                        obs.getDimensions().remove(dimRes);
-                        obs.getDimensions().put(dc.getDimensionMatch(), entityRes);
-                        break;
-                    }
+            for (DimensionConfig dc : config.getDimensions()) {
+                String dim = dc.getDimension();
+                String match = dc.getDimensionMatch();
+                if (match != null && obs.getDimensions().containsKey(dim)) {
+                    // Replace dimension resource (and clear old one)
+                    String entity = obs.getDimensions().remove(dim);
+                    obs.getDimensions().put(match, entity);
                 }
             }
 
             // Replace measures (URIs)
-            for (Map.Entry<String, Double> entrySet : obs.getMeasures().entrySet()) {
-                String measureRes = entrySet.getKey();
-                Double value = entrySet.getValue();
-                for (MeasureConfig mc : config.getMeasures()) {
-                    if (mc.getMeasureMatch() != null && mc.getMeasure().equals(measureRes)) {
-                        // Replace measure resource (and clear old one)
-                        obs.getMeasures().remove(measureRes);
-                        obs.getMeasures().put(mc.getMeasureMatch(), value);
-                        break;
-                    }
+            for (MeasureConfig mc : config.getMeasures()) {
+                String measure = mc.getMeasure();
+                String match = mc.getMeasureMatch();
+                if (match != null && obs.getMeasures().containsKey(measure)) {
+                    // Replace measure resource (and clear old one)
+                    Double value = obs.getMeasures().remove(measure);
+                    obs.getMeasures().put(match, value);
                 }
             }
 
@@ -272,7 +268,6 @@ public class MergeService {
         Map<String, Observation> overlapMap = new HashMap();
 
         // Merge observations by adding unpreferred first and overriding given components
-        List<Observation> newObservations = new ArrayList();
         for (Observation obs : allObservations) {
 
             // Key = combination of all entity URIs
@@ -284,7 +279,6 @@ public class MergeService {
             if (overlapObs == null) {
                 // Save the observation to map for collision detection
                 overlapMap.put(key, obs);
-                newObservations.add(obs);
             } else {
                 // Override the already added observation (add / overwrite measure data)
                 for (Map.Entry<String, Double> entrySet : obs.getMeasures().entrySet()) {
@@ -294,6 +288,7 @@ public class MergeService {
                 }
             }
         }
+        List<Observation> newObservations = new ArrayList(overlapMap.values());
 
         // Combine the merged data
         Cube cube = new Cube();

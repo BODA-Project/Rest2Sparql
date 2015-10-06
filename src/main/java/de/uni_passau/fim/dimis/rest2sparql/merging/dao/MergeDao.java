@@ -28,6 +28,7 @@ import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.riot.Lang;
+import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
 import org.slf4j.Logger;
@@ -39,6 +40,8 @@ import org.slf4j.LoggerFactory;
  * rewritten anyway, except when they are needed (Observations to Entities).
  */
 public class MergeDao {
+
+    private final static String CONTEXT_URI = "?context-uri=";
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
     // TODO: log errors! + add try catch on queries!
@@ -316,30 +319,45 @@ public class MergeDao {
 
         // Combine the models into a single graph
         Model rootModel = ModelFactory.createDefaultModel();
+        setNamespaces(rootModel);
+        rootModel.add(datasetModel);
+        rootModel.add(dsdModel);
+        rootModel.add(dimensionModel);
+        rootModel.add(measureModel);
+        rootModel.add(entityModel);
         rootModel.add(observationModel);
 
-//        rootModel.
-        // TODO: create jena models / graphs ...
-        //        RDFDataMgr.write(System.out, model, Lang.TURTLE);
-        rootModel.write(System.out, "TURTLE"); // TODO TEST
+        RDFDataMgr.write(System.out, rootModel, Lang.TURTLE);
+
+        // Send the rdf data to the triple store
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        rootModel.write(baos, Lang.N3.getName());
+        RDFDataMgr.write(baos, rootModel, Lang.TURTLE);
         String data = baos.toString();
 
-        // TODO send "data" to triple storew
-        // Context uri = new UUID
-        // TODO: create DSD from dimensions and measures!
+//        HttpClient httpClient = HttpClients.createDefault();
+//        HttpPost httpPost = new HttpPost(MergeProperties.getInstance().getTripleStore() + CONTEXT_URI + dataset.getResource());
+//        httpPost.setHeader("Content-Type", contentType.getContentTypeRdf());
+//        try {
+//            httpPost.setEntity(new StringEntity(content));
+//        } catch (UnsupportedEncodingException e) {
+//            e.printStackTrace();
+//        }
+//        HttpResponse response;
+//        String result = "";
+//        try {
+//            response = httpClient.execute(httpPost);
+//            HttpEntity entity = response.getEntity();
+//            result = IOUtils.toString(entity.getContent(), "UTF-8");
+//            EntityUtils.consume(entity);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        } finally {
+//            httpPost.releaseConnection();
+//        }
+//
+//        System.out.println("result: " + result);
 
-        /* TODO: store:
-         Prefixes
-         Dimensions
-         Measures
-         Entities
-         Observations
-         Dataset-Infos
-         Dataset-structure-definition
-         */
-        // TODO: return value? success / fail?
+        // TODO: return value? success / fail? / throw exceptions
     }
 
     /**
@@ -399,8 +417,9 @@ public class MergeDao {
 
             // Define Observation resource
             Resource obsResource = model.createResource(obs.getResource());
+            Resource datasetResource = model.createResource(obs.getDataset());
             obsResource.addProperty(RDF.type, Vocabulary.QB_OBSERVATION);
-            obsResource.addProperty(Vocabulary.QB_DATASET_PROPERTY, obs.getDataset());
+            obsResource.addProperty(Vocabulary.QB_DATASET_PROPERTY, datasetResource);
 
             // Add dimensions
             for (String dimRes : obs.getDimensions().keySet()) {
@@ -411,7 +430,7 @@ public class MergeDao {
 
             // Add measures
             for (String measureRes : obs.getMeasures().keySet()) {
-                Literal literal = model.createTypedLiteral(obs.getMeasures().get(measureRes)); // TODO: XSDDatatype.XSDdouble;?
+                Literal literal = model.createTypedLiteral(obs.getMeasures().get(measureRes));
                 Property measureProperty = model.createProperty(measureRes);
                 obsResource.addLiteral(measureProperty, literal);
             }
@@ -428,17 +447,18 @@ public class MergeDao {
     private Model createDatasetModel(Dataset dataset) {
         Import imp = dataset.getImport();
         Model model = ModelFactory.createDefaultModel();
-        Resource datasetResource = model.createResource();
+        Resource datasetResource = model.createResource(dataset.getResource());
         Resource structureResource = model.createResource(dataset.getStructure());
         Resource importResource = model.createResource(imp.getResource());
         Resource importerResource = model.createResource(imp.getStartedBy());
         importerResource.addLiteral(RDFS.label, imp.getLabel());
         importResource.addProperty(Vocabulary.PROV_WAS_STARTED_BY, importerResource);
         datasetResource.addProperty(RDF.type, Vocabulary.QB_DATASET);
-        datasetResource.addProperty(RDFS.comment, dataset.getComment());
-        datasetResource.addProperty(RDFS.label, dataset.getLabel());
-        datasetResource.addProperty(Vocabulary.DC_FORMAT, dataset.getFormat());
-        datasetResource.addProperty(Vocabulary.DC_SOURCE, dataset.getSource());
+        datasetResource.addLiteral(RDFS.comment, dataset.getComment());
+        datasetResource.addLiteral(RDFS.label, dataset.getLabel());
+        datasetResource.addLiteral(Vocabulary.DC_FORMAT, dataset.getFormat());
+        datasetResource.addLiteral(Vocabulary.DC_RELATION, dataset.getRelation());
+        datasetResource.addLiteral(Vocabulary.DC_SOURCE, dataset.getSource());
         datasetResource.addProperty(Vocabulary.QB_STRUCTURE, structureResource);
         datasetResource.addProperty(Vocabulary.PROV_WAS_GENERATED_BY, importResource);
         return model;
@@ -482,8 +502,15 @@ public class MergeDao {
      */
     private Model createDimensionModel(List<Dimension> dimensions) {
         Model model = ModelFactory.createDefaultModel();
+        for (Dimension dimension : dimensions) {
+            Resource dimResource = model.createResource(dimension.getResource());
+            Resource subPropertyOf = model.createResource(dimension.getSubpropertyOf());
+            dimResource.addProperty(RDF.type, RDF.Property);
+            dimResource.addProperty(RDF.type, Vocabulary.QB_DIMENSION_PROPERTY);
+            dimResource.addProperty(RDFS.subPropertyOf, subPropertyOf);
+            dimResource.addLiteral(RDFS.label, dimension.getLabel());
+        }
         return model;
-
     }
 
     /**
@@ -494,8 +521,15 @@ public class MergeDao {
      */
     private Model createMeasureModel(List<Measure> measures) {
         Model model = ModelFactory.createDefaultModel();
+        for (Measure measure : measures) {
+            Resource dimResource = model.createResource(measure.getResource());
+            Resource subPropertyOfResource = model.createResource(measure.getSubpropertyOf());
+            dimResource.addProperty(RDF.type, RDF.Property);
+            dimResource.addProperty(RDF.type, Vocabulary.QB_MEASURE_PROPERTY);
+            dimResource.addProperty(RDFS.subPropertyOf, subPropertyOfResource);
+            dimResource.addLiteral(RDFS.label, measure.getLabel());
+        }
         return model;
-
     }
 
     /**
@@ -506,6 +540,13 @@ public class MergeDao {
      */
     private Model createEntityModel(List<Entity> entities) {
         Model model = ModelFactory.createDefaultModel();
+        for (Entity entity : entities) {
+            Resource entityResource = model.createResource(entity.getResource());
+            Resource definedByResource = model.createResource(entity.getDefinedBy());
+            entityResource.addProperty(RDF.type, Vocabulary.CODE_ENTITY_DEF);
+            entityResource.addLiteral(RDFS.label, entity.getLabel());
+            entityResource.addProperty(RDFS.isDefinedBy, definedByResource);
+        }
         return model;
     }
 

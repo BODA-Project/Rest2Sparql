@@ -113,8 +113,8 @@ public class DisambiguationServlet extends HttpServlet {
 //        } catch (IOException e) {
 //            e.printStackTrace();
 //        }
-        // If not found, suggest "http://code-research.eu/resource/RESOURCE"
-        result = (result == null || result.equals("")) ? Vocabulary.CODE_URI + "Def-" + label : result;
+        // If not found, suggest "http://code-research.eu/resource/Def-RESOURCE"
+        result = (result == null || result.equals("")) ? Vocabulary.CODE_DEF + label : result;
         result = Vocabulary.CODE_URI + label;
         return result;
     }
