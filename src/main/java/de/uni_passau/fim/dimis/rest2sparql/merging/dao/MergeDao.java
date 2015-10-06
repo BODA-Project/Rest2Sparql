@@ -29,6 +29,9 @@ import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.update.UpdateAction;
+import org.apache.jena.update.UpdateFactory;
+import org.apache.jena.update.UpdateRequest;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
 import org.slf4j.Logger;
@@ -132,17 +135,17 @@ public class MergeDao {
         ParameterizedSparqlString preparedQuery = new ParameterizedSparqlString(queryString);
         preparedQuery.setIri("g", graph);
 
-        QueryExecution qe = QueryExecutionFactory.sparqlService(tripleStore, preparedQuery.toString());
-        ResultSet rs = qe.execSelect();
-        while (rs.hasNext()) {
-            QuerySolution result = rs.next();
-            Entity entity = new Entity();
-            entity.setResource(result.get("res").toString());
-            entity.setDefinedBy(result.get("def").toString());
-            entity.setLabel(result.get("label").toString());
-            list.add(entity);
+        try (QueryExecution qe = QueryExecutionFactory.sparqlService(tripleStore, preparedQuery.toString())) {
+            ResultSet rs = qe.execSelect();
+            while (rs.hasNext()) {
+                QuerySolution result = rs.next();
+                Entity entity = new Entity();
+                entity.setResource(result.get("res").toString());
+                entity.setDefinedBy(result.get("def").toString());
+                entity.setLabel(result.get("label").toString());
+                list.add(entity);
+            }
         }
-        qe.close();
         return list;
     }
 
@@ -166,33 +169,33 @@ public class MergeDao {
         ParameterizedSparqlString preparedQuery = new ParameterizedSparqlString(queryString);
         preparedQuery.setIri("g", graph);
 
-        QueryExecution qe = QueryExecutionFactory.sparqlService(tripleStore, preparedQuery.toString());
-        ResultSet rs = qe.execSelect();
-        while (rs.hasNext()) {
-            QuerySolution result = rs.next();
+        try (QueryExecution qe = QueryExecutionFactory.sparqlService(tripleStore, preparedQuery.toString())) {
+            ResultSet rs = qe.execSelect();
+            while (rs.hasNext()) {
+                QuerySolution result = rs.next();
 
-            // Read subject, predicate, object
-            String obsResource = result.get("s").toString();
-            String predicate = result.get("p").toString();
-            RDFNode object = result.get("o"); // Can be string or numerical value
+                // Read subject, predicate, object
+                String obsResource = result.get("s").toString();
+                String predicate = result.get("p").toString();
+                RDFNode object = result.get("o"); // Can be string or numerical value
 
-            // Create new observation if first triple
-            if (!observations.containsKey(obsResource)) {
-                Observation observation = new Observation();
-                observations.put(obsResource, observation);
-                list.add(observation);
-            }
-            Observation observation = observations.get(obsResource);
+                // Create new observation if first triple
+                if (!observations.containsKey(obsResource)) {
+                    Observation observation = new Observation();
+                    observations.put(obsResource, observation);
+                    list.add(observation);
+                }
+                Observation observation = observations.get(obsResource);
 
-            // Fill the observation object (dimensions and measures)
-            if (Vocabulary.QB_MEASURE.getURI().equals(components.get(predicate))) {
-                double numValue = object.asLiteral().getDouble(); // Note: always interpreted as double -> might cause problems
-                observation.getMeasures().put(predicate, numValue);
-            } else if (Vocabulary.QB_DIMENSION.getURI().equals(components.get(predicate))) {
-                observation.getDimensions().put(predicate, object.toString());
+                // Fill the observation object (dimensions and measures)
+                if (Vocabulary.QB_MEASURE.getURI().equals(components.get(predicate))) {
+                    double numValue = object.asLiteral().getDouble(); // Note: always interpreted as double -> might cause problems
+                    observation.getMeasures().put(predicate, numValue);
+                } else if (Vocabulary.QB_DIMENSION.getURI().equals(components.get(predicate))) {
+                    observation.getDimensions().put(predicate, object.toString());
+                }
             }
         }
-        qe.close();
         return list;
     }
 
@@ -214,17 +217,17 @@ public class MergeDao {
         ParameterizedSparqlString preparedQuery = new ParameterizedSparqlString(queryString);
         preparedQuery.setIri("g", graph);
 
-        QueryExecution qe = QueryExecutionFactory.sparqlService(tripleStore, preparedQuery.toString());
-        ResultSet rs = qe.execSelect();
-        while (rs.hasNext()) {
-            QuerySolution result = rs.next();
-            Dimension dim = new Dimension();
-            dim.setResource(result.get("res").toString());
-            dim.setSubpropertyOf(result.get("sub").toString());
-            dim.setLabel(result.get("label").toString());
-            list.add(dim);
+        try (QueryExecution qe = QueryExecutionFactory.sparqlService(tripleStore, preparedQuery.toString())) {
+            ResultSet rs = qe.execSelect();
+            while (rs.hasNext()) {
+                QuerySolution result = rs.next();
+                Dimension dim = new Dimension();
+                dim.setResource(result.get("res").toString());
+                dim.setSubpropertyOf(result.get("sub").toString());
+                dim.setLabel(result.get("label").toString());
+                list.add(dim);
+            }
         }
-        qe.close();
         return list;
     }
 
@@ -246,17 +249,17 @@ public class MergeDao {
         ParameterizedSparqlString preparedQuery = new ParameterizedSparqlString(queryString);
         preparedQuery.setIri("g", graph);
 
-        QueryExecution qe = QueryExecutionFactory.sparqlService(tripleStore, preparedQuery.toString());
-        ResultSet rs = qe.execSelect();
-        while (rs.hasNext()) {
-            QuerySolution result = rs.next();
-            Measure measure = new Measure();
-            measure.setResource(result.get("res").toString());
-            measure.setSubpropertyOf(result.get("sub").toString());
-            measure.setLabel(result.get("label").toString());
-            list.add(measure);
+        try (QueryExecution qe = QueryExecutionFactory.sparqlService(tripleStore, preparedQuery.toString())) {
+            ResultSet rs = qe.execSelect();
+            while (rs.hasNext()) {
+                QuerySolution result = rs.next();
+                Measure measure = new Measure();
+                measure.setResource(result.get("res").toString());
+                measure.setSubpropertyOf(result.get("sub").toString());
+                measure.setLabel(result.get("label").toString());
+                list.add(measure);
+            }
         }
-        qe.close();
         return list;
     }
 
@@ -276,21 +279,22 @@ public class MergeDao {
         ParameterizedSparqlString preparedQuery = new ParameterizedSparqlString(queryString);
         preparedQuery.setIri("g", graph);
 
-        QueryExecution qe = QueryExecutionFactory.sparqlService(tripleStore, preparedQuery.toString());
-        ResultSet rs = qe.execSelect();
-        Dataset ds = new Dataset();
-        while (rs.hasNext()) {
-            QuerySolution result = rs.next();
-            ds.setComment(result.get("comment").toString());
-            ds.setFormat(result.get("format").toString());
-            ds.setLabel(result.get("label").toString());
-            ds.setRelation(result.get("relation").toString());
-            ds.setSource(result.get("source").toString());
-            Import imp = new Import();
-            imp.setLabel(result.get("auth").toString());
-            ds.setImport(imp);
+        Dataset ds;
+        try (QueryExecution qe = QueryExecutionFactory.sparqlService(tripleStore, preparedQuery.toString())) {
+            ResultSet rs = qe.execSelect();
+            ds = new Dataset();
+            while (rs.hasNext()) {
+                QuerySolution result = rs.next();
+                ds.setComment(result.get("comment").toString());
+                ds.setFormat(result.get("format").toString());
+                ds.setLabel(result.get("label").toString());
+                ds.setRelation(result.get("relation").toString());
+                ds.setSource(result.get("source").toString());
+                Import imp = new Import();
+                imp.setLabel(result.get("auth").toString());
+                ds.setImport(imp);
+            }
         }
-        qe.close();
         return ds;
     }
 
@@ -334,8 +338,11 @@ public class MergeDao {
         RDFDataMgr.write(baos, rootModel, Lang.TURTLE);
         String data = baos.toString();
 
+        // Use the dataset resource as the context uri / graph name
+        String storeURL = MergeProperties.getInstance().getTripleStore() + CONTEXT_URI + dataset.getResource();
+
 //        HttpClient httpClient = HttpClients.createDefault();
-//        HttpPost httpPost = new HttpPost(MergeProperties.getInstance().getTripleStore() + CONTEXT_URI + dataset.getResource());
+//        HttpPost httpPost = new HttpPost(storeURL);
 //        httpPost.setHeader("Content-Type", contentType.getContentTypeRdf());
 //        try {
 //            httpPost.setEntity(new StringEntity(content));
@@ -356,7 +363,6 @@ public class MergeDao {
 //        }
 //
 //        System.out.println("result: " + result);
-
         // TODO: return value? success / fail? / throw exceptions
     }
 
@@ -378,13 +384,13 @@ public class MergeDao {
         ParameterizedSparqlString preparedQuery = new ParameterizedSparqlString(queryString);
         preparedQuery.setIri("g", graph);
 
-        QueryExecution qe = QueryExecutionFactory.sparqlService(tripleStore, preparedQuery.toString());
-        ResultSet rs = qe.execSelect();
-        while (rs.hasNext()) {
-            QuerySolution result = rs.next();
-            components.put(result.get("concept").toString(), result.get("component").toString());
+        try (QueryExecution qe = QueryExecutionFactory.sparqlService(tripleStore, preparedQuery.toString())) {
+            ResultSet rs = qe.execSelect();
+            while (rs.hasNext()) {
+                QuerySolution result = rs.next();
+                components.put(result.get("concept").toString(), result.get("component").toString());
+            }
         }
-        qe.close();
         return components;
     }
 
