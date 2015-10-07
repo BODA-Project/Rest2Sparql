@@ -13,6 +13,7 @@ import de.uni_passau.fim.dimis.rest2sparql.merging.dto.Entity;
 import de.uni_passau.fim.dimis.rest2sparql.merging.dto.Import;
 import de.uni_passau.fim.dimis.rest2sparql.merging.dto.Measure;
 import de.uni_passau.fim.dimis.rest2sparql.merging.dto.Observation;
+import de.uni_passau.fim.dimis.rest2sparql.triplestore.util.ConnectionException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -32,7 +33,7 @@ public class MergeService {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     // TEMP: FOR TESTING
-    public static void main(String[] args) {
+    public static void main(String[] args) throws ConnectionException {
         Gson gson = new Gson();
         InputStream str = MergeService.class.getResourceAsStream("/sampleConfig.json");
         InputStreamReader isr = new InputStreamReader(str);
@@ -47,8 +48,10 @@ public class MergeService {
      * Merges and stores the given datasets (inside the config)
      *
      * @param config the merging configuration
+     * @throws
+     * de.uni_passau.fim.dimis.rest2sparql.triplestore.util.ConnectionException
      */
-    public void merge(MergeConfig config) {
+    public void merge(MergeConfig config) throws ConnectionException {
 
         // TODO: split in methods: dataset, dimensions, measures, entities, observations
         // Database access
@@ -136,6 +139,8 @@ public class MergeService {
                 newDim.setSubpropertyOf(Vocabulary.VA_DIMENSION_NOMINAL); // TODO always nominal?
                 dimMap.put(dc.getDimension(), newDim); // add
             } else if (dc.getEntity() != null) {
+
+                // TODO: if existing entity ->
                 // Missing dimension in one cubbe, observations will get default entity
             } else if (dc.getDimension() != null) {
                 // Dimension replacement, remove old dimension from map, replacement happens at observations
@@ -223,8 +228,8 @@ public class MergeService {
                             continue;
                         }
                         String key;
-                        String definedBy;
-                        String label;
+                        String definedBy = null;
+                        String label = null;
                         if (dc.getEntity2() != null) {
                             // Missing in both cubes
                             if (observationsC1.contains(obs)) {
@@ -238,9 +243,16 @@ public class MergeService {
                             }
                         } else {
                             // Missing in this cube
-                            key = dc.getEntity() + dc.getEntityLabel();
-                            definedBy = dc.getEntity();
-                            label = dc.getEntityLabel();
+                            Entity entity = entityResMap.get(dc.getEntity());
+                            if (entity != null) {
+                                // User chose an existing entity from the list (already in entityDefMap)
+                                key = entity.getDefinedBy() + entity.getLabel();
+                            } else {
+                                // User entered a new entity label
+                                key = dc.getEntity() + dc.getEntityLabel();
+                                definedBy = dc.getEntity();
+                                label = dc.getEntityLabel();
+                            }
                         }
 
                         // Add the entity to the list if missing

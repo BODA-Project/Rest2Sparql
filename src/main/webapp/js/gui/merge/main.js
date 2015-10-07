@@ -870,7 +870,7 @@ var MERGE_MAIN = new function () {
 
                 var dimConfig = {};
                 dimConfig.dimension = dim.dimensionName;
-                dimConfig.entity = entity.resource;
+                dimConfig.entity = entity.definedBy || entity.entityName;
                 dimConfig.entityLabel = entity.label;
                 config.dimensions.push(dimConfig);
             });
@@ -885,9 +885,9 @@ var MERGE_MAIN = new function () {
             var dimConfig = {};
             dimConfig.dimension = dim.dimensionName;
             dimConfig.label = dim.label;
-            dimConfig.entity = entity1.resource;
+            dimConfig.entity = entity1.definedBy;
             dimConfig.entityLabel = entity1.label;
-            dimConfig.entity2 = entity2.resource;
+            dimConfig.entity2 = entity2.definedBy;
             dimConfig.entity2Label = entity2.label;
             config.dimensions.push(dimConfig);
         }
@@ -947,28 +947,19 @@ var MERGE_MAIN = new function () {
         var request = $.ajax({
             type: "post",
             url: TEMPLATES.MERGER_STORE_URL,
-            dataType: 'JSON',
             data: {
                 config: JSON.stringify(config)
             }
         });
-        request.done(function (content) {
-            var obj;
-            try {
-                obj = $.parseJSON(content);
-            } catch (e) {
-                bootbox.alert("Error: " + content);
-                return;
-            }
-
+        request.done(function (data, textStatus, jqXHR) {
             // Show success message and refresh
             bootbox.alert("Your cube was successfully merged and can now be browsed", function () {
-                window.location = "./"; // Refresh page
+                window.location = "./merger"; // Refresh page
             });
 
         });
-        request.fail(function (jqXHR, textStatus) {
-            bootbox.alert("Error: " + textStatus);
+        request.fail(function (jqXHR, textStatus, errorThrown) {
+            bootbox.alert("Internal Server Error. The database might not be reachable at the moment");
         });
     };
 

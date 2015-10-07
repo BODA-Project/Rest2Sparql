@@ -3,7 +3,10 @@ package de.uni_passau.fim.dimis.rest2sparql.rest;
 import com.google.gson.Gson;
 import de.uni_passau.fim.dimis.rest2sparql.merging.MergeService;
 import de.uni_passau.fim.dimis.rest2sparql.merging.config.MergeConfig;
+import static de.uni_passau.fim.dimis.rest2sparql.rest.Rest2SparqlServlet.CODE_BAD_REQ;
+import de.uni_passau.fim.dimis.rest2sparql.triplestore.util.ConnectionException;
 import java.io.IOException;
+import java.io.PrintWriter;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -18,6 +21,7 @@ public class MergerServlet extends HttpServlet {
     public static final int CODE_OK = 200;
     public static final int CODE_BAD_REQ = 400;
     public static final int CODE_UNAUTHED = 401;
+    public static final int CODE_ERROR = 500;
     public static final String MSG_UNAUTHED = "To access this resource, you have to provide an ID and a hash.\n"
             + "You can get your ID an the hash by using the getHash function and providing your mendeley username and password.\n\n"
             + "If you see this message but provided an ID and a hash one of it (or both) may be incorrect.";
@@ -77,9 +81,23 @@ public class MergerServlet extends HttpServlet {
 
         // Merge and store the datasets
         MergeService ms = new MergeService();
-        ms.merge(config); // TODO return success / fail / etc. value
+        String responseText;
+        try {
+            ms.merge(config);
+            response.setStatus(CODE_OK);
+            responseText = null;
+        } catch (ConnectionException ex) {
+            response.setStatus(CODE_ERROR);
+            responseText = "Connection to database failed";
+        }
+        // TODO catch other merging exception for faulty config
 
-        // TODO response handling...
+        // Write a response
+        try (PrintWriter out = response.getWriter()) {
+            out.write(responseText);
+        }
+        response.setContentType("text/plain");
+        response.flushBuffer();
     }
 
 }

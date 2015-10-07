@@ -1239,7 +1239,7 @@ var MERGE_INTERFACE = new function () {
             // All fields filled?
             if (labelDim !== "" && labelEntity1 !== "" && labelEntity2 !== "") {
 
-                // TODO Make 3 disambiguation calls (returned after ajax is done)
+                // Make 3 disambiguation calls (returned after ajax is done)
                 var resourceDimList = MERGE_MAIN.disambiguate(labelDim);
                 var resourceE1List = MERGE_MAIN.disambiguate(labelEntity1);
                 var resourceE2List = MERGE_MAIN.disambiguate(labelEntity2);

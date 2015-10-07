@@ -9,9 +9,11 @@ import de.uni_passau.fim.dimis.rest2sparql.merging.dto.Entity;
 import de.uni_passau.fim.dimis.rest2sparql.merging.dto.Import;
 import de.uni_passau.fim.dimis.rest2sparql.merging.dto.Measure;
 import de.uni_passau.fim.dimis.rest2sparql.merging.dto.Observation;
+import de.uni_passau.fim.dimis.rest2sparql.triplestore.util.ConnectionException;
 import de.uni_passau.fim.dimis.rest2sparql.util.MergeProperties;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.ConnectException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -25,7 +27,6 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
-import org.apache.jena.datatypes.RDFDatatype;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.query.QueryExecution;
@@ -43,7 +44,6 @@ import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
-import org.apache.xerces.xni.grammars.XMLSchemaDescription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,10 +60,9 @@ public class MergeDao {
     private final static String CONTENT_TYPE_RDF_XML = "application/rdf+xml";
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    // TODO: log errors! + add try catch on queries!
 
     // TEMP: for testing purpose
-    public static void main(String[] args) {
+    public static void main(String[] args) throws ConnectionException {
 
         MergeDao dao = new MergeDao();
 
@@ -135,8 +134,10 @@ public class MergeDao {
      *
      * @param graph the named graph
      * @return list of entities
+     * @throws
+     * de.uni_passau.fim.dimis.rest2sparql.triplestore.util.ConnectionException
      */
-    public List<Entity> getEntities(String graph) {
+    public List<Entity> getEntities(String graph) throws ConnectionException {
         MergeProperties properties = MergeProperties.getInstance();
         String tripleStore = properties.getTripleStore();
         String queryFile = properties.getEntityQuery();
@@ -158,6 +159,8 @@ public class MergeDao {
                 entity.setLabel(result.get("label").toString());
                 list.add(entity);
             }
+        } catch (Exception ex) {
+            throw new ConnectionException(ex);
         }
         return list;
     }
@@ -167,8 +170,10 @@ public class MergeDao {
      *
      * @param graph the named graph
      * @return list of observations
+     * @throws
+     * de.uni_passau.fim.dimis.rest2sparql.triplestore.util.ConnectionException
      */
-    public List<Observation> getObservations(String graph) {
+    public List<Observation> getObservations(String graph) throws ConnectionException {
         MergeProperties properties = MergeProperties.getInstance();
         String tripleStore = properties.getTripleStore();
         String queryFile = properties.getObservationQuery();
@@ -208,6 +213,8 @@ public class MergeDao {
                     observation.getDimensions().put(predicate, object.toString());
                 }
             }
+        } catch (Exception ex) {
+            throw new ConnectionException(ex);
         }
         return list;
     }
@@ -217,8 +224,10 @@ public class MergeDao {
      *
      * @param graph the named graph
      * @return list of dimensions
+     * @throws
+     * de.uni_passau.fim.dimis.rest2sparql.triplestore.util.ConnectionException
      */
-    public List<Dimension> getDimensions(String graph) {
+    public List<Dimension> getDimensions(String graph) throws ConnectionException {
         MergeProperties properties = MergeProperties.getInstance();
         String tripleStore = properties.getTripleStore();
         String queryFile = properties.getDimensionQuery();
@@ -240,6 +249,8 @@ public class MergeDao {
                 dim.setLabel(result.get("label").toString());
                 list.add(dim);
             }
+        } catch (Exception ex) {
+            throw new ConnectionException(ex);
         }
         return list;
     }
@@ -249,8 +260,10 @@ public class MergeDao {
      *
      * @param graph the named graph
      * @return list of measures
+     * @throws
+     * de.uni_passau.fim.dimis.rest2sparql.triplestore.util.ConnectionException
      */
-    public List<Measure> getMeasures(String graph) {
+    public List<Measure> getMeasures(String graph) throws ConnectionException {
         MergeProperties properties = MergeProperties.getInstance();
         String tripleStore = properties.getTripleStore();
         String queryFile = properties.getMeasureQuery();
@@ -272,6 +285,8 @@ public class MergeDao {
                 measure.setLabel(result.get("label").toString());
                 list.add(measure);
             }
+        } catch (Exception ex) {
+            throw new ConnectionException(ex);
         }
         return list;
     }
@@ -281,8 +296,10 @@ public class MergeDao {
      *
      * @param graph the named graph
      * @return the cube metadata
+     * @throws
+     * de.uni_passau.fim.dimis.rest2sparql.triplestore.util.ConnectionException
      */
-    public Dataset getDataset(String graph) {
+    public Dataset getDataset(String graph) throws ConnectionException {
         MergeProperties properties = MergeProperties.getInstance();
         String tripleStore = properties.getTripleStore();
         String queryFile = properties.getDatasetQuery();
@@ -307,6 +324,8 @@ public class MergeDao {
                 imp.setLabel(result.get("auth").toString());
                 ds.setImport(imp);
             }
+        } catch (Exception ex) {
+            throw new ConnectionException(ex);
         }
         return ds;
     }
@@ -316,8 +335,10 @@ public class MergeDao {
      * them to the triple store.
      *
      * @param cube the cube, containing all data.
+     * @throws
+     * de.uni_passau.fim.dimis.rest2sparql.triplestore.util.ConnectionException
      */
-    public void store(Cube cube) {
+    public void store(Cube cube) throws ConnectionException {
 
         Dataset dataset = cube.getDataset();
         DatasetStructureDefinition dsd = cube.getDsd();
@@ -344,8 +365,7 @@ public class MergeDao {
         rootModel.add(entityModel);
         rootModel.add(observationModel);
 
-        RDFDataMgr.write(System.out, rootModel, Lang.TURTLE);
-        // Send the rdf data to the triple store
+        // Create textual RDF data and send it to the triple store
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         RDFDataMgr.write(baos, rootModel, Lang.TURTLE);
         String data = baos.toString();
@@ -359,7 +379,7 @@ public class MergeDao {
         try {
             httpPost.setEntity(new StringEntity(data));
         } catch (UnsupportedEncodingException ex) {
-            logger.error("Bad Encoding", ex);
+            logger.error("Bad Encoding", ex); // Should never happen
         }
         HttpResponse response;
         String result = "";
@@ -370,13 +390,11 @@ public class MergeDao {
             EntityUtils.consume(entity);
         } catch (IOException ex) {
             logger.error("Error while executing storage post", ex);
+            throw new ConnectionException(ex);
         } finally {
             httpPost.releaseConnection();
         }
-
         logger.info("Merging result response: " + result);
-
-        // TODO: return value? success / fail? / throw exceptions
     }
 
     /**
@@ -386,7 +404,7 @@ public class MergeDao {
      * @param graph the named graph
      * @return map of components and concepts
      */
-    private Map<String, String> getComponentMap(String graph) {
+    private Map<String, String> getComponentMap(String graph) throws ConnectionException {
         MergeProperties properties = MergeProperties.getInstance();
         String tripleStore = properties.getTripleStore();
         String queryFile = properties.getDSDQuery();
@@ -403,6 +421,8 @@ public class MergeDao {
                 QuerySolution result = rs.next();
                 components.put(result.get("concept").toString(), result.get("component").toString());
             }
+        } catch (Exception ex) {
+            throw new ConnectionException(ex);
         }
         return components;
     }
