@@ -928,6 +928,9 @@ var MERGE_INTERFACE = new function () {
             $('[data-cube-name="' + prevCube.cubeName + '"]').removeClass("disabled");
         }
         $('[data-cube-name="' + cubeName + '"]').addClass("disabled");
+
+        // Clear previous save comment
+        $("#id_mergeComment").val("");
     };
 
     /**
