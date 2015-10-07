@@ -139,8 +139,6 @@ public class MergeService {
                 newDim.setSubpropertyOf(Vocabulary.VA_DIMENSION_NOMINAL); // TODO always nominal?
                 dimMap.put(dc.getDimension(), newDim); // add
             } else if (dc.getEntity() != null) {
-
-                // TODO: if existing entity ->
                 // Missing dimension in one cubbe, observations will get default entity
             } else if (dc.getDimension() != null) {
                 // Dimension replacement, remove old dimension from map, replacement happens at observations
@@ -327,7 +325,7 @@ public class MergeService {
         logger.info("Observations Merged: " + newObservations.size());
 
         // Store the merged cube
-        dao.store(cube); // TODO: throws database-exception -> throw to servlet
+        dao.store(cube);
     }
 
     /**
