@@ -136,7 +136,7 @@ public class CubeManager {
     public String getCubes(String ID) throws ConnectionException {
 
         String query = PrefixManager.createPrefixString() +
-                "SELECT ?CUBE_NAME ?LABEL ?COMMENT " +
+                "SELECT DISTINCT ?CUBE_NAME ?LABEL ?COMMENT " +
                 "WHERE { ?CUBE_NAME a qb:DataSet. " +
                 "?CUBE_NAME rdfs:label ?LABEL. " +
                 "?CUBE_NAME rdfs:comment ?COMMENT. " +
@@ -158,7 +158,7 @@ public class CubeManager {
 
         cube.setVarName("CUBE_NAME", false);
         String query = PrefixManager.createPrefixString() +
-                "SELECT ?CUBE_NAME ?DIMENSION_NAME ?LABEL " +
+                "SELECT DISTINCT ?CUBE_NAME ?DIMENSION_NAME ?LABEL " +
                 "FROM <" + cube.getName() + "> " +
                 "WHERE { ?CUBE_NAME qb:structure ?dsd. " +
                 "?dsd qb:component ?compSpec. " +
@@ -182,7 +182,7 @@ public class CubeManager {
 
         cube.setVarName("CUBE_NAME", false);
         String query = PrefixManager.createPrefixString() +
-                "SELECT ?CUBE_NAME ?MEASURE_NAME ?LABEL " +
+                "SELECT DISTINCT ?CUBE_NAME ?MEASURE_NAME ?LABEL " +
                 "FROM <" + cube.getName() + "> " +
                 "WHERE { ?CUBE_NAME qb:structure ?dsd. " +
                 "?dsd qb:component ?compSpec. " +
@@ -208,7 +208,7 @@ public class CubeManager {
         cube.setVarName("CUBE_NAME", false);
         dimension.setVarName("DIMENSION_NAME", false);
         String query = PrefixManager.createPrefixString() +
-                "SELECT ?CUBE_NAME ?DIMENSION_NAME ?ENTITY_NAME ?LABEL " +
+                "SELECT DISTINCT ?CUBE_NAME ?DIMENSION_NAME ?ENTITY_NAME ?LABEL " +
                 "FROM <" + cube.getName() + "> " +
                 "WHERE { ?CUBE_NAME qb:structure ?dsd. " +
                 "?dsd qb:component ?compSpec. " +

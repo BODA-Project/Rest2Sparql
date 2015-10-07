@@ -10,11 +10,23 @@ import de.uni_passau.fim.dimis.rest2sparql.merging.dto.Import;
 import de.uni_passau.fim.dimis.rest2sparql.merging.dto.Measure;
 import de.uni_passau.fim.dimis.rest2sparql.merging.dto.Observation;
 import de.uni_passau.fim.dimis.rest2sparql.util.MergeProperties;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
+import org.apache.jena.datatypes.RDFDatatype;
+import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
@@ -29,11 +41,9 @@ import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
-import org.apache.jena.update.UpdateAction;
-import org.apache.jena.update.UpdateFactory;
-import org.apache.jena.update.UpdateRequest;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
+import org.apache.xerces.xni.grammars.XMLSchemaDescription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,6 +55,9 @@ import org.slf4j.LoggerFactory;
 public class MergeDao {
 
     private final static String CONTEXT_URI = "?context-uri=";
+    private final static String CONTENT_TYPE_TURTLE = "application/x-turtle";
+    private final static String CONTENT_TYPE_N3 = "text/rdf+n3";
+    private final static String CONTENT_TYPE_RDF_XML = "application/rdf+xml";
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
     // TODO: log errors! + add try catch on queries!
@@ -332,7 +345,6 @@ public class MergeDao {
         rootModel.add(observationModel);
 
         RDFDataMgr.write(System.out, rootModel, Lang.TURTLE);
-
         // Send the rdf data to the triple store
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         RDFDataMgr.write(baos, rootModel, Lang.TURTLE);
@@ -341,28 +353,29 @@ public class MergeDao {
         // Use the dataset resource as the context uri / graph name
         String storeURL = MergeProperties.getInstance().getTripleStore() + CONTEXT_URI + dataset.getResource();
 
-//        HttpClient httpClient = HttpClients.createDefault();
-//        HttpPost httpPost = new HttpPost(storeURL);
-//        httpPost.setHeader("Content-Type", contentType.getContentTypeRdf());
-//        try {
-//            httpPost.setEntity(new StringEntity(content));
-//        } catch (UnsupportedEncodingException e) {
-//            e.printStackTrace();
-//        }
-//        HttpResponse response;
-//        String result = "";
-//        try {
-//            response = httpClient.execute(httpPost);
-//            HttpEntity entity = response.getEntity();
-//            result = IOUtils.toString(entity.getContent(), "UTF-8");
-//            EntityUtils.consume(entity);
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        } finally {
-//            httpPost.releaseConnection();
-//        }
-//
-//        System.out.println("result: " + result);
+        HttpClient httpClient = HttpClients.createDefault();
+        HttpPost httpPost = new HttpPost(storeURL);
+        httpPost.setHeader("Content-Type", CONTENT_TYPE_TURTLE);
+        try {
+            httpPost.setEntity(new StringEntity(data));
+        } catch (UnsupportedEncodingException ex) {
+            logger.error("Bad Encoding", ex);
+        }
+        HttpResponse response;
+        String result = "";
+        try {
+            response = httpClient.execute(httpPost);
+            HttpEntity entity = response.getEntity();
+            result = IOUtils.toString(entity.getContent(), "UTF-8");
+            EntityUtils.consume(entity);
+        } catch (IOException ex) {
+            logger.error("Error while executing storage post", ex);
+        } finally {
+            httpPost.releaseConnection();
+        }
+
+        logger.info("Merging result response: " + result);
+
         // TODO: return value? success / fail? / throw exceptions
     }
 
@@ -457,7 +470,7 @@ public class MergeDao {
         Resource structureResource = model.createResource(dataset.getStructure());
         Resource importResource = model.createResource(imp.getResource());
         Resource importerResource = model.createResource(imp.getStartedBy());
-        importerResource.addLiteral(RDFS.label, imp.getLabel());
+        importerResource.addLiteral(RDFS.label, model.createTypedLiteral(imp.getLabel(), XSDDatatype.XSD + "#string"));
         importResource.addProperty(Vocabulary.PROV_WAS_STARTED_BY, importerResource);
         datasetResource.addProperty(RDF.type, Vocabulary.QB_DATASET);
         datasetResource.addLiteral(RDFS.comment, dataset.getComment());
@@ -511,8 +524,8 @@ public class MergeDao {
         for (Dimension dimension : dimensions) {
             Resource dimResource = model.createResource(dimension.getResource());
             Resource subPropertyOf = model.createResource(dimension.getSubpropertyOf());
-            dimResource.addProperty(RDF.type, RDF.Property);
             dimResource.addProperty(RDF.type, Vocabulary.QB_DIMENSION_PROPERTY);
+            dimResource.addProperty(RDF.type, RDF.Property);
             dimResource.addProperty(RDFS.subPropertyOf, subPropertyOf);
             dimResource.addLiteral(RDFS.label, dimension.getLabel());
         }
@@ -530,8 +543,8 @@ public class MergeDao {
         for (Measure measure : measures) {
             Resource dimResource = model.createResource(measure.getResource());
             Resource subPropertyOfResource = model.createResource(measure.getSubpropertyOf());
-            dimResource.addProperty(RDF.type, RDF.Property);
             dimResource.addProperty(RDF.type, Vocabulary.QB_MEASURE_PROPERTY);
+            dimResource.addProperty(RDF.type, RDF.Property);
             dimResource.addProperty(RDFS.subPropertyOf, subPropertyOfResource);
             dimResource.addLiteral(RDFS.label, measure.getLabel());
         }

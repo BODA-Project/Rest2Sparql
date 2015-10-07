@@ -76,7 +76,7 @@ public class QueryDescriptor {
      * @return the SELECT string.
      */
     public String selectString() {
-        StringBuilder sb = new StringBuilder("SELECT ");
+        StringBuilder sb = new StringBuilder("SELECT DISTINCT");
 
         for (CubeObject co : cubeObjects) {
             if (co.getParams().select) {
@@ -308,7 +308,7 @@ public class QueryDescriptor {
      */
     public static String buildIDCheck(String ID) {
 
-        String template = "?CUBE_NAME prov:wasGeneratedBy ?import. ?import prov:wasStartedBy ?importer. ?importer rdfs:label \">>ID<<\"^^xsd:string. ";
+        String template = "?CUBE_NAME prov:wasGeneratedBy ?import. ?import prov:wasStartedBy ?importer. {?importer rdfs:label \">>ID<<\"^^xsd:string. } UNION {?importer rdfs:label \">>ID<<\".}";
         return template.replace(">>ID<<", ID);
 
     }
