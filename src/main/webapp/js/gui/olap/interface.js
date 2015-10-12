@@ -744,11 +744,7 @@ var INTERFACE = new function () {
 
         label.onmouseover = function () {
 
-            // TODO only if distance to camera >= 10 (?) or if label.entity.rollupLabels
-//            var distance = WEBGL.computeDistance(label);
-//            if (distance > 10 || label.entity.rollupLabels) {
             INTERFACE.showTooltip(label);
-//            }
 
             $.each(label.sprites, function (i, sprite) {
                 sprite.showRow(); // Show surrounding cube
@@ -2258,7 +2254,7 @@ var INTERFACE = new function () {
         event.preventDefault();
 
         // only highlight results if no mouse buttons pressed
-        var button = event.buttons === undefined ? event.which || event.button : event.buttons; // TODO check IE10+
+        var button = event.buttons === undefined ? event.which || event.button : event.buttons;
 //        console.log("MOVE", event.buttons, event.which, event.button);
         if (button !== 0) {
             INTERFACE.mousePressed = true;
@@ -2269,8 +2265,6 @@ var INTERFACE = new function () {
         var node = $(WEBGL.renderer.domElement);
         var x = event.pageX - node.position().left;
         var y = event.pageY - node.position().top;
-//        INTERFACE.mousePosition.x = event.pageX;
-//        INTERFACE.mousePosition.y = event.pageY;
         WEBGL.mousePosition.x = (x / node.width()) * 2 - 1;
         WEBGL.mousePosition.y = -(y / node.height()) * 2 + 1;
     };

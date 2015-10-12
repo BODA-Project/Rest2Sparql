@@ -610,7 +610,7 @@ var WEBGL = new function () {
     };
 
     // Creates an entity label with different drawing modes (bold, normal, ...)
-    this.createEntityLabel = function (text) { // TODO split: number of entities + label
+    this.createEntityLabel = function (text) {
         var size = 30;
         var abbrSign = '\u2026'; // a single char "..." sign
 
@@ -632,10 +632,6 @@ var WEBGL = new function () {
 
         context.textAlign = "center";
         context.textBaseline = "middle";
-
-//        // DEBUG BORDERS
-//        context.strokeStyle = "rgba(0,128,255,0.5)";
-//        context.strokeRect(0, 0, canvas.width, canvas.height);
 
         context.fillStyle = "rgba(0,0,0,0.6)";
         context.fillText(text, canvas.width / 2, canvas.height / 2);
@@ -734,10 +730,6 @@ var WEBGL = new function () {
 
         context.textAlign = "center";
         context.textBaseline = "middle";
-
-//        // DEBUG BORDERS
-//        context.strokeStyle = "rgba(0,128,255,0.5)";
-//        context.strokeRect(0, 0, canvas.width, canvas.height);
 
         context.fillStyle = "rgba(0,0,0,0.25)";
         context.fillText(finalText, canvas.width / 2, canvas.height / 2);
@@ -892,7 +884,7 @@ var WEBGL = new function () {
 
         // Show loading sign as texture
         if (loadingMessage !== undefined) {
-            // TODO ...
+            // Note: was replaced with popup
         }
 
         var geometry = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);

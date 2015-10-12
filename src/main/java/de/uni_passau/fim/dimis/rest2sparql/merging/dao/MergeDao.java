@@ -13,7 +13,6 @@ import de.uni_passau.fim.dimis.rest2sparql.triplestore.util.ConnectionException;
 import de.uni_passau.fim.dimis.rest2sparql.util.MergeProperties;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.net.ConnectException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -60,74 +59,6 @@ public class MergeDao {
     private final static String CONTENT_TYPE_RDF_XML = "application/rdf+xml";
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
-
-    // TEMP: for testing purpose
-    public static void main(String[] args) throws ConnectionException {
-
-        MergeDao dao = new MergeDao();
-
-        List<Observation> obs = dao.getObservations("http://code-research.eu/resource/Dataset-1fb732fc-647d-4747-847d-c73eabbc737a");
-        for (Observation ob : obs) {
-            System.out.println("");
-            System.out.println("========DIMENSIONS========");
-            for (Map.Entry<String, String> entrySet : ob.getDimensions().entrySet()) {
-                String key = entrySet.getKey();
-                String value = entrySet.getValue();
-                System.out.println(key + " = " + value);
-            }
-            System.out.println("---------MEASURES---------");
-            for (Map.Entry<String, Double> entrySet : ob.getMeasures().entrySet()) {
-                String key = entrySet.getKey();
-                Double value = entrySet.getValue();
-                System.out.println(key + " = " + value);
-            }
-        }
-        System.out.println("");
-        System.out.println("========COMPONENTS========");
-        Map<String, String> comps = dao.getComponentMap("http://code-research.eu/resource/Dataset-1fb732fc-647d-4747-847d-c73eabbc737a");
-        for (Map.Entry<String, String> entrySet : comps.entrySet()) {
-            String key = entrySet.getKey();
-            String value = entrySet.getValue();
-
-            System.out.println(key + "  =  " + value);
-        }
-        System.out.println("");
-        System.out.println("=========ENTITIES=========");
-        List<Entity> entities = dao.getEntities("http://code-research.eu/resource/Dataset-1fb732fc-647d-4747-847d-c73eabbc737a");
-        System.out.println(entities.size());
-        System.out.println("==========================");
-        for (Entity entity : entities) {
-            System.out.println(entity.getLabel() + "  =  " + entity.getDefinedBy() + "  =  " + entity.getResource());
-        }
-        System.out.println("");
-        System.out.println("========DIMENSIONS========");
-        List<Dimension> dimensions = dao.getDimensions("http://code-research.eu/resource/Dataset-1fb732fc-647d-4747-847d-c73eabbc737a");
-        System.out.println(dimensions.size());
-        System.out.println("--------------------------");
-        for (Dimension dim : dimensions) {
-            System.out.println(dim.getLabel() + "  =  " + dim.getSubpropertyOf() + "  =  " + dim.getResource());
-        }
-        System.out.println("");
-        System.out.println("=========MEASURES=========");
-        List<Measure> measures = dao.getMeasures("http://code-research.eu/resource/Dataset-1fb732fc-647d-4747-847d-c73eabbc737a");
-        System.out.println(measures.size());
-        System.out.println("--------------------------");
-        for (Measure measure : measures) {
-            System.out.println(measure.getLabel() + "  =  " + measure.getSubpropertyOf() + "  =  " + measure.getResource());
-        }
-        System.out.println("");
-        System.out.println("=========DATASET==========");
-        Dataset ds = dao.getDataset("http://code-research.eu/resource/Dataset-1fb732fc-647d-4747-847d-c73eabbc737a");
-        System.out.println("getComment " + ds.getComment());
-        System.out.println("getFormat " + ds.getFormat());
-        System.out.println("getGeneratedBy " + ds.getGeneratedBy());
-        System.out.println("getLabel " + ds.getLabel());
-        System.out.println("getRelation " + ds.getRelation());
-        System.out.println("getResource " + ds.getResource());
-        System.out.println("getSource " + ds.getSource());
-        System.out.println("getStructure " + ds.getStructure());
-        System.out.println("auth / import label " + ds.getImport().getLabel());
-    }
 
     /**
      * Get all dimension-entities of the given graph

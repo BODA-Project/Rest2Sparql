@@ -22,8 +22,6 @@ function Measure(measureName, label, agg) {
     this.agg = agg;                     // e.g. sum
 }
 
-// TODO: add isDefinedBy (resource) to all entities?
-
 // Entity class (getEntities)
 function Entity(dimensionName, entityName, label, definedBy) {
     this.dimensionName = dimensionName; // e.g. http://code-research.eu/resource/Country
@@ -42,7 +40,7 @@ function Filter(measure, relation, value) {
     this.disabled = false;              // to be set later
 }
 
-// Result class (for merger)
+// Result class (for client side merging part)
 function Result() {
     this.dimensions = {};               // dimensions[dimensionName] = Entity
     this.measures = {};                 // measures[measureName] = value

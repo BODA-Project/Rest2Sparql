@@ -1,6 +1,5 @@
 package de.uni_passau.fim.dimis.rest2sparql.merging;
 
-import com.google.gson.Gson;
 import de.uni_passau.fim.dimis.rest2sparql.merging.config.DimensionConfig;
 import de.uni_passau.fim.dimis.rest2sparql.merging.config.MeasureConfig;
 import de.uni_passau.fim.dimis.rest2sparql.merging.config.MergeConfig;
@@ -14,8 +13,6 @@ import de.uni_passau.fim.dimis.rest2sparql.merging.dto.Import;
 import de.uni_passau.fim.dimis.rest2sparql.merging.dto.Measure;
 import de.uni_passau.fim.dimis.rest2sparql.merging.dto.Observation;
 import de.uni_passau.fim.dimis.rest2sparql.triplestore.util.ConnectionException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -31,18 +28,6 @@ public class MergeService {
 
     private final static String DATASET_RELATION = "Cube was merged with the CubeMerger (Rest2Sparql)";
     private final Logger logger = LoggerFactory.getLogger(getClass());
-
-    // TEMP: FOR TESTING
-    public static void main(String[] args) throws ConnectionException {
-        Gson gson = new Gson();
-        InputStream str = MergeService.class.getResourceAsStream("/sampleConfig.json");
-        InputStreamReader isr = new InputStreamReader(str);
-        MergeConfig config = gson.fromJson(isr, MergeConfig.class);
-
-        // Merge and store the datasets
-        MergeService ms = new MergeService();
-        ms.merge(config);
-    }
 
     /**
      * Merges and stores the given datasets (inside the config)

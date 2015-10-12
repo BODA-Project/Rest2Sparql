@@ -22,9 +22,7 @@
         <nav class="navbar navbar-default navbar-static-top" role="navigation">
 
             <div class="navbar-header">
-                <a class="navbar-brand" href="./">Rest2Sparql</a> <!-- TODO link/name -->
-                <!--<a class="navbar-text" href="./">CODE Research</a>-->
-
+                <a class="navbar-brand" href="./">Rest2Sparql</a>
                 <button type="button" class="btn btn-link btn-sm navbar-btn" id="id_changeUserButton">
                     <span class="glyphicon glyphicon-log-out"></span> Change User ID...
                 </button>
@@ -290,8 +288,6 @@
                 </div>
             </div>
         </div>
-
-        <!--TODO: minified versions-->
 
         <!-- JavaScript -->
 

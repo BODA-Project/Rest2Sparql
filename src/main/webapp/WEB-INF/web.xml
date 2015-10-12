@@ -66,6 +66,4 @@
         <url-pattern>/store</url-pattern>
     </servlet-mapping>
 
-    <!--TODO: init parameters for disambiguation service-->
-
 </web-app>

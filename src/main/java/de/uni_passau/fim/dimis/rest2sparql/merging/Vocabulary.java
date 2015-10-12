@@ -11,7 +11,6 @@ import org.apache.jena.rdf.model.Resource;
  */
 public class Vocabulary {
 
-    // TODO: rdfs:isDefinedBy?
     // Prefixes and URIs
     public static final String QB_PREFIX = "qb";
     public static final String QB_URI = "http://purl.org/linked-data/cube#";

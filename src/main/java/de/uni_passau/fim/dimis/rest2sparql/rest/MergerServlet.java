@@ -3,7 +3,6 @@ package de.uni_passau.fim.dimis.rest2sparql.rest;
 import com.google.gson.Gson;
 import de.uni_passau.fim.dimis.rest2sparql.merging.MergeService;
 import de.uni_passau.fim.dimis.rest2sparql.merging.config.MergeConfig;
-import static de.uni_passau.fim.dimis.rest2sparql.rest.Rest2SparqlServlet.CODE_BAD_REQ;
 import de.uni_passau.fim.dimis.rest2sparql.triplestore.util.ConnectionException;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -22,9 +21,6 @@ public class MergerServlet extends HttpServlet {
     public static final int CODE_BAD_REQ = 400;
     public static final int CODE_UNAUTHED = 401;
     public static final int CODE_ERROR = 500;
-    public static final String MSG_UNAUTHED = "To access this resource, you have to provide an ID and a hash.\n"
-            + "You can get your ID an the hash by using the getHash function and providing your mendeley username and password.\n\n"
-            + "If you see this message but provided an ID and a hash one of it (or both) may be incorrect.";
 
     /**
      *
@@ -33,7 +29,7 @@ public class MergerServlet extends HttpServlet {
      */
     @Override
     public void init(ServletConfig servletConfig) throws ServletException {
-        // TODO: init authorization?
+        // TODO: init authorization
         super.init();
     }
 
@@ -90,7 +86,7 @@ public class MergerServlet extends HttpServlet {
             response.setStatus(CODE_ERROR);
             responseText = "Connection to database failed";
         }
-        // TODO catch other merging exception for faulty config
+        // TODO check and catch other merging exception in case of faulty config
 
         // Write a response
         try (PrintWriter out = response.getWriter()) {

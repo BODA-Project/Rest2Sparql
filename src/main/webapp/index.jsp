@@ -31,7 +31,6 @@
                 </button>
                 <a class="navbar-brand" href="./">Rest2Sparql</a>
 
-                <!--<a class="navbar-text" href="./">Cube title</a>-->
             </div>
 
             <div class="collapse navbar-collapse">
@@ -95,7 +94,6 @@
                         <h3 class="panel-title">Dimensions
                             <a class="side-glyph" id="id_infoDimension" tabindex="0" role="button" data-toggle="popover" data-delay="200" data-trigger="hover" title="Dimensions"><span class="glyphicon glyphicon-info-sign"></span></a>
                         </h3>
-                        <!--<span class="glyphicon glyphicon-info-sign"></span>-->
                     </div>
                     <div class="panel-body">
 
@@ -104,18 +102,6 @@
 
                             <!--Buttons-->
                             <div id="id_xButtonArea">
-
-                                <!--Example-->
-                                <!--<div class="btn-group">
-                                    <button class="btn dropdown-toggle btn-default btn-sm" type="button" data-toggle="dropdown">
-                                        Species <span class="badge">1 / 1234</span>
-                                    </button>
-                                    <ul class="dropdown-menu" role="menu">
-                                        <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Filter Entities...</a></li>
-                                        <li role="presentation" class="divider"></li>
-                                        <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Remove</a></li>
-                                    </ul>
-                                </div>-->
 
                                 <!--Plus Symbol-->
                                 <div class="btn-group" id="id_xPlus">
@@ -191,36 +177,6 @@
                             </ul>
                         </div>
 
-
-                        <!--<div id="id_measureButtonArea">
-
-                            Example
-                            <div class="btn-group">
-                                <button class="btn dropdown-toggle btn-default" type="button" data-toggle="dropdown">
-                                    Euro <span class="badge ms-1">SUM</span>
-                                </button>
-                                <ul class="dropdown-menu" role="menu">
-                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Change Aggregation...</a></li>
-                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Change Color...</a></li>
-                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Hide</a></li>
-                                    <li role="presentation" class="divider"></li>
-                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Remove</a></li>
-                                </ul>
-                            </div>
-
-                            Plus Symbol
-                            <div class="btn-group" id="id_measurePlus">
-                                <button class="btn btn-default dropdown-toggle btn-sm" type="button" data-toggle="dropdown">
-                                    <span class="glyphicon glyphicon-plus"></span>
-                                </button>
-
-                                <ul class="dropdown-menu" role="menu" id="id_measureList">
-                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Example Measure 1</a></li>
-                                </ul>
-                            </div>
-
-                        </div>-->
-
                     </div>
                 </div>
 
@@ -235,18 +191,6 @@
 
                         <div id="id_filterButtonArea">
 
-                            <!--EXAMPLE-->
-                            <!-- <div class="btn-group">
-                                <button class="btn dropdown-toggle btn-default" type="button" data-toggle="dropdown">
-                                    <span class="filter-button-text">Euro</span><span class="badge">&gt;= 1.234.000</span>
-                                </button>
-                                <ul class="dropdown-menu" role="menu">
-                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Change Filter...</a></li>
-                                    <li role="presentation" class="divider"></li>
-                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Remove</a></li>
-                                </ul>
-                            </div>-->
-
                             <!--Plus Button-->
                             <div class="btn-group" id="id_filterPlus">
                                 <button class="btn btn-default dropdown-toggle btn-sm" type="button">
@@ -258,10 +202,6 @@
 
                     </div>
                 </div>
-
-                <!-- CANCEL and ACCEPT / DRAW -->
-
-
 
             </div>
         </nav>
@@ -285,10 +225,6 @@
 
                 <div id="id_cube"></div>
 
-                <!--<div id="id_initialHelp">TEST <br>TEST <br>TEST <br></div>-->
-                <!--TODO: lieber popup zu beginn -->
-
-
             </div>
 
             <div class="panel-footer applyArea">
@@ -302,48 +238,6 @@
                 </div>
             </div>
         </div>
-
-
-        <!-- Modal Tests  -->
-
-        <!--        <div class="modal fade" id="id_loginModal">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h4 class="modal-title">Authentication</h4>
-                            </div>
-                            <div class="modal-body" id="id_loginModalBody">
-                                <form>
-                                    <div class="form-group">
-                                        <label for="id_loginID" class="control-label">Please enter your user ID:</label>
-                                        <input type="text" class="form-control" id="id_loginID">
-                                    </div>
-                                </form>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-primary" data-dismiss="modal" id="id_loginModalOkay">Okay</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>-->
-
-
-
-        <!-- <div class="modal fade" id="id_resultModal">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                                <h4 class="modal-title">&nbsp;</h4>
-                            </div>
-                            <div class="modal-body" id="id_resultModalBody"></div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>-->
-
 
         <!-- Measure Filter Modal (hidden by default) -->
         <div class="modal fade" id="id_filterModal">
@@ -584,7 +478,6 @@
         <%
             }
         %>
-
 
 
     </body>

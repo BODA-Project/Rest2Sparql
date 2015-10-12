@@ -7,7 +7,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- *
+ * A properties class for common merging configurations.
  */
 public class MergeProperties {
 
@@ -16,7 +16,7 @@ public class MergeProperties {
     private static Properties properties;
 
     /**
-     *
+     * Singleton constructor
      */
     private MergeProperties() {
         properties = new Properties();
@@ -30,8 +30,9 @@ public class MergeProperties {
     }
 
     /**
+     * Gets the only instance of the properties.
      *
-     * @return
+     * @return the instance of the Properties object
      */
     public synchronized static MergeProperties getInstance() {
         if (instance == null) {

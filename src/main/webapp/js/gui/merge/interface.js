@@ -1333,16 +1333,11 @@ var MERGE_INTERFACE = new function () {
          * TODO:
          *
          *   ? bundling? maybe by measures
-         *
          *   ? types...  (measure must be number), dimension can be strings (OR number? -> e.g. Year)
-         *
          *   + hover for lines (or list below)
          *   + if numerical entities (e.g. Year) set graph tick to show every label
-         *
          *   ? order of dimensions (maybe C1 then C2 then measures C1 + C2) (for distinct dimensions)
-         *
          *   ? how to count overlap -> 2 obs = 1 or 2 overlap
-         *
          *   ? maybe restore dimension order after filtering / resizing
          *
          */
@@ -1636,13 +1631,12 @@ var MERGE_INTERFACE = new function () {
 
 //        parcoords.bundlingStrength(0.1)
 //        parcoords.smoothness(0.2)
-//        parcoords.bundleDimension("Random");
+//        parcoords.bundleDimension("Euro");
 
         parcoords.render();
         parcoords.createAxes();
 
-        // DEBUG
-        console.log("TYPES", parcoords.types())
+        console.log("TYPES", parcoords.types()); // DEBUG
 
         // Render continuously
         parcoords.mode("queue");

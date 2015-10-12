@@ -305,7 +305,6 @@ a.side-glyph:hover {
     top: 5px;
     float: left;
 
-    /*TODO: label klebt zu weit oben -> vertikal zentrieren!*/
 }
 
 .panel-body > .form-group:last-child {

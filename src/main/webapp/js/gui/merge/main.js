@@ -378,7 +378,6 @@ var MERGE_MAIN = new function () {
                 callback();
             }
         });
-        // TODO: add dummy ajax call?
     };
 
 
@@ -740,8 +739,8 @@ var MERGE_MAIN = new function () {
 
         // manipulate and save downloaded results
         var callback = function (results) {
-            // DEBUG
-            console.log("Parsed " + results.length + " observations for cube " + cubeName);
+
+            console.log("Parsed " + results.length + " observations for cube " + cubeName); // DEBUG
 
             // Convert to clean result objects
             var cleanResults = [];
@@ -751,7 +750,7 @@ var MERGE_MAIN = new function () {
                 // Add dimension data
                 $.each(MERGE_MAIN.availableDimensions[cubeName], function (j, dimension) {
 
-                    // TODO Implying dimensions are in the same order as requested
+                    // Note: Implying dimensions are in the same order as requested
                     var index = j + 1;
                     var entityName = result["E_NAME_" + index].value;
                     var entityLabel = result["L_NAME_" + index].value;
@@ -791,7 +790,7 @@ var MERGE_MAIN = new function () {
                 // Add measure data
                 $.each(MERGE_MAIN.availableMeasures[cubeName], function (j, measure) {
 
-                    // TODO Implying measures are in the same order as requested
+                    // Note: Implying measures are in the same order as requested
                     var index = j + 1 + MERGE_MAIN.availableDimensions[cubeName].length; // counting after dimensions
                     var value = result["V_NAME_" + index].value;
                     if (value) {
@@ -835,7 +834,7 @@ var MERGE_MAIN = new function () {
                 callback(results);
             });
             request.fail(function (jqXHR, textStatus) {
-                bootbox.alert("Error: " + textStatus); // TODO escape
+                bootbox.alert("Error: " + textStatus);
             });
         } else {
 
@@ -910,9 +909,6 @@ var MERGE_MAIN = new function () {
             config.measures.push(measureConfig);
         });
 
-        // DEBUG: log generated configuration
-        console.log("DEBUG: CONFIG", JSON.stringify(config))
-
         return config;
     };
 
@@ -933,7 +929,7 @@ var MERGE_MAIN = new function () {
             result.push(content);
         });
         request.fail(function (jqXHR, textStatus) {
-            bootbox.alert("Error: " + textStatus); // TODO escape
+            bootbox.alert("Error: " + textStatus);
         });
         return result;
     };

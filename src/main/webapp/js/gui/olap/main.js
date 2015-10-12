@@ -819,11 +819,6 @@ var MAIN = new function () {
         // Update the rest of the interface (Apply, Cancel, Undo, ...)
         INTERFACE.updateNavigation();
 
-        // DEBUG url, undo stack
-//        console.log("REQUEST URL", MAIN.currentURL);
-//        console.log("UNDO STACK:", MAIN.undoStack);
-//        console.log("REDO STACK:", MAIN.redoStack);
-
         // Set temp selection to be empty again for following OLAP steps
         MAIN.tempSelection = {};
     };

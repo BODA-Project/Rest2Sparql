@@ -13,7 +13,7 @@ public class FixedDimension extends Dimension {
 
     public FixedDimension(String name, String entityName, Parameters p) {
         super(name, p);
-        String[] entities = entityName.split(","); // TODO: komma als trennzeichen ok? könnte in URL vorkommen...
+        String[] entities = entityName.split(","); // Comma as separator
         this.entityNames.addAll(Arrays.asList(entities));
     }
 
