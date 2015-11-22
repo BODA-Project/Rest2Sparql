@@ -79,8 +79,6 @@ var MAIN = new function () {
         MAIN.init();
     });
 
-    // Tries to log in a given ID
-
     /**
      * Try to log a user with given id in. the given callback function (optional) is executed after the user's cubes have been loaded.
      *

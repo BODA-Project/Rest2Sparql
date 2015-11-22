@@ -1329,23 +1329,6 @@ var MERGE_INTERFACE = new function () {
         var cube1ObsMap = {}; // e.g. map[uri+uri+uri+...] = true
         var cube2ObsMap = {};
 
-        /*
-         * TODO:
-         *
-         *   ? bundling? maybe by measures
-         *   ? types...  (measure must be number), dimension can be strings (OR number? -> e.g. Year)
-         *   + hover for lines (or list below)
-         *   + if numerical entities (e.g. Year) set graph tick to show every label
-         *   ? order of dimensions (maybe C1 then C2 then measures C1 + C2) (for distinct dimensions)
-         *   ? how to count overlap -> 2 obs = 1 or 2 overlap
-         *   ? maybe restore dimension order after filtering / resizing
-         *
-         */
-
-
-        console.log("OBS CUBE1", MERGE_MAIN.observations[cube1.cubeName][0]);
-        console.log("OBS CUBE2", MERGE_MAIN.observations[cube2.cubeName][0]);
-
         // Create sorted list of all dimensions of both cubes (without replaced ones)
         var allDimensions = cube1Dimensions.concat(cube2Dimensions); // may be fully or partially matched
 
@@ -1437,7 +1420,7 @@ var MERGE_INTERFACE = new function () {
                 // Fill the data cell
                 $.each(allDimensions, function (j, dimension) {
                     if (obs.dimensions[dimension.dimensionName] === undefined) {
-                        data.push("UNKNOWN"); // TODO empty entity? "not yet defined" / Dimension can be numerical too -> "0" -> dimensioninfo > type string/number
+                        data.push("UNKNOWN"); // TODO: correct type for numerical value!
                     } else {
                         var label = obs.dimensions[dimension.dimensionName].label;
                         data.push(label); // Add entity label
@@ -1445,7 +1428,7 @@ var MERGE_INTERFACE = new function () {
                 });
                 $.each(allMeasures, function (j, measure) {
                     if (obs.measures[measure.measureName] === undefined) {
-                        data.push(0); // TODO: missing measure? "not yet defined" ? or: 0
+                        data.push(0); // needs a default value
                     } else {
                         data.push(obs.measures[measure.measureName]); // Add measure value
                     }
@@ -1511,8 +1494,6 @@ var MERGE_INTERFACE = new function () {
             showOverlaps: true
         };
 
-        // TODO button for "popout" -> full width and height from other button
-
         // Configure resize button to show compact or full height
         $("#id_sizeButton").text("Full Height");
         $("#id_sizeButton").off("click");
@@ -1564,7 +1545,6 @@ var MERGE_INTERFACE = new function () {
             var label = dimension.label;
             if (label.length > 20) {
                 label = label.substr(0, 29) + "\u2026";
-                // TODO: tooltip
             }
             dimTitles[i] = label;
         });
@@ -1572,7 +1552,6 @@ var MERGE_INTERFACE = new function () {
             var label = measure.label;
             if (label.length > 20) {
                 label = label.substr(0, 29) + "\u2026";
-                // TODO: tooltip
             }
             dimTitles[allDimensions.length + i] = label;
         });
@@ -1620,23 +1599,10 @@ var MERGE_INTERFACE = new function () {
         // Set coloring
         parcoords.color(setColor);
 
-        // TODO style
-
-//        parcoords.alpha(1);
-//        var types = {};
-//        $.each(dimTitles, function (i, title) {
-//            types[title] = "number";
-//        });
-//        parcoords.types(types);
-
-//        parcoords.bundlingStrength(0.1)
-//        parcoords.smoothness(0.2)
-//        parcoords.bundleDimension("Euro");
+        // TODO: parcoords: bundling
 
         parcoords.render();
         parcoords.createAxes();
-
-        console.log("TYPES", parcoords.types()); // DEBUG
 
         // Render continuously
         parcoords.mode("queue");

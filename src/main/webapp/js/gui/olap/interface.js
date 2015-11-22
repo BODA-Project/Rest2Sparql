@@ -2280,7 +2280,7 @@ var INTERFACE = new function () {
         var y = event.pageY - node.position().top;
 
         // cancel if dragged a certain min distance
-        var distance = 6; // TODO: no ratation below
+        var distance = 6; // TODO: no rotation below this cursor movement
         if (Math.abs(x - INTERFACE.mouseDown.x) > distance || Math.abs(y - INTERFACE.mouseDown.y) > distance) {
             return;
         }

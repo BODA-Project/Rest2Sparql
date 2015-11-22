@@ -38,7 +38,6 @@ public class MergeService {
      */
     public void merge(MergeConfig config) throws ConnectionException {
 
-        // TODO: split in methods: dataset, dimensions, measures, entities, observations
         // Database access
         MergeDao dao = new MergeDao();
 

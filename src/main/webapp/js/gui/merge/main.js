@@ -27,7 +27,7 @@ var MERGE_MAIN = new function () {
     this.addedDimensions = {}; // addedDimensions[cubeName] = [], list of dimensions with 1 (new default) entity
 
     // To distinguish 2 datasets with an additional dimension with 2 entities for both cubes
-    this.distinctionDimension; // TODO avoid adding an EXISTING dimension?
+    this.distinctionDimension; // TODO: avoid adding an EXISTING dimension (same URI)
 
     // In case of overlap this cube is preferred
     this.preferedCube; // reference to cube1 or cube2
@@ -739,8 +739,6 @@ var MERGE_MAIN = new function () {
 
         // manipulate and save downloaded results
         var callback = function (results) {
-
-            console.log("Parsed " + results.length + " observations for cube " + cubeName); // DEBUG
 
             // Convert to clean result objects
             var cleanResults = [];
